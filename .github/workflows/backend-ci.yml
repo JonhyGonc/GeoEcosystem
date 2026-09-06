@@ -39,10 +39,10 @@ jobs:
       - name: Test
         run: dotnet test GeoMap.sln --configuration Release --no-build --verbosity normal
 
-  verify-postgis:
-    name: Verify Docker Compose and PostGIS
+  verify-local-stack:
+    name: Verify Docker Compose, API and PostGIS
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -54,8 +54,8 @@ jobs:
       - name: Validate Compose
         run: docker compose config --quiet
 
-      - name: Start PostGIS
-        run: docker compose up --detach database
+      - name: Build and start local stack
+        run: docker compose up --detach --build
 
       - name: Wait for PostGIS and verify extension
         shell: bash
@@ -75,6 +75,19 @@ jobs:
           done
 
           docker compose logs database
+          exit 1
+
+      - name: Verify API health
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:8080/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker compose logs api
           exit 1
 
       - name: Clean up
