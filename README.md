@@ -58,7 +58,6 @@ docker compose exec database sh -ec \
   'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT PostGIS_Version();"'
 ~~~
 
-
 ### Aplicar o modelo espacial
 
 Bash:
@@ -86,6 +85,20 @@ dotnet build GeoMap.sln --configuration Release --no-restore
 dotnet test GeoMap.sln --configuration Release --no-build
 ~~~
 
+### Gerar dados espaciais de teste
+
+Após aplicar a migration, o gerador carrega dados artificiais reproduzíveis diretamente no PostGIS:
+
+~~~bash
+export GEOMAP_DB_CONNECTION_STRING='Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only'
+
+dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
+  --size small \
+  --seed 20260906
+~~~
+
+Os perfis disponíveis são SMALL, com 1.000 feições, e MEDIUM, com 100.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
+
 ### Encerrar o ambiente
 
 ~~~bash
@@ -97,15 +110,17 @@ Use docker compose down --volumes somente quando quiser apagar intencionalmente 
 ## Estrutura implementada
 
 ~~~text
-apps/api/GeoMap.Api/        API mínima ASP.NET Core
-database/migrations/        modelo espacial e rollback versionados
-tests/GeoMap.Api.Tests/     testes de inicialização
-tests/integration/          testes reais de schema e integridade
-.github/workflows/          CI do backend e PostGIS
-docker-compose.yml          ambiente local
+apps/api/GeoMap.Api/                API mínima ASP.NET Core
+database/migrations/                modelo espacial e rollback versionados
+tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
+tests/GeoMap.Api.Tests/             testes de inicialização
+tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
+tests/integration/                  testes reais de schema, integridade e datasets
+.github/workflows/                  CI do backend e PostGIS
+docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial inicial e suas migrations estão implementados. O frontend, os tiles vetoriais, o importador e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial e o gerador dos datasets SMALL e MEDIUM estão implementados. O frontend, os tiles vetoriais, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 
