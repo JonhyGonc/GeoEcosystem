@@ -23,9 +23,67 @@ PostGIS → API → MVT → MapLibre
 
 O exportador do Civil 3D será tratado somente depois de o fluxo geográfico web funcionar com volume alto.
 
-## Estado do repositório
+## Desenvolvimento local
 
-Esta branch contém somente a fundação documental e de governança. Nenhuma funcionalidade do GeoMap foi implementada.
+### Pré-requisitos
+
+- Git;
+- Docker Desktop com Docker Compose;
+- .NET 8 SDK, apenas para executar build e testes fora do Docker.
+
+### Iniciar banco e API
+
+No PowerShell:
+
+~~~powershell
+Copy-Item .env.example .env
+docker compose up --build
+~~~
+
+No Bash:
+
+~~~bash
+cp .env.example .env
+docker compose up --build
+~~~
+
+A API ficará disponível em http://localhost:8080 e o health check em http://localhost:8080/health.
+
+O arquivo .env é ignorado pelo Git. Troque a senha de exemplo antes de usar e nunca versione credenciais reais.
+
+### Verificar o PostGIS
+
+~~~bash
+docker compose exec database sh -ec \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT PostGIS_Version();"'
+~~~
+
+### Build e testes do backend
+
+~~~bash
+dotnet restore GeoMap.sln
+dotnet build GeoMap.sln --configuration Release --no-restore
+dotnet test GeoMap.sln --configuration Release --no-build
+~~~
+
+### Encerrar o ambiente
+
+~~~bash
+docker compose down
+~~~
+
+Use docker compose down --volumes somente quando quiser apagar intencionalmente os dados locais do banco.
+
+## Estrutura implementada
+
+~~~text
+apps/api/GeoMap.Api/        API mínima ASP.NET Core
+tests/GeoMap.Api.Tests/     testes de inicialização
+.github/workflows/          CI do backend e PostGIS
+docker-compose.yml          ambiente local
+~~~
+
+O modelo espacial, as migrations, o frontend e os tiles vetoriais pertencem às próximas Issues e ainda não foram implementados.
 
 ## Documentação
 
