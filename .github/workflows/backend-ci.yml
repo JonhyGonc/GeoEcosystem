@@ -57,24 +57,25 @@ jobs:
       - name: Start PostGIS
         run: docker compose up --detach database
 
-      - name: Wait for database
+      - name: Wait for PostGIS and verify extension
         shell: bash
         run: |
-          for attempt in {1..30}; do
+          for attempt in {1..45}; do
             if docker compose exec -T database sh -ec \
-              'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; then
-              exit 0
+              'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'; then
+              sleep 2
+
+              if docker compose exec -T database sh -ec \
+                'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'; then
+                exit 0
+              fi
             fi
+
             sleep 2
           done
 
           docker compose logs database
           exit 1
-
-      - name: Verify PostGIS extension
-        run: |
-          docker compose exec -T database sh -ec \
-            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'
 
       - name: Clean up
         if: always()
