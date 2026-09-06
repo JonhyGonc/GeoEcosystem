@@ -8,6 +8,7 @@ public sealed class DatasetLoader(SyntheticFeatureGenerator generator)
 {
     public async Task<DatasetLoadResult> LoadAsync(
         DatasetCommandOptions options,
+        Action<DatasetLoadProgress>? reportProgress = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -46,6 +47,11 @@ public sealed class DatasetLoader(SyntheticFeatureGenerator generator)
                 options,
                 cancellationToken);
             await TruncateStagingTableAsync(connection, transaction, cancellationToken);
+
+            reportProgress?.Invoke(new DatasetLoadProgress(
+                offset + count,
+                options.Profile.FeatureCount,
+                stopwatch.Elapsed));
         }
 
         var statistics = await ReadStatisticsAsync(
@@ -300,3 +306,11 @@ public sealed record DatasetLoadResult(
     int FeatureCount,
     DatasetExtent ActualExtent,
     TimeSpan Elapsed);
+
+public sealed record DatasetLoadProgress(
+    int LoadedFeatureCount,
+    int TotalFeatureCount,
+    TimeSpan Elapsed)
+{
+    public double Percentage => LoadedFeatureCount * 100d / TotalFeatureCount;
+}

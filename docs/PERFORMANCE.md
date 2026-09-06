@@ -72,6 +72,25 @@ A Issue #4 deve definir geração reproduzível e sementes fixas. As Issues #6 e
 
 Metas numéricas serão definidas após o primeiro baseline, para evitar números arbitrários. A ausência de meta inicial não autoriza regressões sem medição.
 
+## Baseline de carga LARGE — Issue #5
+
+Ambiente: GitHub Actions `ubuntu-latest`, Backend CI nº 10, PostgreSQL 16 com PostGIS 3.5 em Docker Compose e gerador .NET 8 executado no host do runner.
+
+| Medida | Resultado observado |
+|---|---:|
+| LARGE carregado | 1.000.000 feições |
+| Tamanho do lote | 10.000 feições |
+| Tempo total informado pelo gerador | 35,937 s |
+| Pico do working set do processo .NET | 80,9 MiB |
+| RSS máximo independente | aproximadamente 120,4 MiB |
+| Heap gerenciado ao final | 3,8 MiB |
+| Total simultâneo SMALL + MEDIUM + LARGE | 1.101.000 feições |
+| Tamanho de `network_features` com índices | aproximadamente 604,4 MiB |
+
+A carga foi gerada sob demanda, enviada por `COPY` binário a uma tabela temporária limitada ao lote e confirmada em uma transação atômica. Após `ANALYZE network_features`, o banco estimou 1.100.990 linhas; estatísticas de `network_id` e `geometry`, o índice GiST espacial e o índice B-tree relacional foram verificados.
+
+Este baseline mede geração e carga artificial local no runner. Não mede consultas, tiles, tráfego de produção nem complexidade de uma rede CAD real. Detalhes, extensão efetiva e comandos estão em [tools/importer/README.md](../tools/importer/README.md).
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;
