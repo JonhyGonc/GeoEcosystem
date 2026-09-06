@@ -21,7 +21,7 @@ trap 'rm -f "$response_file" "$timings_file" "$sorted_timings_file"' EXIT
 curl --fail --silent --show-error --max-time 10 "$url" > "$response_file"
 
 returned="$(jq --exit-status '.returned | numbers' "$response_file")"
-has_more="$(jq --exit-status '.hasMore | booleans | tostring' "$response_file")"
+has_more="$(jq --raw-output --exit-status '.hasMore | booleans | tostring' "$response_file")"
 if [[ "$returned" -lt 1 || "$returned" -gt 500 ]]; then
   echo "Unexpected returned count for $dataset: $returned" >&2
   exit 1

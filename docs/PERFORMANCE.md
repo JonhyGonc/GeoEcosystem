@@ -91,6 +91,22 @@ A carga foi gerada sob demanda, enviada por `COPY` binário a uma tabela tempor�
 
 Este baseline mede geração e carga artificial local no runner. Não mede consultas, tiles, tráfego de produção nem complexidade de uma rede CAD real. Detalhes, extensão efetiva e comandos estão em [tools/importer/README.md](../tools/importer/README.md).
 
+## Baseline de consulta espacial — Issue #6
+
+Ambiente: GitHub Actions `ubuntu-24.04`, Backend CI nº 14, PostgreSQL 16 com PostGIS 3.5 em Docker Compose e API .NET 8. Os três datasets foram carregados simultaneamente, totalizando 1.101.000 feições dentro da extensão sintética `[-48.95, -26.40, -48.75, -26.20]` em EPSG:4326.
+
+A medição consultou a bounding box `[-48.90, -26.35, -48.85, -26.30]`, com `limit=500`. Após uma chamada de aquecimento, cada perfil recebeu 30 chamadas HTTP sequenciais:
+
+| Dataset | Volume da rede | Retornadas | `hasMore` | Mediana HTTP | p95 HTTP | Máxima HTTP |
+|---|---:|---:|---:|---:|---:|---:|
+| SMALL | 1.000 | 64 | `false` | 5,555 ms | 5,939 ms | 6,229 ms |
+| MEDIUM | 100.000 | 500 | `true` | 9,471 ms | 12,801 ms | 15,175 ms |
+| LARGE | 1.000.000 | 500 | `true` | 20,658 ms | 36,550 ms | 37,067 ms |
+
+`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` confirmou `ix_network_features_geometry` nos três perfis. O resumo versionado dos planos e a consulta medida estão em [benchmarks/spatial-query-issue-6.md](benchmarks/spatial-query-issue-6.md); os planos JSON completos permanecem no log da CI nº 14.
+
+Os valores representam um runner compartilhado e não constituem SLA. A amostra HTTP foi aquecida; o `EXPLAIN` também registra leituras de blocos que variam conforme o estado do cache. Memória por consulta não foi isolada neste baseline, mas o volume de resposta ficou limitado a 500 geometrias. Tamanho e latência de tile serão medidos na Issue #7.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;
