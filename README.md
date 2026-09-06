@@ -58,6 +58,26 @@ docker compose exec database sh -ec \
   'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT PostGIS_Version();"'
 ~~~
 
+
+### Aplicar o modelo espacial
+
+Bash:
+
+~~~bash
+docker compose exec -T database sh -ec \
+  'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  < database/migrations/001_initial_spatial_model.up.sql
+~~~
+
+PowerShell:
+
+~~~powershell
+Get-Content -Raw database/migrations/001_initial_spatial_model.up.sql |
+  docker compose exec -T database sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+~~~
+
+Consulte [database/migrations/README.md](database/migrations/README.md) antes de executar um rollback, pois a reversão remove as tabelas e seus dados.
+
 ### Build e testes do backend
 
 ~~~bash
@@ -78,12 +98,14 @@ Use docker compose down --volumes somente quando quiser apagar intencionalmente 
 
 ~~~text
 apps/api/GeoMap.Api/        API mínima ASP.NET Core
+database/migrations/        modelo espacial e rollback versionados
 tests/GeoMap.Api.Tests/     testes de inicialização
+tests/integration/          testes reais de schema e integridade
 .github/workflows/          CI do backend e PostGIS
 docker-compose.yml          ambiente local
 ~~~
 
-O modelo espacial, as migrations, o frontend e os tiles vetoriais pertencem às próximas Issues e ainda não foram implementados.
+O modelo espacial inicial e suas migrations estão implementados. O frontend, os tiles vetoriais, o importador e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 

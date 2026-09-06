@@ -62,12 +62,25 @@ Status: aprovada.
 
 Primeiro será validado PostGIS → API → MVT → MapLibre com dados artificiais grandes. O exportador Civil 3D será implementado depois.
 
+## DEC-011 — EPSG:4326 como CRS canônico de armazenamento
+
+Status: aprovada.
+
+As geometrias normalizadas serão armazenadas em EPSG:4326. Toda importação deverá declarar o CRS de origem e transformá-lo para o CRS canônico. Para tiles web, o envelope será transformado de EPSG:3857 para EPSG:4326 antes do filtro espacial, permitindo que o índice GiST da coluna armazenada seja utilizado; a geometria resultante poderá então ser transformada para EPSG:3857.
+
+Cálculos de distância ou comprimento não devem tratar graus como metros. Quando necessários, deverão usar CRS projetado adequado ou estratégia geodésica documentada.
+
+## DEC-012 — Migrations SQL versionadas no protótipo
+
+Status: aprovada.
+
+O modelo físico será evoluído por scripts SQL up/down numerados em database/migrations e executados com psql usando ON_ERROR_STOP. Esta escolha mantém o protótipo simples, torna PostGIS e índices explícitos e evita acoplar a evolução inicial do banco a um ORM. Uma ferramenta de migration poderá substituir esse processo futuramente mediante decisão registrada.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
 |---|---|---|
-| PEND-001 | CRS canônico de armazenamento e política de transformação | Issue #3 |
-| PEND-002 | Política para coordenada Z | Issues #3 e #14 |
+| PEND-002 | Política de importação para coordenada Z: rejeitar ou descartar antes da normalização 2D | Issue #14 |
 | PEND-003 | Estratégia de reimportação e idempotência | Issues #14 e #15 |
 | PEND-004 | Provedor gratuito inicial do mapa base e seus termos | Issue #9 |
 | PEND-005 | Metas quantitativas de latência e tamanho de tile | Issues #6 e #7 |

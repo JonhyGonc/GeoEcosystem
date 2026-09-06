@@ -1,6 +1,6 @@
 # Modelo de dados inicial
 
-Este modelo é conceitual. A definição física, tipos exatos e SRID serão fechados na Issue #3.
+Status: implementado pela Issue #3.
 
 ## Relações
 
@@ -10,88 +10,90 @@ erDiagram
     NETWORK ||--o{ NETWORK_FEATURE : agrupa
     PROJECT {
         uuid id
-        string name
-        timestamp created_at
+        varchar name
+        timestamptz created_at
     }
     NETWORK {
         uuid id
         uuid project_id
-        string name
-        string type
-        timestamp created_at
+        varchar name
+        varchar type
+        timestamptz created_at
     }
     NETWORK_FEATURE {
         uuid id
         uuid network_id
         geometry geometry
-        string source_id
-        string source_layer
-        string source_type
+        varchar source_id
+        varchar source_layer
+        varchar source_type
         jsonb properties
-        timestamp created_at
+        timestamptz created_at
     }
 ~~~
 
-## Project
+## Modelo físico
 
-Representa uma área ou trabalho que agrupa redes.
+### projects
 
-Campos mínimos propostos:
+| Campo | Tipo | Regra |
+|---|---|---|
+| id | uuid | chave primária, fornecida pela aplicação/importação |
+| name | varchar(200) | obrigatório e não vazio |
+| created_at | timestamptz | obrigatório, padrão CURRENT_TIMESTAMP |
 
-| Campo | Finalidade |
-|---|---|
-| id | Identificador estável |
-| name | Nome de apresentação |
-| created_at | Auditoria mínima |
+### networks
 
-## Network
+| Campo | Tipo | Regra |
+|---|---|---|
+| id | uuid | chave primária |
+| project_id | uuid | FK obrigatória para projects |
+| name | varchar(200) | obrigatório e não vazio |
+| type | varchar(100) | categoria normalizada obrigatória |
+| created_at | timestamptz | obrigatório, padrão CURRENT_TIMESTAMP |
 
-Agrupa feições de mesma finalidade ou origem dentro de um projeto.
+### network_features
 
-| Campo | Finalidade |
-|---|---|
-| id | Identificador estável |
-| project_id | Projeto proprietário |
-| name | Nome de apresentação |
-| type | Categoria normalizada inicial |
-| created_at | Auditoria mínima |
+| Campo | Tipo | Regra |
+|---|---|---|
+| id | uuid | chave primária GeoMap |
+| network_id | uuid | FK obrigatória para networks |
+| geometry | geometry(Geometry, 4326) | somente LineString ou MultiLineString 2D, não vazia |
+| source_id | varchar(255) | identificador opcional na origem |
+| source_layer | varchar(255) | layer opcional de origem |
+| source_type | varchar(100) | tipo de origem obrigatório |
+| properties | jsonb | objeto JSON obrigatório, padrão vazio |
+| created_at | timestamptz | obrigatório, padrão CURRENT_TIMESTAMP |
 
-## NetworkFeature
+## CRS e dimensionalidade
 
-Representa uma feição espacial normalizada.
+O CRS canônico de armazenamento é **EPSG:4326 (WGS 84), em longitude/latitude**.
 
-| Campo | Finalidade |
-|---|---|
-| id | Identificador GeoMap |
-| network_id | Rede proprietária |
-| geometry | Geometria PostGIS |
-| source_id | Identificador na origem, quando disponível |
-| source_layer | Layer CAD de origem |
-| source_type | Tipo de origem, como Polyline |
-| properties | Atributos variáveis em JSONB |
-| created_at | Auditoria mínima |
+- Toda entrada deve declarar seu CRS de origem.
+- A transformação para EPSG:4326 acontece antes ou durante a importação.
+- A coluna é 2D. A Issue #14 decidirá se valores Z recebidos serão rejeitados ou descartados explicitamente.
+- Para MVT, o envelope do tile em EPSG:3857 deverá ser transformado para EPSG:4326 antes do filtro espacial, preservando o uso do índice GiST. A geometria selecionada poderá então ser transformada para EPSG:3857.
+- Cálculos métricos futuros devem transformar a geometria para um CRS projetado adequado ou usar outra estratégia explicitamente documentada.
 
-## Regras iniciais
+EPSG:4326 foi escolhido como formato canônico único para simplificar múltiplas cidades e fontes. O CRS original continua obrigatório no contrato de importação para garantir posicionamento e rastreabilidade.
 
-- O MVP prioriza LineString e MultiLineString 2D.
-- Coordenadas Z podem ser recebidas futuramente, mas a política de preservação ainda precisa ser decidida.
-- Toda geometria importada deve declarar o CRS de origem.
-- O banco não armazena objetos Autodesk serializados.
-- properties contém apenas valores de negócio permitidos; não é depósito de arquivos binários.
-- source_id não substitui o id interno.
-- exclusões em cascata, unicidade de source_id e estratégia de reimportação serão decididas na Issue #3 ou #15.
-- índices mínimos esperados: GiST na geometria e índices nas chaves estrangeiras.
-- índices em JSONB só devem ser criados para consultas reais.
+## Integridade e índices
 
-## Sistemas de referência
+- Exclusão de Project remove suas Networks e NetworkFeatures por cascade.
+- Exclusão de Network remove suas NetworkFeatures por cascade.
+- Não há endpoint de exclusão nesta etapa.
+- source_id, quando informado, é único dentro da combinação network_id + source_type.
+- A estratégia completa de reimportação permanece para as Issues #14 e #15.
+- Índices B-tree existem nas FKs project_id e network_id.
+- ix_network_features_geometry usa GiST.
+- Não há índice JSONB sem uma consulta real que o justifique.
+- properties deve ser um objeto JSON; arrays e valores escalares são rejeitados.
 
-Duas informações são obrigatórias no desenho da solução:
+## Migrations
 
-1. CRS de origem declarado pela importação;
-2. CRS canônico de armazenamento e transformação para Web Mercator.
+A fonte de verdade física está em database/migrations.
 
-A escolha entre armazenamento canônico em EPSG:4326, CRS projetado por projeto ou outra estratégia permanece pendente até um teste com dados brasileiros reais. A decisão deve equilibrar precisão, simplicidade de tiles, índices e múltiplas cidades.
-
-## Evolução controlada
-
-Novos campos devem surgir quando atributos forem comprovadamente padronizados e consultados. Até lá, propriedades variáveis permanecem em JSONB para evitar dezenas de colunas especulativas.
+- 001_initial_spatial_model.up.sql cria a extensão necessária, tabelas, restrições e índices.
+- 001_initial_spatial_model.down.sql reverte as tabelas em ordem segura.
+- O rollback não remove a extensão PostGIS.
+- Novas alterações devem criar nova migration, sem editar uma migration já aplicada em ambiente compartilhado.

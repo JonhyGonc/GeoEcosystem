@@ -77,6 +77,35 @@ jobs:
           docker compose logs database
           exit 1
 
+
+      - name: Apply initial spatial migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.up.sql
+
+      - name: Verify spatial model
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-model.sql
+
+      - name: Verify migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.down.sql
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-model-rollback.sql
+
+      - name: Reapply initial spatial migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.up.sql
+
       - name: Verify API health
         shell: bash
         run: |
