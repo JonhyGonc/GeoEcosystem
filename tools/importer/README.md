@@ -51,9 +51,14 @@ A carga é atômica: falha em qualquer lote reverte Project, Network e NetworkFe
 
 ## Medição inicial
 
-Os tempos abaixo serão preenchidos com a primeira execução completa no GitHub Actions da Issue #4. São uma observação do ambiente de CI, não uma meta de produção.
+Medição realizada no GitHub Actions, runner `ubuntu-latest`, no workflow Backend CI nº 7. São tempos totais informados pela ferramenta, incluindo conexão, criação de Project/Network, carga, verificação de contagem e commit. Representam uma observação do ambiente de CI, não uma meta de produção.
 
 | Perfil | Feições | Lote | Tempo observado |
 |---|---:|---:|---:|
-| SMALL | 1.000 | 250 | pendente |
-| MEDIUM | 100.000 | 5.000 | pendente |
+| SMALL | 1.000 | 250 | 1,188 s |
+| MEDIUM | 100.000 | 5.000 | 3,543 s |
+
+Extensões efetivamente verificadas nessa execução:
+
+- SMALL: `[-48.94905033, -26.39846622, -48.75094667, -26.20188423]`;
+- MEDIUM: `[-48.94990531, -26.39984959, -48.75009488, -26.20015090]`.
