@@ -1,0 +1,21 @@
+# .NET
+**/bin/
+**/obj/
+TestResults/
+coverage/
+*.user
+*.suo
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Operating system
+.DS_Store
+Thumbs.db

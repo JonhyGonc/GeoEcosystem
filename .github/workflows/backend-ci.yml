@@ -1,0 +1,81 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  build-and-test:
+    name: Build and test .NET
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore
+        run: dotnet restore GeoMap.sln
+
+      - name: Build
+        run: dotnet build GeoMap.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test GeoMap.sln --configuration Release --no-build --verbosity normal
+
+  verify-postgis:
+    name: Verify Docker Compose and PostGIS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare local-only environment
+        run: cp .env.example .env
+
+      - name: Validate Compose
+        run: docker compose config --quiet
+
+      - name: Start PostGIS
+        run: docker compose up --detach database
+
+      - name: Wait for database
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if docker compose exec -T database sh -ec \
+              'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker compose logs database
+          exit 1
+
+      - name: Verify PostGIS extension
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'
+
+      - name: Clean up
+        if: always()
+        run: docker compose down --volumes
