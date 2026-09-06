@@ -1,4 +1,7 @@
 using GeoMap.Api;
+using GeoMap.Api.SpatialQueries;
+using Microsoft.Extensions.Options;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +13,15 @@ builder.Services
         "Database:ConnectionString must be provided through configuration.")
     .ValidateOnStart();
 
+builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider =>
+{
+    var databaseOptions = serviceProvider
+        .GetRequiredService<IOptions<DatabaseOptions>>()
+        .Value;
+
+    return NpgsqlDataSource.Create(databaseOptions.ConnectionString);
+});
+builder.Services.AddScoped<SpatialFeatureQuery>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -21,6 +33,7 @@ app.MapGet("/", () => Results.Ok(new
 }));
 
 app.MapHealthChecks("/health");
+app.MapSpatialQueryEndpoints();
 
 app.Run();
 

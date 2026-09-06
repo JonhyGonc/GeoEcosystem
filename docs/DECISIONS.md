@@ -76,6 +76,14 @@ Status: aprovada.
 
 O modelo físico será evoluído por scripts SQL up/down numerados em database/migrations e executados com psql usando ON_ERROR_STOP. Esta escolha mantém o protótipo simples, torna PostGIS e índices explícitos e evita acoplar a evolução inicial do banco a um ORM. Uma ferramenta de migration poderá substituir esse processo futuramente mediante decisão registrada.
 
+## DEC-013 — Consultas espaciais obrigatoriamente regionais e limitadas
+
+Status: aprovada.
+
+A consulta de feições exige projeto, rede e bounding box em EPSG:4326. O envelope deve possuir no máximo 1 grau de longitude por 1 grau de latitude. A resposta retorna 500 feições por padrão e no máximo 2.000, usando `hasMore` para indicar que a região deve ser reduzida. O comando no banco possui timeout de 5 segundos.
+
+O endpoint retorna apenas identificadores e geometria necessários para validar a consulta regional. Não fornece paginação para percorrer uma rede inteira nem inclui o JSONB detalhado. MVT e consulta de atributos permanecem nas Issues #7 e #13.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

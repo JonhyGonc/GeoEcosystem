@@ -192,6 +192,45 @@ jobs:
           docker compose logs api
           exit 1
 
+      - name: Seed and verify spatial query API
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/seed-spatial-query-fixtures.sql
+
+          tests/integration/verify-spatial-api.sh http://localhost:8080
+
+      - name: Verify spatial query plans
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-query-plans.sql
+
+      - name: Benchmark spatial API with SMALL, MEDIUM and LARGE
+        shell: bash
+        run: |
+          SMALL_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=small -v expected_seed=42' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r SMALL_PROJECT_ID SMALL_NETWORK_ID <<< "$SMALL_IDS"
+
+          MEDIUM_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=medium -v expected_seed=4242' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r MEDIUM_PROJECT_ID MEDIUM_NETWORK_ID <<< "$MEDIUM_IDS"
+
+          LARGE_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=large -v expected_seed=424242' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r LARGE_PROJECT_ID LARGE_NETWORK_ID <<< "$LARGE_IDS"
+
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID" "$SMALL_NETWORK_ID"
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
+
       - name: Clean up
         if: always()
         run: docker compose down --volumes
