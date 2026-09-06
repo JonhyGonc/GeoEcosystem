@@ -42,11 +42,18 @@ jobs:
   verify-local-stack:
     name: Verify Docker Compose, API and PostGIS
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up .NET 8 for dataset loading
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: "**/*.csproj"
 
       - name: Prepare local-only environment
         run: cp .env.example .env
@@ -77,7 +84,6 @@ jobs:
           docker compose logs database
           exit 1
 
-
       - name: Apply initial spatial migration
         run: |
           docker compose exec -T database sh -ec \
@@ -105,6 +111,47 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < database/migrations/001_initial_spatial_model.up.sql
+
+      - name: Build dataset generator
+        run: |
+          dotnet restore tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj
+          dotnet build tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-restore
+
+      - name: Load and verify SMALL dataset
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --size small \
+            --seed 42 \
+            --batch-size 250
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=small -v expected_seed=42 -v expected_count=1000' \
+            < tests/integration/verify-dataset.sql
+
+      - name: Load and verify MEDIUM dataset
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --size medium \
+            --seed 4242 \
+            --batch-size 5000
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=medium -v expected_seed=4242 -v expected_count=100000' \
+            < tests/integration/verify-dataset.sql
 
       - name: Verify API health
         shell: bash
