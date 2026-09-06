@@ -30,6 +30,7 @@ public sealed class SyntheticFeatureGeneratorTests
     [Theory]
     [InlineData("small", 1_000)]
     [InlineData("medium", 100_000)]
+    [InlineData("large", 1_000_000)]
     public void Profile_generates_the_exact_expected_count(string size, int expectedCount)
     {
         var profile = DatasetProfile.Parse(size);
@@ -40,6 +41,7 @@ public sealed class SyntheticFeatureGeneratorTests
     [Theory]
     [InlineData("small")]
     [InlineData("medium")]
+    [InlineData("large")]
     public void Every_coordinate_is_finite_and_inside_the_declared_extent(string size)
     {
         var profile = DatasetProfile.Parse(size);
@@ -67,5 +69,19 @@ public sealed class SyntheticFeatureGeneratorTests
         var actual = _generator.Generate(DatasetProfile.Small, 77, 250, 125).ToArray();
 
         Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void Large_profile_is_reproducible_at_distant_positions()
+    {
+        var positions = new[] { 0, 499_999, 999_999 };
+
+        foreach (var position in positions)
+        {
+            var first = _generator.Generate(DatasetProfile.Large, 424242, position, 1).Single();
+            var second = _generator.Generate(DatasetProfile.Large, 424242, position, 1).Single();
+
+            Assert.Equal(first, second);
+        }
     }
 }

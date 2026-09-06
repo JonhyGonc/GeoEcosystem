@@ -42,7 +42,7 @@ jobs:
   verify-local-stack:
     name: Verify Docker Compose, API and PostGIS
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -152,6 +152,32 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=medium -v expected_seed=4242 -v expected_count=100000' \
             < tests/integration/verify-dataset.sql
+
+      - name: Load, analyze and verify LARGE dataset
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          /usr/bin/time --verbose \
+            dotnet run \
+              --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --size large \
+              --seed 424242 \
+              --batch-size 10000
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ANALYZE network_features;"'
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=large -v expected_seed=424242 -v expected_count=1000000' \
+            < tests/integration/verify-dataset.sql
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-large-dataset-database.sql
 
       - name: Verify API health
         shell: bash

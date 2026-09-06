@@ -97,7 +97,7 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
   --seed 20260906
 ~~~
 
-Os perfis disponíveis são SMALL, com 1.000 feições, e MEDIUM, com 100.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
+Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
 ### Encerrar o ambiente
 
@@ -120,7 +120,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial e o gerador dos datasets SMALL e MEDIUM estão implementados. O frontend, os tiles vetoriais, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial e o gerador dos datasets SMALL, MEDIUM e LARGE estão implementados. O frontend, os tiles vetoriais, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 

@@ -15,13 +15,19 @@ public sealed record DatasetProfile(
         100_000,
         DatasetExtent.JoinvilleTestArea);
 
+    public static DatasetProfile Large { get; } = new(
+        "large",
+        1_000_000,
+        DatasetExtent.JoinvilleTestArea);
+
     public static DatasetProfile Parse(string value) =>
         value.Trim().ToLowerInvariant() switch
         {
             "small" => Small,
             "medium" => Medium,
+            "large" => Large,
             _ => throw new DatasetOptionException(
-                $"Unknown dataset size '{value}'. Use 'small' or 'medium'.")
+                $"Unknown dataset size '{value}'. Use 'small', 'medium' or 'large'.")
         };
 }
 
