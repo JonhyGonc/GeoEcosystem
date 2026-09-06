@@ -111,3 +111,24 @@ A configuração do frontend deve abstrair a fonte. O MVP poderá apontar para X
 ## Implantação inicial
 
 O desenvolvimento local usará Docker Compose. A estratégia de hospedagem de produção permanece pendente e não bloqueia o Protótipo 0.1.
+
+## Estrutura prevista do repositório
+
+Os diretórios serão criados somente quando a Issue correspondente lhes der uso:
+
+~~~text
+apps/
+  api/                 backend ASP.NET Core
+  web/                 frontend React + TypeScript
+tools/
+  importer/            geração e importação de dados
+database/
+  migrations/          evolução do esquema PostGIS
+tests/                 testes que não pertençam aos projetos
+test-data/
+  small/
+  medium/
+  large/
+~~~
+
+Não criar diretórios vazios apenas para reproduzir esta árvore.

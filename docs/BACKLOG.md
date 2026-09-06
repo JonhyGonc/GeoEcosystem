@@ -71,3 +71,10 @@ O milestone termina quando:
 - a importação grande não exige carregar tudo em memória;
 - o exportador inicial de Polyline gera dados aceitos pelo GeoMap;
 - build, testes e documentação estão atualizados.
+
+## Evolução do CI
+
+- Issue #2: criar workflow para restore, build e testes do backend.
+- Issue #8: incluir instalação limpa, build e testes do frontend.
+- Issues posteriores: adicionar testes de integração PostGIS e verificações de performance quando houver infraestrutura e datasets adequados.
+- Pull Requests não devem ser aprovados com gates obrigatórios falhando.
