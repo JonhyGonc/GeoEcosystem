@@ -109,6 +109,16 @@ GET /api/projects/{projectId}/networks/{networkId}/features
 
 Não existe endpoint para carregar uma rede completa. Consulte [docs/API.md](docs/API.md) para parâmetros, limites e formato da resposta.
 
+### Solicitar um tile vetorial
+
+As redes também podem ser obtidas em MVT, já recortadas por zoom e tile:
+
+~~~text
+GET /api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt
+~~~
+
+O endpoint aceita zoom de 14 a 22, retorna somente o identificador mínimo de cada feição e nunca usa uma carga integral como alternativa. O contrato completo está em [docs/API.md](docs/API.md).
+
 ### Encerrar o ambiente
 
 ~~~bash

@@ -200,11 +200,20 @@ jobs:
 
           tests/integration/verify-spatial-api.sh http://localhost:8080
 
+      - name: Verify vector tile API and MVT payload
+        run: tests/integration/verify-vector-tile-api.sh http://localhost:8080
+
       - name: Verify spatial query plans
         run: |
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-spatial-query-plans.sql
+
+      - name: Verify LARGE vector tile plan
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-vector-tile-plan.sql
 
       - name: Benchmark spatial API with SMALL, MEDIUM and LARGE
         shell: bash
@@ -229,6 +238,13 @@ jobs:
           tests/integration/benchmark-spatial-api.sh \
             http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
           tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
+
+          tests/integration/benchmark-vector-tile.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID" "$SMALL_NETWORK_ID"
+          tests/integration/benchmark-vector-tile.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
+          tests/integration/benchmark-vector-tile.sh \
             http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
 
       - name: Clean up

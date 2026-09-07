@@ -84,6 +84,16 @@ A consulta de feições exige projeto, rede e bounding box em EPSG:4326. O envel
 
 O endpoint retorna apenas identificadores e geometria necessários para validar a consulta regional. Não fornece paginação para percorrer uma rede inteira nem inclui o JSONB detalhado. MVT e consulta de atributos permanecem nas Issues #7 e #13.
 
+## DEC-014 — Tiles vetoriais MVT recortados e com conteúdo mínimo
+
+Status: aprovada.
+
+As redes serão entregues por `GET /api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, em uma camada `network_features`. O PostGIS converte o envelope XYZ para Web Mercator, filtra candidatos no CRS canônico EPSG:4326 com o índice GiST e produz o tile com `ST_AsMVTGeom` e `ST_AsMVT`.
+
+O protótipo aceita zoom de 14 a 22, extensão MVT 4.096, buffer 64, recorte habilitado e timeout de banco de 5 segundos. Cada feição carrega apenas `id`; os atributos detalhados permanecem em consulta separada. Tiles vazios retornam HTTP 204 e respostas válidas recebem `Cache-Control: public, max-age=60`. Não haverá Redis ou CDN nesta etapa.
+
+O zoom mínimo evita agregar uma rede extensa em um tile de área excessiva. Esse limite poderá ser revisto quando existirem níveis de detalhe ou camadas generalizadas medidos, sem criar fallback de carga integral.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
