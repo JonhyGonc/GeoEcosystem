@@ -25,7 +25,7 @@ BEGIN
                         15,
                         11938,
                         18866,
-                        0.015625::double precision),
+                        margin => 0.015625::double precision),
                     4326) AS query_envelope
         ),
         tile_rows AS (

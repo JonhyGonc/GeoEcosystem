@@ -19,7 +19,7 @@ public sealed class VectorTileQuery(NpgsqlDataSource dataSource)
                         @zoom,
                         @tile_x,
                         @tile_y,
-                        0.015625::double precision),
+                        margin => 0.015625::double precision),
                     4326) AS query_envelope
         ),
         tile_rows AS (
