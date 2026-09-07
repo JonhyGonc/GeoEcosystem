@@ -42,5 +42,13 @@ awk \
     median = (lower + upper) / 2
     p95_index = int((NR * 95 + 99) / 100)
     printf "VECTOR_TILE_BENCHMARK dataset=%s samples=%d features=%s tile_bytes=%s median_ms=%.3f p95_ms=%.3f max_ms=%.3f\n", dataset, NR, feature_count, tile_bytes, median * 1000, values[p95_index] * 1000, values[NR] * 1000
+    if (dataset == "large" && tile_bytes > 524288) {
+      print "LARGE vector tile exceeded the 512 KiB regression guard" > "/dev/stderr"
+      exit 1
+    }
+    if (dataset == "large" && values[p95_index] > 0.100) {
+      print "LARGE vector tile exceeded the 100 ms p95 regression guard" > "/dev/stderr"
+      exit 1
+    }
   }
 ' "$sorted_timings_file"

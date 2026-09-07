@@ -215,7 +215,7 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-vector-tile-plan.sql
 
-      - name: Benchmark spatial API with SMALL, MEDIUM and LARGE
+      - name: Benchmark spatial API and vector tiles with SMALL, MEDIUM and LARGE
         shell: bash
         run: |
           SMALL_IDS="$(docker compose exec -T database sh -ec \
