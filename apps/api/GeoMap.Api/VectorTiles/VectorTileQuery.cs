@@ -15,7 +15,11 @@ public sealed class VectorTileQuery(NpgsqlDataSource dataSource)
             SELECT
                 ST_TileEnvelope(@zoom, @tile_x, @tile_y) AS tile_envelope,
                 ST_Transform(
-                    ST_TileEnvelope(@zoom, @tile_x, @tile_y, 0.015625),
+                    ST_TileEnvelope(
+                        @zoom,
+                        @tile_x,
+                        @tile_y,
+                        0.015625::double precision),
                     4326) AS query_envelope
         ),
         tile_rows AS (

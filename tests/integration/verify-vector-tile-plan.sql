@@ -21,7 +21,11 @@ BEGIN
             SELECT
                 ST_TileEnvelope(15, 11938, 18866) AS tile_envelope,
                 ST_Transform(
-                    ST_TileEnvelope(15, 11938, 18866, 0.015625),
+                    ST_TileEnvelope(
+                        15,
+                        11938,
+                        18866,
+                        0.015625::double precision),
                     4326) AS query_envelope
         ),
         tile_rows AS (
