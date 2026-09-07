@@ -1,5 +1,37 @@
 # API GeoMap
 
+## Tiles vetoriais da rede
+
+~~~http
+GET /api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt
+~~~
+
+O endpoint entrega uma camada MVT chamada `network_features`, pronta para ser configurada como fonte vetorial do MapLibre. Cada feição contém somente a geometria recortada ao tile e a propriedade textual `id`; atributos detalhados permanecem fora do tile.
+
+### Regras
+
+| Entrada ou comportamento | Regra |
+|---|---|
+| `projectId` e `networkId` | UUIDs obrigatórios; a rede precisa pertencer ao projeto |
+| `z` | inteiro entre 14 e 22 |
+| `x` e `y` | inteiros dentro da grade `0` a `2^z - 1` |
+| projeção do tile | Web Mercator, EPSG:3857 |
+| extensão MVT | 4.096 unidades |
+| buffer | 64 unidades, com recorte da geometria |
+| conteúdo | propriedade `id` e geometria linear |
+| timeout do banco | 5 segundos |
+| cache | `Cache-Control: public, max-age=60` |
+
+Um tile válido com feições retorna HTTP 200 e `Content-Type: application/vnd.mapbox-vector-tile`. Um tile válido sem feições, inclusive quando projeto e rede não correspondem, retorna HTTP 204. Coordenadas inválidas retornam HTTP 400.
+
+O zoom mínimo 14 impede pedidos continentais que agregariam uma rede extensa em um único tile. A futura fonte MapLibre deve declarar o mesmo `minzoom`. Não existe fallback para carregar a rede inteira.
+
+Exemplo para a região do dataset sintético:
+
+~~~http
+GET /api/projects/{projectId}/networks/{networkId}/tiles/15/11938/18866.mvt
+~~~
+
 ## Consulta espacial por região
 
 ~~~http

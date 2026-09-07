@@ -84,6 +84,24 @@ A consulta de feições exige projeto, rede e bounding box em EPSG:4326. O envel
 
 O endpoint retorna apenas identificadores e geometria necessários para validar a consulta regional. Não fornece paginação para percorrer uma rede inteira nem inclui o JSONB detalhado. MVT e consulta de atributos permanecem nas Issues #7 e #13.
 
+## DEC-014 — Tiles vetoriais MVT recortados e com conteúdo mínimo
+
+Status: aprovada.
+
+As redes serão entregues por `GET /api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, em uma camada `network_features`. O PostGIS converte o envelope XYZ para Web Mercator, filtra candidatos no CRS canônico EPSG:4326 com o índice GiST e produz o tile com `ST_AsMVTGeom` e `ST_AsMVT`.
+
+O protótipo aceita zoom de 14 a 22, extensão MVT 4.096, buffer 64, recorte habilitado e timeout de banco de 5 segundos. Cada feição carrega apenas `id`; os atributos detalhados permanecem em consulta separada. Tiles vazios retornam HTTP 204 e respostas válidas recebem `Cache-Control: public, max-age=60`. Não haverá Redis ou CDN nesta etapa.
+
+O zoom mínimo evita agregar uma rede extensa em um tile de área excessiva. Esse limite poderá ser revisto quando existirem níveis de detalhe ou camadas generalizadas medidos, sem criar fallback de carga integral.
+
+## DEC-015 — Guardas quantitativas iniciais para MVT
+
+Status: aprovada.
+
+Com base no baseline da Issue #7, o cenário LARGE no tile de referência em zoom 15 deve manter payload de até 512 KiB e p95 HTTP de até 100 ms em 30 chamadas aquecidas, executadas em ambiente equivalente à CI. A verificação automatizada falha ao ultrapassar esses valores.
+
+As guardas detectam regressões grosseiras e não constituem SLA de produção. O baseline observado foi 171.200 bytes e p95 de 32,423 ms, deixando margem para variação de runner e evolução moderada. Metas de experiência do mapa completo serão revistas após o frontend e uma rede CAD real.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
@@ -91,7 +109,6 @@ O endpoint retorna apenas identificadores e geometria necessários para validar 
 | PEND-002 | Política de importação para coordenada Z: rejeitar ou descartar antes da normalização 2D | Issue #14 |
 | PEND-003 | Estratégia de reimportação e idempotência | Issues #14 e #15 |
 | PEND-004 | Provedor gratuito inicial do mapa base e seus termos | Issue #9 |
-| PEND-005 | Metas quantitativas de latência e tamanho de tile | Issues #6 e #7 |
 | PEND-006 | Formato físico inicial do contrato e pacote | Issue #14 |
 | PEND-007 | Estratégia de hospedagem do protótipo | após fluxo local |
 | PEND-008 | Primeiro dataset real e autorização de uso | Issue #17 |

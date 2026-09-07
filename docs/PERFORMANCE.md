@@ -48,6 +48,10 @@ Simplificação, recorte e visibilidade por zoom podem ser aplicados quando pres
 
 Endpoints e importadores devem possuir limites documentados de tamanho, timeout e quantidade quando implementados.
 
+### PERF-010 — Guarda inicial de regressão MVT
+
+No cenário reproduzível LARGE em zoom 15, o tile deve permanecer abaixo de 512 KiB e o p95 de 30 chamadas HTTP aquecidas deve permanecer abaixo de 100 ms em runner equivalente ao baseline. Esses valores são guardas de regressão do protótipo, não SLA de produção.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;
@@ -70,7 +74,7 @@ A Issue #4 deve definir geração reproduzível e sementes fixas. As Issues #6 e
 - memória observada;
 - limitações encontradas.
 
-Metas numéricas serão definidas após o primeiro baseline, para evitar números arbitrários. A ausência de meta inicial não autoriza regressões sem medição.
+As medições das Issues #6 e #7 formam o primeiro baseline. A guarda quantitativa inicial de MVT foi definida em PERF-010; ela deve ser revista quando houver frontend e rede CAD real, sempre com nova medição registrada.
 
 ## Baseline de carga LARGE — Issue #5
 
@@ -105,7 +109,25 @@ A medição consultou a bounding box `[-48.90, -26.35, -48.85, -26.30]`, com `li
 
 `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` confirmou `ix_network_features_geometry` nos três perfis. O resumo versionado dos planos e a consulta medida estão em [benchmarks/spatial-query-issue-6.md](benchmarks/spatial-query-issue-6.md); os planos JSON completos permanecem no log da CI nº 14.
 
-Os valores representam um runner compartilhado e não constituem SLA. A amostra HTTP foi aquecida; o `EXPLAIN` também registra leituras de blocos que variam conforme o estado do cache. Memória por consulta não foi isolada neste baseline, mas o volume de resposta ficou limitado a 500 geometrias. Tamanho e latência de tile serão medidos na Issue #7.
+Os valores representam um runner compartilhado e não constituem SLA. A amostra HTTP foi aquecida; o `EXPLAIN` também registra leituras de blocos que variam conforme o estado do cache. Memória por consulta não foi isolada neste baseline, mas o volume de resposta ficou limitado a 500 geometrias. Tamanho e latência de tile foram medidos separadamente na Issue #7.
+
+## Baseline de Vector Tiles — Issue #7
+
+Ambiente: GitHub Actions `ubuntu-24.04`, Backend CI nº 19, PostgreSQL 16 com PostGIS 3.5 em Docker Compose e API .NET 8. Os três datasets estavam carregados simultaneamente. A medição usou o tile XYZ `15/11938/18866`, extent 4.096, buffer 64 e somente a propriedade `id`.
+
+Após uma chamada de aquecimento e validação do MVT, cada perfil recebeu 30 chamadas HTTP sequenciais:
+
+| Dataset | Volume da rede | Feições no tile | Tamanho | Mediana HTTP | p95 HTTP | Máxima HTTP |
+|---|---:|---:|---:|---:|---:|---:|
+| SMALL | 1.000 | 5 | 324 bytes | 2,742 ms | 5,162 ms | 5,326 ms |
+| MEDIUM | 100.000 | 296 | 17.619 bytes | 3,790 ms | 8,796 ms | 9,025 ms |
+| LARGE | 1.000.000 | 2.907 | 171.200 bytes | 20,690 ms | 32,423 ms | 33,024 ms |
+
+No LARGE, `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` registrou 15,024 ms de planejamento e 14,024 ms de execução. O plano usou `ix_network_features_geometry`, processou 2.907 feições candidatas e produziu um único agregado MVT. O resumo versionado está em [benchmarks/vector-tile-issue-7.md](benchmarks/vector-tile-issue-7.md); o plano JSON completo permanece no log da CI nº 19.
+
+O payload LARGE observado equivale a aproximadamente 167,2 KiB. A CI aplica uma guarda de regressão de 512 KiB e p95 de 100 ms para esse cenário. Os limites deixam margem para variação de runner e crescimento moderado sem transformar o baseline em SLA.
+
+O leitor de teste confirmou MVT versão 2, camada `network_features`, extent 4.096, geometrias lineares válidas e identificadores UUID. Memória por tile não foi isolada. Redes CAD reais podem possuir geometrias muito mais complexas que as linhas sintéticas de dois vértices e deverão ser medidas na Issue #17.
 
 ## Antipadrões proibidos
 

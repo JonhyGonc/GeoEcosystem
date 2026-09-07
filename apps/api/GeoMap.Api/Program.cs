@@ -1,5 +1,6 @@
 using GeoMap.Api;
 using GeoMap.Api.SpatialQueries;
+using GeoMap.Api.VectorTiles;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -22,6 +23,7 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider =>
     return NpgsqlDataSource.Create(databaseOptions.ConnectionString);
 });
 builder.Services.AddScoped<SpatialFeatureQuery>();
+builder.Services.AddScoped<VectorTileQuery>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -34,6 +36,7 @@ app.MapGet("/", () => Results.Ok(new
 
 app.MapHealthChecks("/health");
 app.MapSpatialQueryEndpoints();
+app.MapVectorTileEndpoints();
 
 app.Run();
 
