@@ -99,6 +99,16 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
 
 Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
+### Consultar feições por região
+
+A API aceita somente consultas com projeto, rede e bounding box EPSG:4326 explícitos:
+
+~~~text
+GET /api/projects/{projectId}/networks/{networkId}/features
+~~~
+
+Não existe endpoint para carregar uma rede completa. Consulte [docs/API.md](docs/API.md) para parâmetros, limites e formato da resposta.
+
 ### Encerrar o ambiente
 
 ~~~bash
@@ -128,6 +138,7 @@ O modelo espacial e o gerador dos datasets SMALL, MEDIUM e LARGE estão implemen
 - [MVP](docs/MVP.md)
 - [Arquitetura](docs/ARCHITECTURE.md)
 - [Modelo de dados](docs/DATA_MODEL.md)
+- [API](docs/API.md)
 - [Contrato de importação](docs/IMPORT_CONTRACT.md)
 - [Performance](docs/PERFORMANCE.md)
 - [Decisões](docs/DECISIONS.md)
