@@ -83,7 +83,9 @@ EPSG:4326 foi escolhido como formato canônico único para simplificar múltipla
 - Exclusão de Network remove suas NetworkFeatures por cascade.
 - Não há endpoint de exclusão nesta etapa.
 - source_id, quando informado, é único dentro da combinação network_id + source_type.
-- A estratégia completa de reimportação permanece para a Issue #15; dentro de um documento v0.1, `sourceType` + `sourceId` não pode se repetir.
+- O importador deriva IDs determinísticos do sistema de origem e dos identificadores externos. Dentro de um documento v0.1, `sourceType` + `sourceId` não pode se repetir.
+- Cada documento é o snapshot completo da rede identificada. A reimportação atualiza os nomes e o tipo e substitui todas as feições da rede na mesma transação.
+- Feições com `sourceId` mantêm ID estável pela combinação rede + `sourceType` + `sourceId`. Sem `sourceId`, o ID é estável somente enquanto a posição da feição no documento não mudar.
 - Índices B-tree existem nas FKs project_id e network_id.
 - ix_network_features_geometry usa GiST.
 - Não há índice JSONB sem uma consulta real que o justifique.

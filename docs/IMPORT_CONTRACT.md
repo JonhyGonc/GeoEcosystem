@@ -93,7 +93,7 @@ Esse documento atende ao importador inicial da Issue #15 e possui limites delibe
 
 O validador equivalente e sem dependências externas está em `tools/importer/GeoMap.Contract`. Uma importação rejeita versão desconhecida, CRS ausente ou inválido, coordenadas não finitas, Z, geometria vazia ou não suportada, campos estruturais desconhecidos ou duplicados, propriedades acima dos limites e repetição de `sourceType` + `sourceId` no mesmo documento.
 
-Cada erro possui código estável, caminho JSON e mensagem legível. O importador da Issue #15 deverá preservar esses dados em seu resultado.
+Cada erro possui código estável, caminho JSON e mensagem legível. O importador preserva esses dados no resumo JSON e não inicia a persistência quando houver qualquer erro.
 
 ## Códigos de erro
 
@@ -124,12 +124,25 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 ## Normalização
 
 - `sourceType` e `sourceLayer` preservam rastreabilidade usando strings neutras.
-- `geometry` será convertida para o modelo espacial GeoMap pelo importador.
+- o tipo da rede é normalizado para minúsculas após remoção de espaços externos.
+- `geometry` é interpretada no EPSG declarado e transformada pelo PostGIS para EPSG:4326.
 - `properties` mantém atributos ainda não padronizados.
 - nenhuma classe Autodesk atravessa o limite do exportador.
+
+## Persistência e reimportação
+
+- o documento representa o snapshot completo da rede indicada;
+- projeto e rede são resolvidos por UUIDs determinísticos derivados de `sourceSystem` e `externalId`;
+- uma reimportação atualiza os nomes e o tipo e substitui as feições da rede;
+- validação e gravação são atômicas: qualquer erro mantém o snapshot anterior;
+- importações concorrentes da mesma rede são serializadas no banco;
+- `sourceType` + `sourceId` produz uma identidade estável; feições sem `sourceId` dependem da posição no documento;
+- o resumo informa `received`, `imported`, `rejected`, `replaced`, IDs resolvidos, duração e erros.
+
+Falhas operacionais usam `GMI_FILE_INVALID`, `GMI_CRS_UNAVAILABLE` ou `GMI_PERSISTENCE_FAILED`. Os códigos `GMC_*` permanecem reservados à validação do contrato.
 
 ## Exemplos e testes
 
 Há exemplos válidos de `LineString` e `MultiLineString` e exemplos inválidos de versão, CRS, Z e tipo geométrico. Os testes automatizados executam o mesmo validador que será reutilizado pelo importador, verificam os limites de propriedades, campos futuros incompatíveis e identidades de origem duplicadas.
 
-A política de atualização/reimportação, atomicidade operacional e códigos normalizados adicionais de rede permanecem para a Issue #15. A representação escalável por streaming será definida na Issue #16.
+A integração gera e importa um contrato SMALL com 1.000 feições, confirma transformação de EPSG:31982 para EPSG:4326, propriedades JSONB, reimportação idempotente e preservação do banco após documento inválido. A representação escalável por streaming será definida na Issue #16.

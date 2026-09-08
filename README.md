@@ -121,6 +121,19 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
 
 Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
+### Importar um contrato GeoMap v0.1
+
+Com o banco iniciado e a migration aplicada, defina a conexão e informe um arquivo validado:
+
+~~~bash
+export GEOMAP_DB_CONNECTION_STRING='Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only'
+
+dotnet run --project tools/importer/GeoMap.Importer -- \
+  --file contracts/geomap/0.1/examples/valid-linestring.geomap.json
+~~~
+
+O comando valida o documento inteiro antes de gravar, transforma o CRS declarado para EPSG:4326 e emite um resumo JSON. Uma reimportação substitui atomicamente o conteúdo da mesma rede, sem duplicar feições.
+
 ### Consultar feições por região
 
 A API aceita somente consultas com projeto, rede e bounding box EPSG:4326 explícitos:
@@ -167,14 +180,16 @@ apps/web/                            frontend React, TypeScript e MapLibre
 database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
 tools/importer/GeoMap.Contract/        validador do contrato de importação v0.1
+tools/importer/GeoMap.Importer/        importador transacional do contrato v0.1
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
+tests/GeoMap.Importer.Tests/        testes do parser, CLI e identidade
 tests/integration/                  testes reais de schema, integridade e datasets
 .github/workflows/                  CI do backend, frontend e PostGIS
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos e o contrato GeoMap v0.1 validável estão implementados. O importador do contrato e os demais endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, o contrato GeoMap v0.1 e seu importador inicial estão implementados. O transporte de importação por streaming e os demais itens finais pertencem às próximas Issues.
 
 ## Documentação
 

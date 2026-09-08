@@ -162,11 +162,18 @@ Cada posição contém exatamente `[x, y]`. Coordenadas Z são rejeitadas, sem d
 
 A versão inicial limita o documento a 50 MiB e 10.000 feições, além de limites por geometria e `properties`. Campos estruturais desconhecidos são rejeitados; apenas o conteúdo de `properties` é extensível. Versões futuras exigem validador próprio e não sofrem downgrade silencioso. A Issue #16 poderá adicionar transporte por streaming preservando o modelo lógico.
 
+## DEC-022 — Reimportação como substituição atômica do snapshot da rede
+
+Status: aprovada.
+
+O arquivo `.geomap.json` v0.1 representa o estado completo de uma rede. O importador valida o documento integralmente antes de abrir a persistência e, em uma única transação, cria ou atualiza o projeto e a rede, substitui as feições anteriores e insere o novo snapshot. Um advisory lock transacional derivado do ID da rede impede duas substituições concorrentes da mesma rede.
+
+Projeto e rede recebem UUIDs determinísticos derivados de `sourceSystem` e dos respectivos `externalId`. Feições com `sourceId` usam rede + `sourceType` + `sourceId`; feições anônimas usam sua posição no documento. Assim, a reimportação idêntica mantém IDs e quantidade, enquanto qualquer falha provoca rollback e preserva o snapshot anterior. A transformação espacial usa o EPSG declarado e as definições instaladas no PostGIS, armazenando sempre EPSG:4326.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
 |---|---|---|
-| PEND-003 | Estratégia de reimportação e idempotência | Issues #14 e #15 |
 | PEND-007 | Estratégia de hospedagem do protótipo | após fluxo local |
 | PEND-008 | Primeiro dataset real e autorização de uso | Issue #17 |
 
