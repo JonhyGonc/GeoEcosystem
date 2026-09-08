@@ -91,4 +91,19 @@ O banco continha simultaneamente SMALL, MEDIUM e LARGE, totalizando exatamente 1
 
 A especificação do arquivo `.geomap.json`, seus limites, códigos de erro e exemplos ficam em [docs/IMPORT_CONTRACT.md](../../docs/IMPORT_CONTRACT.md) e [contracts/geomap/0.1/examples](../../contracts/geomap/0.1/examples). O validador reutilizável está em `GeoMap.Contract` e faz parte da solução principal.
 
-O gerador de datasets deste diretório continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato. A Issue #15 utilizará o validador antes de persistir um documento, e a Issue #16 adicionará o fluxo apropriado para volumes superiores aos limites do JSON inicial.
+## Importador inicial
+
+O projeto `GeoMap.Importer` importa um arquivo v0.1 limitado. Com a migration 001 aplicada:
+
+~~~bash
+export GEOMAP_DB_CONNECTION_STRING='Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only'
+
+dotnet run --project tools/importer/GeoMap.Importer -- \
+  --file contracts/geomap/0.1/examples/valid-linestring.geomap.json
+~~~
+
+No PowerShell, defina a conexão com `$env:GEOMAP_DB_CONNECTION_STRING = '...'` e use o mesmo comando `dotnet run`, trocando `\` por crase para continuar a linha quando necessário.
+
+O resultado é JSON e contém sucesso, totais recebidos/importados/rejeitados/substituídos, IDs de projeto e rede, duração e erros. O arquivo inteiro é validado antes do banco; a gravação substitui atomicamente o snapshot da rede e transforma o EPSG declarado para 4326. Reimportar o mesmo arquivo mantém os IDs e não duplica feições.
+
+O gerador de datasets continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato. A Issue #16 adicionará o fluxo apropriado para volumes superiores aos limites do JSON inicial.

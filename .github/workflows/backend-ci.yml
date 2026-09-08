@@ -112,6 +112,75 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < database/migrations/001_initial_spatial_model.up.sql
 
+      - name: Build initial GeoMap importer
+        run: |
+          dotnet restore tools/importer/GeoMap.Importer/GeoMap.Importer.csproj
+          dotnet build tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-restore
+
+      - name: Import and verify GeoMap SMALL contract
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-small-import.py \
+            /tmp/geomap-issue-15-small.geomap.json \
+            /tmp/geomap-issue-15-invalid.geomap.json
+
+          /usr/bin/time --verbose \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-issue-15-small.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-initial-import.sql
+
+      - name: Verify atomic and idempotent reimport
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          NETWORK_STATE_SQL="SELECT count(*)::text || '|' || md5(string_agg(id::text, ',' ORDER BY id)) FROM network_features WHERE network_id = (SELECT id FROM networks WHERE name = 'Drenagem Issue 15 SMALL');"
+          BEFORE_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-15-small.geomap.json
+
+          AFTER_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$BEFORE_REIMPORT" = "$AFTER_REIMPORT"
+
+          if dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-15-invalid.geomap.json; then
+            echo "Invalid import unexpectedly succeeded"
+            exit 1
+          fi
+
+          AFTER_INVALID="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$AFTER_REIMPORT" = "$AFTER_INVALID"
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-initial-import.sql
+
       - name: Build dataset generator
         run: |
           dotnet restore tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj

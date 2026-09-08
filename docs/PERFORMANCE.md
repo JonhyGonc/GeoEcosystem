@@ -56,6 +56,10 @@ No cenário reproduzível LARGE em zoom 15, o tile deve permanecer abaixo de 512
 
 Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; a carga LARGE deverá usar a representação por streaming da Issue #16.
 
+### PERF-012 — Importação inicial limitada e transacional
+
+O importador da Issue #15 carrega somente um documento v0.1 já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica. O transporte LARGE não é aplicado a este formato; a Issue #16 deverá processá-lo em lotes ou streaming com memória limitada.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;
