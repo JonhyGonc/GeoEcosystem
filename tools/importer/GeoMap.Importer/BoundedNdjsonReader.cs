@@ -82,7 +82,11 @@ public static class BoundedNdjsonReader
     {
         var value = memory.Span;
         if (value.Length > 0 && value[^1] == (byte)'\r') value = value[..^1];
-        if (lineNumber == 1 && value.StartsWith([0xef, 0xbb, 0xbf])) value = value[3..];
+        if (lineNumber == 1 && value.Length >= 3 &&
+            value[0] == 0xef && value[1] == 0xbb && value[2] == 0xbf)
+        {
+            value = value[3..];
+        }
         return new(lineNumber, value.ToArray());
     }
 }
