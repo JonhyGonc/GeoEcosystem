@@ -57,7 +57,7 @@ VALUES
         'outside',
         'SPATIAL-QUERY-TEST',
         'TestLineString',
-        '{"position":"outside"}'::jsonb),
+        '{}'::jsonb),
     (
         '62000000-0000-4000-8000-000000000004',
         '61000000-0000-4000-8000-000000000002',

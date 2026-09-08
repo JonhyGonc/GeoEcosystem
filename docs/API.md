@@ -59,6 +59,36 @@ Exemplo para a região do dataset sintético:
 GET /api/projects/{projectId}/networks/{networkId}/tiles/15/11938/18866.mvt
 ~~~
 
+## Detalhe da feição selecionada
+
+~~~http
+GET /api/projects/{projectId}/networks/{networkId}/features/{featureId}
+~~~
+
+Retorna os atributos básicos de uma única feição selecionada. Os três identificadores são UUIDs obrigatórios e devem corresponder ao mesmo contexto. Uma feição inexistente, pertencente a outra rede ou vinculada a outro projeto retorna HTTP 404.
+
+Exemplo resumido:
+
+~~~json
+{
+  "projectId": "60000000-0000-4000-8000-000000000001",
+  "id": "62000000-0000-4000-8000-000000000001",
+  "networkId": "61000000-0000-4000-8000-000000000001",
+  "networkName": "Drenagem principal",
+  "networkType": "stormwater",
+  "sourceId": "DREN-001",
+  "sourceLayer": "DRENAGEM",
+  "sourceType": "Polyline",
+  "properties": {
+    "material": "PVC",
+    "diameter": 300
+  },
+  "createdAt": "2026-09-08T12:00:00Z"
+}
+~~~
+
+A resposta não repete a geometria. `properties` é sempre um objeto JSON, podendo estar vazio; `sourceId` e `sourceLayer` podem ser nulos. O timeout do banco é de 5 segundos. Não existe endpoint para percorrer os atributos de uma rede inteira.
+
 ## Consulta espacial por região
 
 ~~~http

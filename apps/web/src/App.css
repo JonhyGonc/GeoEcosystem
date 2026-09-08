@@ -101,7 +101,9 @@
   bottom: 76px;
   left: 20px;
   width: min(390px, calc(100% - 40px));
+  max-height: min(58vh, 560px);
   padding: 15px 16px;
+  overflow-y: auto;
   border: 1px solid rgb(24 68 89 / 14%);
   border-radius: 10px;
   color: #254b5d;
@@ -144,25 +146,25 @@
   font-size: 1rem;
 }
 
-.selection-summary dl {
+.selection-summary > dl {
   display: grid;
   gap: 7px;
   margin: 13px 0;
 }
 
-.selection-summary dl div {
+.selection-summary > dl div {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 8px;
 }
 
-.selection-summary dt {
+.selection-summary > dl dt {
   color: #718690;
   font-size: 0.78rem;
   font-weight: 700;
 }
 
-.selection-summary dd {
+.selection-summary > dl dd {
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -170,6 +172,70 @@
   font-size: 0.8rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.selection-summary__attributes {
+  padding: 12px 0 13px;
+  border-top: 1px solid #e1ecef;
+}
+
+.selection-summary__attributes h3 {
+  margin: 0 0 10px;
+  color: #12364a;
+  font-size: 0.92rem;
+}
+
+.selection-summary__metadata,
+.selection-summary__properties {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.selection-summary__properties {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #d9e7eb;
+}
+
+.selection-summary__metadata div,
+.selection-summary__properties div {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+}
+
+.selection-summary__metadata dt,
+.selection-summary__properties dt {
+  overflow: hidden;
+  color: #718690;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.selection-summary__metadata dd,
+.selection-summary__properties dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #345767;
+  font-size: 0.875rem;
+}
+
+.selection-summary__message,
+.selection-summary__feedback p {
+  margin: 0;
+  color: #617985;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.selection-summary__feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .selection-summary button {
@@ -193,6 +259,10 @@
 .selection-summary button:focus-visible {
   outline: 3px solid rgb(45 122 151 / 28%);
   outline-offset: 2px;
+}
+
+.selection-summary__clear {
+  width: 100%;
 }
 
 .layer-control {
@@ -403,6 +473,7 @@
     bottom: 82px;
     left: 12px;
     width: calc(100% - 24px);
+    max-height: 50vh;
   }
 
   .layer-control {

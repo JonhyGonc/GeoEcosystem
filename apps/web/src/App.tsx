@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import { LayerControl } from './LayerControl'
 import { SelectionSummary } from './SelectionSummary'
+import {
+  fetchFeatureDetails,
+  type FeatureDetailsState,
+} from './api/featureDetails'
 import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
 import {
   createNetworkLayerViews,
@@ -35,6 +39,10 @@ function App({ configuration = networkConfiguration }: AppProps) {
   )
   const [selectedFeature, setSelectedFeature] =
     useState<SelectedNetworkFeature | null>(null)
+  const [featureDetails, setFeatureDetails] = useState<FeatureDetailsState>({
+    kind: 'idle',
+  })
+  const [detailsRevision, setDetailsRevision] = useState(0)
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -81,6 +89,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
     layerController.current?.cleanup()
     layerController.current = null
     setSelectedFeature(null)
+    setFeatureDetails({ kind: 'idle' })
     setLayers([])
     setNetworkStatus(initialNetworkStatus(configuration))
     if (configuration.kind !== 'ready') return
@@ -110,7 +119,10 @@ function App({ configuration = networkConfiguration }: AppProps) {
               ),
             )
           },
-          setSelectedFeature,
+          (selection) => {
+            setSelectedFeature(selection)
+            setFeatureDetails(selection ? { kind: 'loading' } : { kind: 'idle' })
+          },
         )
       })
       .catch((error: unknown) => {
@@ -130,6 +142,35 @@ function App({ configuration = networkConfiguration }: AppProps) {
       layerController.current = null
     }
   }, [configuration, styleRevision])
+
+  useEffect(() => {
+    if (!selectedFeature || configuration.kind !== 'ready') return
+
+    const abortController = new AbortController()
+    void fetchFeatureDetails(
+      configuration.value,
+      selectedFeature,
+      abortController.signal,
+    )
+      .then((details) => {
+        if (abortController.signal.aborted) return
+        setFeatureDetails(
+          details ? { kind: 'ready', details } : { kind: 'not-found' },
+        )
+      })
+      .catch((error: unknown) => {
+        if (abortController.signal.aborted) return
+        setFeatureDetails({
+          kind: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível carregar os atributos',
+        })
+      })
+
+    return () => abortController.abort()
+  }, [configuration, detailsRevision, selectedFeature])
 
   const changeVisibility = (networkId: string, visible: boolean) => {
     layerController.current?.setVisibility(networkId, visible)
@@ -184,7 +225,12 @@ function App({ configuration = networkConfiguration }: AppProps) {
       {selectedFeature && (
         <SelectionSummary
           selection={selectedFeature}
+          detailsState={featureDetails}
           onClear={() => layerController.current?.clearSelection()}
+          onRetry={() => {
+            setFeatureDetails({ kind: 'loading' })
+            setDetailsRevision((revision) => revision + 1)
+          }}
         />
       )}
 

@@ -111,7 +111,9 @@ Cada rede possui uma camada de destaque `geomap-network-selection-{networkId}`, 
 
 ## Fluxo de atributos
 
-O cartão de seleção apresenta somente rede, tipo e identificador mínimo presente no tile. A consulta detalhada futura buscará uma única feição ou um conjunto pequeno, sem embutir propriedades pesadas em todos os tiles.
+Após a seleção, o frontend solicita `GET /api/projects/{projectId}/networks/{networkId}/features/{featureId}`. A API exige os três UUIDs no mesmo contexto e consulta uma única linha pela chave da feição, vinculada à rede e ao projeto. Uma combinação inexistente ou cruzada retorna HTTP 404 sem indicar se a feição existe em outro contexto.
+
+A resposta contém os metadados básicos de origem, data de registro e o objeto `properties`; a geometria permanece no MVT e não é repetida. O frontend cancela a requisição anterior ao trocar a seleção e apresenta carregamento, propriedades vazias, ausência e falha. O painel é somente leitura e não introduz edição de geometria ou atributos.
 
 ## Mapa base
 

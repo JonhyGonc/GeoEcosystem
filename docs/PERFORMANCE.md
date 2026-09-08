@@ -149,6 +149,12 @@ A identificação acontece somente em resposta ao clique, por `queryRenderedFeat
 
 Os testes do frontend cobrem seleção, troca, limpeza, clique sem feição, sobreposição pela ordem visual, ocultação da rede selecionada e remoção segura das camadas. A Backend CI continua validando o dataset LARGE com 1.000.000 de feições, payload máximo de 512 KiB e p95 máximo de 100 ms. Esta Issue não altera SQL, índice, conteúdo MVT ou limites do backend.
 
+## Validação de atributos sob demanda — Issue #13
+
+O detalhe consulta uma única feição por sua chave primária e confirma a rede e o projeto por junção relacional. A geometria não é lida nem serializada, o JSONB não é repetido nos tiles e a chamada ocorre somente após uma seleção válida. Trocar ou limpar a seleção cancela a requisição anterior no navegador.
+
+A integração verifica resposta existente, propriedades vazias e variáveis, HTTP 404 para ausência e isolamento entre projetos e redes. A Backend CI também consulta uma feição da rede LARGE enquanto 1.000.000 de feições estão carregadas, além de preservar as guardas quantitativas do MVT. Não foi introduzida rota para listar atributos ou carregar a rede completa.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;
