@@ -102,13 +102,26 @@ Com base no baseline da Issue #7, o cenário LARGE no tile de referência em zoo
 
 As guardas detectam regressões grosseiras e não constituem SLA de produção. O baseline observado foi 171.200 bytes e p95 de 32,423 ms, deixando margem para variação de runner e evolução moderada. Metas de experiência do mapa completo serão revistas após o frontend e uma rede CAD real.
 
+## DEC-016 — OpenStreetMap Standard como mapa base inicial
+
+Status: aprovada.
+
+O Protótipo 0.1 usará inicialmente os tiles raster XYZ do OpenStreetMap Standard em `https://tile.openstreetmap.org/{z}/{x}/{y}.png`, sem chave ou assinatura. A atribuição visível `© OpenStreetMap contributors`, vinculada à página de copyright, é obrigatória.
+
+A escolha vale apenas para desenvolvimento e demonstração interna de baixo tráfego. O serviço público é oferecido sem SLA, exige respeito ao cache e não permite download em massa, varredura, prefetch ou uso offline. Uma implantação pública ou de alto tráfego deverá usar provedor compatível ou fonte própria após nova avaliação dos termos.
+
+URL, nome, tamanho de tile, limites de zoom e atribuição ficam centralizados em configuração validada. Fontes personalizadas exigem atribuição explícita. IDs `basemap-*` são reservados ao fundo e `geomap-*` às redes, permitindo trocar apenas a fonte base sem remover camadas GeoMap.
+
+Somente raster XYZ está implementado. WMS, WMTS, ortofoto própria e COG permanecem extensões previstas, condicionadas a necessidade, licença e medições futuras.
+
+Referências: [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/), [Copyright e licença do OpenStreetMap](https://www.openstreetmap.org/copyright) e [fonte raster no MapLibre](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-raster-tile-source/).
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
 |---|---|---|
 | PEND-002 | Política de importação para coordenada Z: rejeitar ou descartar antes da normalização 2D | Issue #14 |
 | PEND-003 | Estratégia de reimportação e idempotência | Issues #14 e #15 |
-| PEND-004 | Provedor gratuito inicial do mapa base e seus termos | Issue #9 |
 | PEND-006 | Formato físico inicial do contrato e pacote | Issue #14 |
 | PEND-007 | Estratégia de hospedagem do protótipo | após fluxo local |
 | PEND-008 | Primeiro dataset real e autorização de uso | Issue #17 |

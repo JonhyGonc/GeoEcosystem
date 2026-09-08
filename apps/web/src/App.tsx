@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as maplibregl from 'maplibre-gl'
+import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
 import './App.css'
-
-const DEMO_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
 
 function App() {
   const mapContainer = useRef<HTMLDivElement>(null)
@@ -14,11 +13,12 @@ function App() {
 
     const map = new maplibregl.Map({
       container: mapContainer.current,
-      style: DEMO_STYLE_URL,
+      style: buildBaseMapStyle(baseMapConfig),
       center: [-48.845, -26.304],
       zoom: 13,
       minZoom: 1,
       maxZoom: 22,
+      attributionControl: { compact: false },
     })
 
     map.addControl(
@@ -53,7 +53,7 @@ function App() {
 
       <aside className="map-status" aria-label="Status do mapa">
         <span className="map-status__dot" aria-hidden="true" />
-        <span>Mapa interativo disponível</span>
+        <span>Mapa base: {baseMapConfig.name}</span>
       </aside>
     </main>
   )

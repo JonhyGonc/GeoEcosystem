@@ -90,11 +90,12 @@ dotnet test GeoMap.sln --configuration Release --no-build
 
 ~~~bash
 cd apps/web
+cp .env.example .env
 npm ci
 npm run dev
 ~~~
 
-Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O estilo público de demonstração usado nesta fundação não exige chave; a fonte configurável será tratada na Issue #9.
+Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O padrão usa OpenStreetMap Standard sem chave e mantém sua atribuição visível. Consulte [apps/web/README.md](apps/web/README.md) para trocar a fonte e conhecer os limites de uso.
 
 Antes de enviar uma alteração do frontend:
 
@@ -160,7 +161,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais e a fundação do frontend estão implementados. O mapa base configurável, a ligação das redes ao mapa, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend e o mapa base configurável estão implementados. A ligação das redes ao mapa, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 
