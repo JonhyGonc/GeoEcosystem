@@ -122,4 +122,13 @@ O lote padrão é 10.000 e aceita valores de 100 a 50.000. Eventos compactos `pr
 
 Os lotes usam uma tabela temporária da sessão. Mesmo após vários lotes concluídos, a rede pública só é substituída na transação final. Arquivo inválido, duplicata, erro do PostGIS ou `Ctrl+C` fecham a sessão e preservam o snapshot anterior.
 
+Baseline da CI da Issue #16:
+
+| Perfil | Feições | Tamanho | Lote | Tempo | Pico de memória |
+|---|---:|---:|---:|---:|---:|
+| MEDIUM | 100.000 | 27.766.036 bytes | 10.000 | 7,35 s | 123.608 KiB |
+| LARGE | 1.000.000 | 275.666.232 bytes | 25.000 | 50,26 s | 123.432 KiB |
+
+Os dois processos permaneceram em aproximadamente 121 MiB, apesar do arquivo LARGE ter dez vezes mais feições. As medições incluem inicialização, validação, staging, transformação e commit no runner Ubuntu hospedado.
+
 O gerador de datasets continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato.

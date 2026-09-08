@@ -66,7 +66,14 @@ No baseline da CI da Issue #15, um documento de 265.218 bytes com 1.000 `LineStr
 
 O transporte `.geomap.ndjson` lê blocos de 64 KiB, limita cada registro a 16 MiB e mantém em memória somente o registro atual e o lote configurado. A tabela temporária recebe os lotes por `COPY`; o tamanho total do arquivo não é materializado no processo. A CI gera, importa e mede MEDIUM com 100.000 feições e LARGE com 1.000.000, verificando contagem, geometria, propriedades, reimportação e falha após um lote já confirmado no staging.
 
-Os tempos, tamanhos e picos de memória observados serão registrados após a primeira execução verde da CI da Issue #16. Os valores são baseline do runner hospedado, não SLA.
+No baseline verde da CI da Issue #16:
+
+| Perfil | Feições | Arquivo | Lote | Tempo total | Memória residente máxima |
+|---|---:|---:|---:|---:|---:|
+| MEDIUM | 100.000 | 27.766.036 bytes | 10.000 | 7,35 s | 123.608 KiB |
+| LARGE | 1.000.000 | 275.666.232 bytes | 25.000 | 50,26 s | 123.432 KiB |
+
+O crescimento de dez vezes na quantidade e no arquivo não aumentou o pico observado do processo, que permaneceu em aproximadamente 121 MiB. Isso confirma o objetivo de memória independente do total de feições para esse cenário. Os tempos incluem inicialização de `dotnet run --no-build`, validação, `COPY`, transformação e commit final no runner Ubuntu hospedado; são baseline reproduzível do protótipo, não SLA.
 
 ## Práticas de consulta
 
