@@ -1,0 +1,30 @@
+{
+  "contractVersion": "0.1",
+  "sourceSystem": "Generic GIS",
+  "sourceCrs": "EPSG:4326",
+  "units": "degree",
+  "project": {
+    "externalId": "project-002",
+    "name": "Projeto interoperável"
+  },
+  "network": {
+    "externalId": "network-002",
+    "name": "Rede sanitária",
+    "type": "sewer"
+  },
+  "exportedAt": "2026-09-08T14:00:00Z",
+  "features": [
+    {
+      "sourceId": "feature-002",
+      "sourceType": "MultiLine",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [[-48.8500, -26.3000], [-48.8490, -26.2990]],
+          [[-48.8490, -26.2990], [-48.8480, -26.2980]]
+        ]
+      },
+      "properties": {}
+    }
+  ]
+}

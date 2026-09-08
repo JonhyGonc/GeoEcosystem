@@ -152,13 +152,21 @@ Os atributos básicos de uma feição serão obtidos por `GET /api/projects/{pro
 
 A resposta inclui identificadores, nome e tipo da rede, metadados de origem, data de registro e o objeto JSONB `properties`. A geometria não é repetida e os tiles continuam contendo apenas `id`. O frontend consulta somente após a seleção, cancela requisições obsoletas e oferece visualização sem edição.
 
+## DEC-021 — Contrato v0.1 em JSON estrito, 2D e limitado
+
+Status: aprovada.
+
+A importação inicial usa um documento JSON UTF-8 com extensão `.geomap.json`, media type `application/vnd.geomap.v0.1+json` e `contractVersion` exata `0.1`. O contrato aceita somente `LineString` e `MultiLineString`, exige CRS no formato EPSG e unidade declarada, e usa tipos neutros sem classes Autodesk.
+
+Cada posição contém exatamente `[x, y]`. Coordenadas Z são rejeitadas, sem descarte implícito. O produtor só pode projetar para 2D antes da exportação quando essa perda for uma decisão explícita fora do contrato.
+
+A versão inicial limita o documento a 50 MiB e 10.000 feições, além de limites por geometria e `properties`. Campos estruturais desconhecidos são rejeitados; apenas o conteúdo de `properties` é extensível. Versões futuras exigem validador próprio e não sofrem downgrade silencioso. A Issue #16 poderá adicionar transporte por streaming preservando o modelo lógico.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
 |---|---|---|
-| PEND-002 | Política de importação para coordenada Z: rejeitar ou descartar antes da normalização 2D | Issue #14 |
 | PEND-003 | Estratégia de reimportação e idempotência | Issues #14 e #15 |
-| PEND-006 | Formato físico inicial do contrato e pacote | Issue #14 |
 | PEND-007 | Estratégia de hospedagem do protótipo | após fluxo local |
 | PEND-008 | Primeiro dataset real e autorização de uso | Issue #17 |
 
