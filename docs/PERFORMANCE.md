@@ -129,6 +129,12 @@ O payload LARGE observado equivale a aproximadamente 167,2 KiB. A CI aplica uma 
 
 O leitor de teste confirmou MVT versão 2, camada `network_features`, extent 4.096, geometrias lineares válidas e identificadores UUID. Memória por tile não foi isolada. Redes CAD reais podem possuir geometrias muito mais complexas que as linhas sintéticas de dois vértices e deverão ser medidas na Issue #17.
 
+## Validação MapLibre com LARGE — Issue #10
+
+A integração do frontend preserva as guardas do endpoint MVT: fonte vetorial limitada aos zooms 14–22, template regional z/x/y e detecção baseada somente nas feições renderizadas no viewport. Testes de contrato verificam a URL exata, a source-layer `network_features`, mudanças de estado em pan/zoom, região vazia, erro isolado e a ausência de qualquer rota de carga integral.
+
+A Backend CI continua sendo a validação integrada com volume: carrega simultaneamente SMALL, MEDIUM e LARGE, incluindo 1.000.000 de feições na rede LARGE, chama o endpoint MVT real e verifica formato, plano espacial, payload máximo de 512 KiB e p95 máximo de 100 ms. A Frontend CI compila a configuração com os identificadores determinísticos dessa rede, ligando o contrato MapLibre ao mesmo cenário. Os números observados mais recentes permanecem no baseline da Issue #7; esta Issue não altera consulta, índice, payload ou limites do backend.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;

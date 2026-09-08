@@ -7,12 +7,14 @@ const mapMocks = vi.hoisted(() => ({
   createMap: vi.fn(),
   createNavigationControl: vi.fn(),
   createScaleControl: vi.fn(),
+  on: vi.fn(() => ({ unsubscribe: vi.fn() })),
   remove: vi.fn(),
 }))
 
 vi.mock('maplibre-gl', () => {
   class Map {
     addControl = mapMocks.addControl
+    on = mapMocks.on
     remove = mapMocks.remove
 
     constructor(options: unknown) {
@@ -47,7 +49,7 @@ describe('GeoMap app', () => {
       screen.getByRole('heading', { level: 1, name: 'GeoMap' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Mapa interativo GeoMap')).toBeInTheDocument()
-    expect(screen.getByText('Mapa base: OpenStreetMap Standard')).toBeInTheDocument()
+    expect(screen.getByText('Rede não configurada')).toBeInTheDocument()
 
     expect(mapMocks.createMap).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -55,7 +57,7 @@ describe('GeoMap app', () => {
         maxZoom: 22,
         minZoom: 1,
         attributionControl: { compact: false },
-        zoom: 13,
+        zoom: 15,
       }),
     )
     expect(mapMocks.createMap.mock.calls[0][0]).toEqual(
@@ -74,6 +76,7 @@ describe('GeoMap app', () => {
       showZoom: true,
       visualizePitch: false,
     })
+    expect(mapMocks.on).toHaveBeenCalledWith('style.load', expect.any(Function))
     expect(mapMocks.addControl).toHaveBeenCalledTimes(2)
 
     unmount()

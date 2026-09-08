@@ -97,6 +97,8 @@ npm run dev
 
 Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O padrão usa OpenStreetMap Standard sem chave e mantém sua atribuição visível. Consulte [apps/web/README.md](apps/web/README.md) para trocar a fonte e conhecer os limites de uso.
 
+Para exibir uma rede, informe `VITE_GEOMAP_PROJECT_ID` e `VITE_GEOMAP_NETWORK_ID` no arquivo `apps/web/.env`. O frontend solicita somente os tiles MVT da região visível; sem esses IDs, o mapa base continua disponível e indica que a rede não está configurada. Consulte [apps/web/README.md](apps/web/README.md) para obter os IDs e ajustar a URL da API.
+
 Antes de enviar uma alteração do frontend:
 
 ~~~bash
@@ -161,7 +163,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend e o mapa base configurável estão implementados. A ligação das redes ao mapa, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável e a visualização de uma rede MVT no MapLibre estão implementados. O importador do contrato, os controles completos de camadas e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 
