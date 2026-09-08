@@ -76,7 +76,9 @@ Responsável por:
 - registrar erros e resumo da importação;
 - limitar uso de memória.
 
-O contrato não depende dos tipos internos do Civil 3D.
+O contrato não depende dos tipos internos do Civil 3D. A versão 0.1 usa um documento `.geomap.json` UTF-8 estrito para a importação inicial. O módulo `GeoMap.Contract` valida versão, campos, CRS EPSG, unidades, limites, identidade de origem e geometrias `LineString` ou `MultiLineString` antes de qualquer persistência.
+
+Posições são estritamente 2D; Z é rejeitado para impedir perda silenciosa. O documento limitado atende à Issue #15. A representação por streaming da Issue #16 deverá preservar os mesmos objetos lógicos e códigos de erro.
 
 ### Civil 3D Exporter
 

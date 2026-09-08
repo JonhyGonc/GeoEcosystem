@@ -52,6 +52,10 @@ Endpoints e importadores devem possuir limites documentados de tamanho, timeout 
 
 No cenário reproduzível LARGE em zoom 15, o tile deve permanecer abaixo de 512 KiB e o p95 de 30 chamadas HTTP aquecidas deve permanecer abaixo de 100 ms em runner equivalente ao baseline. Esses valores são guardas de regressão do protótipo, não SLA de produção.
 
+### PERF-011 — Limites do contrato inicial
+
+Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; a carga LARGE deverá usar a representação por streaming da Issue #16.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;
@@ -154,6 +158,12 @@ Os testes do frontend cobrem seleção, troca, limpeza, clique sem feição, sob
 O detalhe consulta uma única feição por sua chave primária e confirma a rede e o projeto por junção relacional. A geometria não é lida nem serializada, o JSONB não é repetido nos tiles e a chamada ocorre somente após uma seleção válida. Trocar ou limpar a seleção cancela a requisição anterior no navegador.
 
 A integração verifica resposta existente, propriedades vazias e variáveis, HTTP 404 para ausência e isolamento entre projetos e redes. A Backend CI também consulta uma feição da rede LARGE enquanto 1.000.000 de feições estão carregadas, além de preservar as guardas quantitativas do MVT. Não foi introduzida rota para listar atributos ou carregar a rede completa.
+
+## Validação do contrato — Issue #14
+
+O contrato inicial impede documentos JSON sem limite: 50 MiB, 10.000 feições, 100.000 vértices por feição e limites próprios para `properties`. Isso não substitui o streaming necessário ao LARGE; separa deliberadamente a importação inicial da solução de escala da Issue #16.
+
+O validador percorre o documento uma vez após o parse, não realiza acesso ao banco e devolve códigos e caminhos estáveis. Os testes cobrem exemplos válidos de LineString/MultiLineString, versão e CRS inválidos, Z, geometria não suportada, limite de propriedades, compatibilidade estrita e identidade de origem duplicada. A Issue não altera consultas, tiles ou o baseline LARGE existente.
 
 ## Antipadrões proibidos
 

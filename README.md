@@ -166,6 +166,7 @@ apps/api/GeoMap.Api/                API mínima ASP.NET Core
 apps/web/                            frontend React, TypeScript e MapLibre
 database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
+tools/importer/GeoMap.Contract/        validador do contrato de importação v0.1
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
 tests/integration/                  testes reais de schema, integridade e datasets
@@ -173,7 +174,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção e a consulta de atributos básicos estão implementados. O importador do contrato e os demais endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos e o contrato GeoMap v0.1 validável estão implementados. O importador do contrato e os demais endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 

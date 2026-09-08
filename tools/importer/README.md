@@ -85,3 +85,10 @@ O banco continha simultaneamente SMALL, MEDIUM e LARGE, totalizando exatamente 1
 - O dataset é artificial e contém segmentos lineares simples; não representa toda a complexidade de uma rede CAD real.
 - O tamanho inclui os três perfis e todos os índices de `network_features`.
 - Consultas espaciais, planos com `EXPLAIN`, tiles e metas de latência pertencem às Issues #6 e #7.
+
+
+## Contrato de importação GeoMap v0.1
+
+A especificação do arquivo `.geomap.json`, seus limites, códigos de erro e exemplos ficam em [docs/IMPORT_CONTRACT.md](../../docs/IMPORT_CONTRACT.md) e [contracts/geomap/0.1/examples](../../contracts/geomap/0.1/examples). O validador reutilizável está em `GeoMap.Contract` e faz parte da solução principal.
+
+O gerador de datasets deste diretório continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato. A Issue #15 utilizará o validador antes de persistir um documento, e a Issue #16 adicionará o fluxo apropriado para volumes superiores aos limites do JSON inicial.

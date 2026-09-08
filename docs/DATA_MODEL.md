@@ -71,7 +71,7 @@ O CRS canônico de armazenamento é **EPSG:4326 (WGS 84), em longitude/latitude*
 
 - Toda entrada deve declarar seu CRS de origem.
 - A transformação para EPSG:4326 acontece antes ou durante a importação.
-- A coluna é 2D. A Issue #14 decidirá se valores Z recebidos serão rejeitados ou descartados explicitamente.
+- A coluna e o contrato v0.1 são 2D. Posições com Z são rejeitadas; nenhum componente pode descartar Z silenciosamente.
 - Para MVT, o envelope do tile em EPSG:3857 deverá ser transformado para EPSG:4326 antes do filtro espacial, preservando o uso do índice GiST. A geometria selecionada poderá então ser transformada para EPSG:3857.
 - Cálculos métricos futuros devem transformar a geometria para um CRS projetado adequado ou usar outra estratégia explicitamente documentada.
 
@@ -83,7 +83,7 @@ EPSG:4326 foi escolhido como formato canônico único para simplificar múltipla
 - Exclusão de Network remove suas NetworkFeatures por cascade.
 - Não há endpoint de exclusão nesta etapa.
 - source_id, quando informado, é único dentro da combinação network_id + source_type.
-- A estratégia completa de reimportação permanece para as Issues #14 e #15.
+- A estratégia completa de reimportação permanece para a Issue #15; dentro de um documento v0.1, `sourceType` + `sourceId` não pode se repetir.
 - Índices B-tree existem nas FKs project_id e network_id.
 - ix_network_features_geometry usa GiST.
 - Não há índice JSONB sem uma consulta real que o justifique.
