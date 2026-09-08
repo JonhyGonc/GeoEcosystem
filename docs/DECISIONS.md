@@ -136,6 +136,14 @@ Cada rede recebe fonte e camada MapLibre próprias, com IDs derivados de seu UUI
 
 `VITE_GEOMAP_PROJECT_ID` define o projeto atual. `VITE_GEOMAP_NETWORK_ID` passa a ser opcional e, quando pertence ao catálogo, indica a única camada inicialmente visível; sem ela, todas começam visíveis. A troca futura do projeto reutiliza o mesmo fluxo, removendo as camadas anteriores antes de instalar as novas.
 
+## DEC-019 — Seleção local pela ordem visual do MapLibre
+
+Status: aprovada.
+
+O clique consulta somente as camadas de rede visíveis no ponto indicado e aceita apenas feições cujo `id` MVT seja um UUID válido. Quando houver sobreposição, a primeira feição retornada por `queryRenderedFeatures` é escolhida, acompanhando a ordem visual do MapLibre. Um clique sem feição válida limpa a seleção.
+
+O destaque usa uma camada de linha adicional por rede sobre a mesma fonte MVT e filtra pelo `id` selecionado. A seleção fica no estado local da sessão, sobrevive a zoom e pan e é limpa quando sua rede é ocultada, o projeto muda ou o estilo é reinstalado. Nenhuma geometria é editada e nenhum atributo detalhado é carregado nesta etapa.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

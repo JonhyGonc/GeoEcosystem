@@ -33,6 +33,8 @@ GET /api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt
 
 O endpoint entrega uma camada MVT chamada `network_features`, pronta para ser configurada como fonte vetorial do MapLibre. Cada feição contém somente a geometria recortada ao tile e a propriedade textual `id`; atributos detalhados permanecem fora do tile.
 
+O frontend usa `id` como identificador estável da seleção e como futuro token para consultar uma única feição. O clique e o destaque não criam chamada adicional a este endpoint; a consulta detalhada permanece reservada à Issue #13.
+
 ### Regras
 
 | Entrada ou comportamento | Regra |

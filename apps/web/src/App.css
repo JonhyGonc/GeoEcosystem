@@ -95,6 +95,106 @@
   box-shadow: 0 0 0 3px rgb(200 71 55 / 16%);
 }
 
+.selection-summary {
+  position: absolute;
+  z-index: 2;
+  bottom: 76px;
+  left: 20px;
+  width: min(390px, calc(100% - 40px));
+  padding: 15px 16px;
+  border: 1px solid rgb(24 68 89 / 14%);
+  border-radius: 10px;
+  color: #254b5d;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 12px 32px rgb(20 47 61 / 16%);
+  backdrop-filter: blur(10px);
+}
+
+.selection-summary__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selection-summary__swatch {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(18 54 74 / 20%);
+}
+
+.selection-summary__heading strong,
+.selection-summary__eyebrow {
+  display: block;
+}
+
+.selection-summary__eyebrow {
+  margin-bottom: 2px;
+  color: #63808d;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selection-summary__heading strong {
+  color: #12364a;
+  font-size: 1rem;
+}
+
+.selection-summary dl {
+  display: grid;
+  gap: 7px;
+  margin: 13px 0;
+}
+
+.selection-summary dl div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.selection-summary dt {
+  color: #718690;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.selection-summary dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #345767;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-summary button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #cadde4;
+  border-radius: 7px;
+  color: #285769;
+  background: #f6fafb;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.selection-summary button:hover {
+  border-color: #8fb6c4;
+  background: #edf6f8;
+}
+
+.selection-summary button:focus-visible {
+  outline: 3px solid rgb(45 122 151 / 28%);
+  outline-offset: 2px;
+}
+
 .layer-control {
   position: absolute;
   z-index: 2;
@@ -297,6 +397,12 @@
     bottom: 30px;
     left: 12px;
     max-width: calc(100% - 24px);
+  }
+
+  .selection-summary {
+    bottom: 82px;
+    left: 12px;
+    width: calc(100% - 24px);
   }
 
   .layer-control {

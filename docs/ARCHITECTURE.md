@@ -103,9 +103,15 @@ A API lista `id`, `name` e `type` das redes filtradas por `project_id`, sem aces
 
 A visibilidade é estado local da sessão e muda por `setLayoutProperty`, mantendo as fontes instaladas e permitindo reutilizar o cache de tiles. Zoom e pan não recriam camadas. Ao trocar o projeto configurado, requisições pendentes são canceladas e as camadas anteriores são removidas antes de instalar o novo catálogo. Cores simples e determinísticas diferenciam as redes, sem editor de estilo.
 
+## Seleção de elementos
+
+O clique consulta apenas as camadas de rede visíveis já renderizadas no ponto do mapa. Entre feições sobrepostas, a primeira retornada pelo MapLibre — a visualmente superior — é selecionada quando contém um UUID válido na propriedade MVT `id`. Clicar fora de uma feição válida limpa a seleção; zoom e pan preservam a seleção corrente.
+
+Cada rede possui uma camada de destaque `geomap-network-selection-{networkId}`, ligada à mesma fonte MVT da linha. A seleção altera somente o filtro dessa camada para o identificador escolhido, sem nova consulta à API, duplicação de fonte ou carga integral. Ocultar a rede selecionada, trocar o projeto ou recarregar o estilo limpa a seleção.
+
 ## Fluxo de atributos
 
-A seleção no mapa usa um identificador mínimo presente no tile. A consulta detalhada busca uma única feição ou um conjunto pequeno, sem embutir propriedades pesadas em todos os tiles.
+O cartão de seleção apresenta somente rede, tipo e identificador mínimo presente no tile. A consulta detalhada futura buscará uma única feição ou um conjunto pequeno, sem embutir propriedades pesadas em todos os tiles.
 
 ## Mapa base
 

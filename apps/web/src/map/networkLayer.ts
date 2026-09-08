@@ -1,4 +1,5 @@
 import type {
+  FilterSpecification,
   LayerSpecification,
   MapGeoJSONFeature,
   SourceSpecification,
@@ -10,6 +11,7 @@ export const NETWORK_MAX_ZOOM = 22
 
 const NETWORK_SOURCE_PREFIX = 'geomap-network-source-'
 const NETWORK_LAYER_PREFIX = 'geomap-network-lines-'
+const NETWORK_SELECTION_LAYER_PREFIX = 'geomap-network-selection-'
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const NETWORK_COLORS = [
@@ -75,6 +77,7 @@ export type NetworkStatus =
 
 interface NetworkMapEvent {
   readonly isSourceLoaded?: boolean
+  readonly point?: { readonly x: number; readonly y: number }
   readonly sourceId?: string
 }
 
@@ -89,10 +92,21 @@ export interface NetworkMapTarget {
   getSource(id: string): unknown
   getZoom(): number
   on(
-    event: 'error' | 'idle' | 'movestart' | 'sourcedata' | 'sourcedataloading',
+    event:
+      | 'click'
+      | 'error'
+      | 'idle'
+      | 'movestart'
+      | 'sourcedata'
+      | 'sourcedataloading',
     listener: (event: NetworkMapEvent) => void,
   ): NetworkMapSubscription
-  queryRenderedFeatures(options: { layers: string[] }): MapGeoJSONFeature[]
+  queryRenderedFeatures(
+    geometryOrOptions:
+      | { readonly x: number; readonly y: number }
+      | { layers: string[] },
+    options?: { layers: string[] },
+  ): MapGeoJSONFeature[]
   removeLayer(id: string): unknown
   removeSource(id: string): unknown
   setLayoutProperty(
@@ -100,9 +114,19 @@ export interface NetworkMapTarget {
     name: 'visibility',
     value: 'none' | 'visible',
   ): unknown
+  setFilter(layerId: string, filter: FilterSpecification): unknown
+}
+
+export interface SelectedNetworkFeature {
+  readonly color: string
+  readonly featureId: string
+  readonly networkId: string
+  readonly networkName: string
+  readonly networkType: string
 }
 
 export interface NetworkLayerController {
+  clearSelection(): void
   cleanup(): void
   setVisibility(networkId: string, visible: boolean): void
 }
@@ -205,6 +229,10 @@ export function buildNetworkLayerId(networkId: string): string {
   return `${NETWORK_LAYER_PREFIX}${networkId}`
 }
 
+export function buildNetworkSelectionLayerId(networkId: string): string {
+  return `${NETWORK_SELECTION_LAYER_PREFIX}${networkId}`
+}
+
 export function buildNetworkTileUrl(
   config: NetworkCatalogConfig,
   networkId: string,
@@ -256,11 +284,45 @@ export function buildNetworkLayer(
   }
 }
 
+export function buildNetworkSelectionLayer(
+  network: NetworkLayerView,
+): LayerSpecification {
+  return {
+    id: buildNetworkSelectionLayerId(network.id),
+    type: 'line',
+    source: buildNetworkSourceId(network.id),
+    'source-layer': NETWORK_SOURCE_LAYER,
+    minzoom: NETWORK_MIN_ZOOM,
+    filter: emptySelectionFilter(),
+    layout: {
+      'line-cap': 'round',
+      'line-join': 'round',
+      visibility: network.visible ? 'visible' : 'none',
+    },
+    paint: {
+      'line-color': '#ffd84d',
+      'line-opacity': 1,
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        NETWORK_MIN_ZOOM,
+        6,
+        18,
+        9,
+        NETWORK_MAX_ZOOM,
+        13,
+      ],
+    },
+  }
+}
+
 export function installNetworkLayers(
   map: NetworkMapTarget,
   config: NetworkCatalogConfig,
   networks: readonly NetworkLayerView[],
   updateStatus: (networkId: string, status: NetworkLayerStatus) => void,
+  updateSelection: (selection: SelectedNetworkFeature | null) => void = () => {},
 ): NetworkLayerController {
   const visibility = new Map(
     networks.map((network) => [network.id, network.visible]),
@@ -269,6 +331,10 @@ export function installNetworkLayers(
     networks.map((network) => [buildNetworkSourceId(network.id), network.id]),
   )
   const networkErrors = new Set<string>()
+  const layerToNetwork = new Map(
+    networks.map((network) => [buildNetworkLayerId(network.id), network]),
+  )
+  let selectedFeature: SelectedNetworkFeature | null = null
 
   for (const network of networks) {
     map.addSource(
@@ -276,6 +342,20 @@ export function installNetworkLayers(
       buildNetworkSource(config, network.id),
     )
     map.addLayer(buildNetworkLayer(network))
+    map.addLayer(buildNetworkSelectionLayer(network))
+  }
+
+  const applySelection = (selection: SelectedNetworkFeature | null) => {
+    selectedFeature = selection
+    for (const network of networks) {
+      map.setFilter(
+        buildNetworkSelectionLayerId(network.id),
+        selection?.networkId === network.id
+          ? selectedFeatureFilter(selection.featureId)
+          : emptySelectionFilter(),
+      )
+    }
+    updateSelection(selection)
   }
 
   const updateVisibleState = (network: NetworkLayerView) => {
@@ -336,10 +416,56 @@ export function installNetworkLayers(
       updateStatus(networkId, { kind: 'error', message: 'Falha ao carregar' })
     }
   })
+  const clickSubscription = map.on('click', (event) => {
+    if (!event.point) {
+      applySelection(null)
+      return
+    }
+    const visibleLayerIds = networks
+      .filter((network) => visibility.get(network.id))
+      .map((network) => buildNetworkLayerId(network.id))
+    if (visibleLayerIds.length === 0) {
+      applySelection(null)
+      return
+    }
+
+    const features = map.queryRenderedFeatures(event.point, {
+      layers: visibleLayerIds,
+    })
+    const match = features.find((feature) => {
+      const featureId = feature.properties?.id
+      return (
+        layerToNetwork.has(feature.layer.id) &&
+        typeof featureId === 'string' &&
+        UUID_PATTERN.test(featureId)
+      )
+    })
+    if (!match) {
+      applySelection(null)
+      return
+    }
+
+    const network = layerToNetwork.get(match.layer.id)
+    const featureId = match.properties?.id
+    if (!network || typeof featureId !== 'string') {
+      applySelection(null)
+      return
+    }
+    applySelection({
+      color: network.color,
+      featureId,
+      networkId: network.id,
+      networkName: network.name,
+      networkType: network.type,
+    })
+  })
 
   if (map.getZoom() < NETWORK_MIN_ZOOM) updateVisibleStates()
 
   return {
+    clearSelection() {
+      applySelection(null)
+    },
     setVisibility(networkId, visible) {
       if (!visibility.has(networkId)) return
       visibility.set(networkId, visible)
@@ -349,6 +475,14 @@ export function installNetworkLayers(
         'visibility',
         visible ? 'visible' : 'none',
       )
+      map.setLayoutProperty(
+        buildNetworkSelectionLayerId(networkId),
+        'visibility',
+        visible ? 'visible' : 'none',
+      )
+      if (!visible && selectedFeature?.networkId === networkId) {
+        applySelection(null)
+      }
       updateStatus(
         networkId,
         visible
@@ -364,14 +498,25 @@ export function installNetworkLayers(
       idleSubscription.unsubscribe()
       moveSubscription.unsubscribe()
       errorSubscription.unsubscribe()
+      clickSubscription.unsubscribe()
       for (const network of [...networks].reverse()) {
         const layerId = buildNetworkLayerId(network.id)
+        const selectionLayerId = buildNetworkSelectionLayerId(network.id)
         const sourceId = buildNetworkSourceId(network.id)
+        if (map.getLayer(selectionLayerId)) map.removeLayer(selectionLayerId)
         if (map.getLayer(layerId)) map.removeLayer(layerId)
         if (map.getSource(sourceId)) map.removeSource(sourceId)
       }
     },
   }
+}
+
+function emptySelectionFilter(): FilterSpecification {
+  return ['==', ['get', 'id'], '']
+}
+
+function selectedFeatureFilter(featureId: string): FilterSpecification {
+  return ['==', ['get', 'id'], featureId]
 }
 
 export function summarizeNetworkLayers(

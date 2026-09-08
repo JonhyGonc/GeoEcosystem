@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import { LayerControl } from './LayerControl'
+import { SelectionSummary } from './SelectionSummary'
 import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
 import {
   createNetworkLayerViews,
@@ -15,6 +16,7 @@ import {
   type NetworkLayerView,
   type NetworkMapTarget,
   type NetworkStatus,
+  type SelectedNetworkFeature,
 } from './map/networkLayer'
 import './App.css'
 
@@ -31,6 +33,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() =>
     initialNetworkStatus(configuration),
   )
+  const [selectedFeature, setSelectedFeature] =
+    useState<SelectedNetworkFeature | null>(null)
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -76,6 +80,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
     layerController.current?.cleanup()
     layerController.current = null
+    setSelectedFeature(null)
     setLayers([])
     setNetworkStatus(initialNetworkStatus(configuration))
     if (configuration.kind !== 'ready') return
@@ -105,6 +110,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
               ),
             )
           },
+          setSelectedFeature,
         )
       })
       .catch((error: unknown) => {
@@ -172,6 +178,13 @@ function App({ configuration = networkConfiguration }: AppProps) {
           onVisibilityChange={changeVisibility}
           onShowAll={() => changeAllVisibility(true)}
           onHideAll={() => changeAllVisibility(false)}
+        />
+      )}
+
+      {selectedFeature && (
+        <SelectionSummary
+          selection={selectedFeature}
+          onClear={() => layerController.current?.clearSelection()}
         />
       )}
 
