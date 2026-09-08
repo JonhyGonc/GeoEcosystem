@@ -1,0 +1,116 @@
+.map-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.map-header {
+  position: absolute;
+  z-index: 1;
+  top: 20px;
+  left: 20px;
+  width: min(340px, calc(100% - 96px));
+  padding: 17px 20px 18px;
+  border: 1px solid rgb(24 68 89 / 12%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 12px 32px rgb(20 47 61 / 14%);
+  backdrop-filter: blur(8px);
+}
+
+.map-header__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #41778b;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.map-header h1 {
+  margin: 0;
+  color: #12364a;
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.map-header p {
+  margin: 7px 0 0;
+  color: #536f7c;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.map-status {
+  position: absolute;
+  z-index: 1;
+  bottom: 24px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgb(24 68 89 / 12%);
+  border-radius: 8px;
+  color: #345767;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 8px 20px rgb(20 47 61 / 12%);
+  font-size: 0.82rem;
+  font-weight: 650;
+  backdrop-filter: blur(8px);
+}
+
+.map-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1b8d6b;
+  box-shadow: 0 0 0 3px rgb(27 141 107 / 14%);
+}
+
+.maplibregl-ctrl-group {
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgb(20 47 61 / 16%);
+}
+
+.maplibregl-ctrl-group button {
+  width: 34px;
+  height: 34px;
+}
+
+.maplibregl-ctrl-top-right {
+  top: 10px;
+  right: 10px;
+}
+
+.maplibregl-ctrl-attrib {
+  color: #365b6b;
+}
+
+@media (max-width: 560px) {
+  .map-header {
+    top: 12px;
+    left: 12px;
+    width: calc(100% - 76px);
+    padding: 14px 16px 15px;
+  }
+
+  .map-header p {
+    font-size: 0.82rem;
+  }
+
+  .map-status {
+    bottom: 30px;
+    left: 12px;
+  }
+}

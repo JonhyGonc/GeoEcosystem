@@ -29,7 +29,8 @@ O exportador do Civil 3D será tratado somente depois de o fluxo geográfico web
 
 - Git;
 - Docker Desktop com Docker Compose;
-- .NET 8 SDK, apenas para executar build e testes fora do Docker.
+- .NET 8 SDK, apenas para executar build e testes fora do Docker;
+- Node.js 24, para executar o frontend fora do Docker.
 
 ### Iniciar banco e API
 
@@ -85,6 +86,24 @@ dotnet build GeoMap.sln --configuration Release --no-restore
 dotnet test GeoMap.sln --configuration Release --no-build
 ~~~
 
+### Executar e verificar o frontend
+
+~~~bash
+cd apps/web
+npm ci
+npm run dev
+~~~
+
+Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O estilo público de demonstração usado nesta fundação não exige chave; a fonte configurável será tratada na Issue #9.
+
+Antes de enviar uma alteração do frontend:
+
+~~~bash
+npm run lint
+npm run test
+npm run build
+~~~
+
 ### Gerar dados espaciais de teste
 
 Após aplicar a migration, o gerador carrega dados artificiais reproduzíveis diretamente no PostGIS:
@@ -131,16 +150,17 @@ Use docker compose down --volumes somente quando quiser apagar intencionalmente 
 
 ~~~text
 apps/api/GeoMap.Api/                API mínima ASP.NET Core
+apps/web/                            frontend React, TypeScript e MapLibre
 database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
 tests/integration/                  testes reais de schema, integridade e datasets
-.github/workflows/                  CI do backend e PostGIS
+.github/workflows/                  CI do backend, frontend e PostGIS
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial e o gerador dos datasets SMALL, MEDIUM e LARGE estão implementados. O frontend, os tiles vetoriais, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais e a fundação do frontend estão implementados. O mapa base configurável, a ligação das redes ao mapa, o importador do contrato e os endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 
