@@ -97,6 +97,12 @@ O frontend configura uma fonte vetorial `geomap-network` com o template `/api/pr
 
 Pan e zoom fazem o MapLibre requisitar apenas os tiles necessários para a região visível. A aplicação não usa o endpoint de feições como alternativa nem carrega a rede completa. Eventos da fonte controlam os estados de carregamento, região vazia, conteúdo visível e falha; erros da rede ficam isolados do mapa base.
 
+## Catálogo e controle de camadas
+
+A API lista `id`, `name` e `type` das redes filtradas por `project_id`, sem acessar geometrias ou contar feições. O frontend cria uma fonte e uma camada MapLibre por rede do catálogo; seus identificadores `geomap-network-source-{networkId}` e `geomap-network-lines-{networkId}` evitam colisões.
+
+A visibilidade é estado local da sessão e muda por `setLayoutProperty`, mantendo as fontes instaladas e permitindo reutilizar o cache de tiles. Zoom e pan não recriam camadas. Ao trocar o projeto configurado, requisições pendentes são canceladas e as camadas anteriores são removidas antes de instalar o novo catálogo. Cores simples e determinísticas diferenciam as redes, sem editor de estilo.
+
 ## Fluxo de atributos
 
 A seleção no mapa usa um identificador mínimo presente no tile. A consulta detalhada busca uma única feição ou um conjunto pequeno, sem embutir propriedades pesadas em todos os tiles.

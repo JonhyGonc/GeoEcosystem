@@ -135,6 +135,14 @@ A integração do frontend preserva as guardas do endpoint MVT: fonte vetorial l
 
 A Backend CI continua sendo a validação integrada com volume: carrega simultaneamente SMALL, MEDIUM e LARGE, incluindo 1.000.000 de feições na rede LARGE, chama o endpoint MVT real e verifica formato, plano espacial, payload máximo de 512 KiB e p95 máximo de 100 ms. A Frontend CI compila a configuração com os identificadores determinísticos dessa rede, ligando o contrato MapLibre ao mesmo cenário. Os números observados mais recentes permanecem no baseline da Issue #7; esta Issue não altera consulta, índice, payload ou limites do backend.
 
+## Validação de múltiplas camadas — Issue #11
+
+O catálogo de redes consulta somente a tabela `networks`, filtrada por `project_id` e coberta pelo índice `ix_networks_project_id`; ele não lê geometrias, atributos JSONB ou contagens de feições. Cada camada continua usando o endpoint MVT regional e as mesmas guardas de zoom, payload e latência.
+
+Alternar visibilidade usa a propriedade de layout do MapLibre e não remove nem recria fontes. Assim, pan e zoom preservam a seleção e tiles já obtidos podem permanecer no cache interno. Somente camadas visíveis participam da renderização; projetos com muitas redes oferecem ações combinadas para reduzir o conjunto ativo.
+
+Os testes do frontend verificam alternância individual e combinada, projeto trocado, rede vazia, falha isolada e ausência de carga integral. A Backend CI mantém a carga LARGE de 1.000.000 de feições e as guardas quantitativas do tile; esta Issue não altera a consulta MVT nem seus limites.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;

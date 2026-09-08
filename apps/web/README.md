@@ -47,14 +47,14 @@ O OpenStreetMap Standard é adequado ao protótipo interno de baixo tráfego, ma
 
 Antes de uso público ou de alto tráfego, deve-se contratar um provedor compatível ou hospedar uma fonte própria. Alterar a fonte não autoriza remover os créditos ou ignorar os termos do novo provedor.
 
-## Configurar a rede exibida
+## Configurar as camadas de rede
 
-O frontend carrega uma rede por vez usando o endpoint MVT da API. Preencha no arquivo `.env`:
+O frontend consulta as redes pertencentes ao projeto e cria uma camada MVT para cada uma. Preencha o projeto no arquivo `.env`; a rede inicial é opcional:
 
 ~~~dotenv
 VITE_GEOMAP_API_BASE_URL=/api
 VITE_GEOMAP_PROJECT_ID=UUID_DO_PROJETO
-VITE_GEOMAP_NETWORK_ID=UUID_DA_REDE
+VITE_GEOMAP_NETWORK_ID=UUID_DA_REDE_INICIAL_OPCIONAL
 ~~~
 
 No desenvolvimento, `/api` é encaminhado para `http://localhost:8080`. Em produção, o proxy reverso deverá publicar frontend e API na mesma origem ou `VITE_GEOMAP_API_BASE_URL` deverá apontar para a URL HTTPS da API.
@@ -68,7 +68,9 @@ JOIN networks n ON n.project_id = p.id
 ORDER BY p.created_at DESC, n.created_at DESC;
 ~~~
 
-Sem os dois identificadores, o mapa base abre e informa que nenhuma rede foi configurada. Com a configuração completa, o MapLibre solicita somente os tiles visíveis entre os zooms 14 e 22. A interface diferencia carregamento, região vazia e falha da API sem remover o mapa base. Não existe chamada para carregar uma rede inteira.
+Sem o identificador do projeto, o mapa base abre e informa que o projeto não foi configurado. Com o projeto definido, o controle lista somente suas redes. Se uma rede inicial válida for informada, ela começa visível e as demais ocultas; sem essa preferência, todas começam visíveis.
+
+Cada rede pode ser ligada ou desligada, e os comandos `Mostrar todas` e `Ocultar todas` ajudam em projetos com várias camadas. A troca de visibilidade altera apenas o estilo do MapLibre, preservando as fontes e o estado durante zoom e pan. O mapa solicita somente os tiles visíveis entre os zooms 14 e 22, diferencia carregamento, região vazia e falha e nunca carrega uma rede inteira.
 
 ## Verificações
 
@@ -78,4 +80,4 @@ npm run test
 npm run build
 ~~~
 
-O frontend oferece apenas visualização, zoom e navegação. Não há ferramentas de desenho ou edição.
+O frontend oferece visualização, camadas, zoom e navegação. Não há ferramentas de desenho ou edição.
