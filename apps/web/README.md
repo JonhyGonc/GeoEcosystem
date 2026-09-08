@@ -47,6 +47,29 @@ O OpenStreetMap Standard é adequado ao protótipo interno de baixo tráfego, ma
 
 Antes de uso público ou de alto tráfego, deve-se contratar um provedor compatível ou hospedar uma fonte própria. Alterar a fonte não autoriza remover os créditos ou ignorar os termos do novo provedor.
 
+## Configurar a rede exibida
+
+O frontend carrega uma rede por vez usando o endpoint MVT da API. Preencha no arquivo `.env`:
+
+~~~dotenv
+VITE_GEOMAP_API_BASE_URL=/api
+VITE_GEOMAP_PROJECT_ID=UUID_DO_PROJETO
+VITE_GEOMAP_NETWORK_ID=UUID_DA_REDE
+~~~
+
+No desenvolvimento, `/api` é encaminhado para `http://localhost:8080`. Em produção, o proxy reverso deverá publicar frontend e API na mesma origem ou `VITE_GEOMAP_API_BASE_URL` deverá apontar para a URL HTTPS da API.
+
+Depois de aplicar a migration e carregar um dataset, os identificadores disponíveis podem ser consultados com:
+
+~~~sql
+SELECT p.id AS project_id, n.id AS network_id, p.name AS project, n.name AS network
+FROM projects p
+JOIN networks n ON n.project_id = p.id
+ORDER BY p.created_at DESC, n.created_at DESC;
+~~~
+
+Sem os dois identificadores, o mapa base abre e informa que nenhuma rede foi configurada. Com a configuração completa, o MapLibre solicita somente os tiles visíveis entre os zooms 14 e 22. A interface diferencia carregamento, região vazia e falha da API sem remover o mapa base. Não existe chamada para carregar uma rede inteira.
+
 ## Verificações
 
 ~~~bash

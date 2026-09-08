@@ -8,6 +8,9 @@ interface ImportMetaEnv {
   readonly VITE_BASE_MAP_NAME?: string
   readonly VITE_BASE_MAP_TILE_SIZE?: string
   readonly VITE_BASE_MAP_TILE_URL?: string
+  readonly VITE_GEOMAP_API_BASE_URL?: string
+  readonly VITE_GEOMAP_NETWORK_ID?: string
+  readonly VITE_GEOMAP_PROJECT_ID?: string
 }
 
 interface ImportMeta {

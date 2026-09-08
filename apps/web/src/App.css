@@ -65,7 +65,7 @@
   color: #345767;
   background: rgb(255 255 255 / 94%);
   box-shadow: 0 8px 20px rgb(20 47 61 / 12%);
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 650;
   backdrop-filter: blur(8px);
 }
@@ -76,6 +76,23 @@
   border-radius: 50%;
   background: #1b8d6b;
   box-shadow: 0 0 0 3px rgb(27 141 107 / 14%);
+}
+
+.map-status--loading .map-status__dot {
+  background: #d38a1f;
+  box-shadow: 0 0 0 3px rgb(211 138 31 / 16%);
+}
+
+.map-status--empty .map-status__dot,
+.map-status--unconfigured .map-status__dot,
+.map-status--zoom-required .map-status__dot {
+  background: #718690;
+  box-shadow: 0 0 0 3px rgb(113 134 144 / 16%);
+}
+
+.map-status--error .map-status__dot {
+  background: #c84737;
+  box-shadow: 0 0 0 3px rgb(200 71 55 / 16%);
 }
 
 .maplibregl-ctrl-group {

@@ -91,6 +91,12 @@ Componente futuro, carregado no Civil 3D, responsável apenas por extrair e conv
 5. O PostGIS ou a API produz MVT.
 6. O navegador renderiza o tile e descarta tiles fora da área necessária.
 
+## Integração MapLibre com MVT
+
+O frontend configura uma fonte vetorial `geomap-network` com o template `/api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, a source-layer `network_features` e zoom de 14 a 22. Projeto, rede e base da API são configuração de ambiente validada; uma configuração ausente ou inválida mantém o mapa base funcional e informa o estado ao usuário.
+
+Pan e zoom fazem o MapLibre requisitar apenas os tiles necessários para a região visível. A aplicação não usa o endpoint de feições como alternativa nem carrega a rede completa. Eventos da fonte controlam os estados de carregamento, região vazia, conteúdo visível e falha; erros da rede ficam isolados do mapa base.
+
 ## Fluxo de atributos
 
 A seleção no mapa usa um identificador mínimo presente no tile. A consulta detalhada busca uma única feição ou um conjunto pequeno, sem embutir propriedades pesadas em todos os tiles.

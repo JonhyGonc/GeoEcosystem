@@ -1,10 +1,20 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
+import {
+  initialNetworkStatus,
+  installNetworkLayer,
+  networkConfiguration,
+  type NetworkMapTarget,
+  type NetworkStatus,
+} from './map/networkLayer'
 import './App.css'
 
 function App() {
   const mapContainer = useRef<HTMLDivElement>(null)
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() =>
+    initialNetworkStatus(networkConfiguration),
+  )
 
   useEffect(() => {
     if (!mapContainer.current) {
@@ -15,10 +25,21 @@ function App() {
       container: mapContainer.current,
       style: buildBaseMapStyle(baseMapConfig),
       center: [-48.845, -26.304],
-      zoom: 13,
+      zoom: 15,
       minZoom: 1,
       maxZoom: 22,
       attributionControl: { compact: false },
+    })
+    let detachNetworkLayer: (() => void) | undefined
+
+    const styleSubscription = map.on('style.load', () => {
+      if (networkConfiguration.kind === 'ready') {
+        detachNetworkLayer = installNetworkLayer(
+          map as unknown as NetworkMapTarget,
+          networkConfiguration.value,
+          setNetworkStatus,
+        )
+      }
     })
 
     map.addControl(
@@ -34,7 +55,11 @@ function App() {
       'bottom-right',
     )
 
-    return () => map.remove()
+    return () => {
+      styleSubscription.unsubscribe()
+      detachNetworkLayer?.()
+      map.remove()
+    }
   }, [])
 
   return (
@@ -51,9 +76,13 @@ function App() {
         <p>Visualizador geográfico de redes de tubulação</p>
       </header>
 
-      <aside className="map-status" aria-label="Status do mapa">
+      <aside
+        className={`map-status map-status--${networkStatus.kind}`}
+        aria-label="Status da rede"
+        aria-live="polite"
+      >
         <span className="map-status__dot" aria-hidden="true" />
-        <span>Mapa base: {baseMapConfig.name}</span>
+        <span>{networkStatus.message}</span>
       </aside>
     </main>
   )

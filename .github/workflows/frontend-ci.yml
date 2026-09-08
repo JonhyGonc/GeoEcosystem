@@ -39,4 +39,7 @@ jobs:
         run: npm run test
 
       - name: Build production bundle
+        env:
+          VITE_GEOMAP_PROJECT_ID: 60000000-0000-4000-8000-000000000001
+          VITE_GEOMAP_NETWORK_ID: 61000000-0000-4000-8000-000000000001
         run: npm run build

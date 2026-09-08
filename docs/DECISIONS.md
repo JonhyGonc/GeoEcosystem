@@ -116,6 +116,16 @@ Somente raster XYZ está implementado. WMS, WMTS, ortofoto própria e COG perman
 
 Referências: [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/), [Copyright e licença do OpenStreetMap](https://www.openstreetmap.org/copyright) e [fonte raster no MapLibre](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-raster-tile-source/).
 
+## DEC-017 — Uma rede MVT configurada como primeira integração MapLibre
+
+Status: aprovada.
+
+A primeira integração completa PostGIS → API → MVT → MapLibre exibirá uma rede identificada por `VITE_GEOMAP_PROJECT_ID` e `VITE_GEOMAP_NETWORK_ID`. A fonte vetorial `geomap-network` usa diretamente o endpoint regional de tiles, a source-layer `network_features` e zoom de 14 a 22; a camada de linhas `geomap-network-lines` referencia essa fonte.
+
+O MapLibre decide os tiles necessários a cada viewport, pan e zoom. Não há carregamento integral, prefetch ou fallback pelo endpoint de feições. Estados de carregamento, região vazia e falha são derivados dos eventos da fonte, e uma falha da rede não remove nem bloqueia o mapa base.
+
+Esta etapa limita deliberadamente a interface a uma rede configurada. Seleção de projetos, múltiplas redes e controles completos de camadas pertencem às Issues posteriores.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
