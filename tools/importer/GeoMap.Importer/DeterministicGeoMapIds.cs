@@ -8,10 +8,16 @@ public static class DeterministicGeoMapIds
     private static readonly Guid NamespaceId = new("6a81bc1e-c60a-4d14-8fb8-f96e56b69a75");
 
     public static Guid Project(GeoMapImportDocument document) =>
-        Create($"project\u001f{document.SourceSystem}\u001f{document.Project.ExternalId}");
+        Project(document.Metadata);
+
+    public static Guid Project(GeoMapImportMetadata metadata) =>
+        Create($"project\u001f{metadata.SourceSystem}\u001f{metadata.Project.ExternalId}");
 
     public static Guid Network(Guid projectId, GeoMapImportDocument document) =>
-        Create($"network\u001f{projectId:D}\u001f{document.Network.ExternalId}");
+        Network(projectId, document.Metadata);
+
+    public static Guid Network(Guid projectId, GeoMapImportMetadata metadata) =>
+        Create($"network\u001f{projectId:D}\u001f{metadata.Network.ExternalId}");
 
     public static Guid Feature(Guid networkId, GeoMapImportFeature feature) =>
         feature.SourceId is null

@@ -12,6 +12,14 @@ public sealed record GeoMapImportDocument(
     DateTimeOffset ExportedAt,
     IReadOnlyList<GeoMapImportFeature> Features)
 {
+    public GeoMapImportMetadata Metadata => new(
+        SourceSystem,
+        SourceSrid,
+        Units,
+        Project,
+        Network,
+        ExportedAt);
+
     public static GeoMapImportDocument Parse(ReadOnlyMemory<byte> utf8Json)
     {
         using var document = JsonDocument.Parse(utf8Json);
@@ -66,12 +74,61 @@ public sealed record GeoMapImportDocument(
         }
     }
 
+    public static GeoMapImportMetadata ParseStreamingMetadata(
+        ReadOnlyMemory<byte> utf8Json)
+    {
+        using var document = JsonDocument.Parse(utf8Json);
+        var root = document.RootElement;
+        var project = root.GetProperty("project");
+        var network = root.GetProperty("network");
+        var sourceCrs = root.GetProperty("sourceCrs").GetString()!;
+
+        return new(
+            root.GetProperty("sourceSystem").GetString()!,
+            int.Parse(sourceCrs.AsSpan("EPSG:".Length), CultureInfo.InvariantCulture),
+            root.GetProperty("units").GetString()!,
+            new(
+                project.GetProperty("externalId").GetString()!,
+                project.GetProperty("name").GetString()!),
+            new(
+                network.GetProperty("externalId").GetString()!,
+                network.GetProperty("name").GetString()!,
+                NormalizeNetworkType(network.GetProperty("type").GetString()!)),
+            DateTimeOffset.Parse(
+                root.GetProperty("exportedAt").GetString()!,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal));
+    }
+
+    public static GeoMapImportFeature ParseStreamingFeature(
+        ReadOnlyMemory<byte> utf8Json,
+        int sequence)
+    {
+        using var document = JsonDocument.Parse(utf8Json);
+        var feature = document.RootElement;
+        return new(
+            sequence,
+            OptionalString(feature, "sourceId"),
+            feature.GetProperty("sourceType").GetString()!,
+            OptionalString(feature, "sourceLayer"),
+            feature.GetProperty("geometry").GetRawText(),
+            feature.GetProperty("properties").GetRawText());
+    }
+
     private static string? OptionalString(JsonElement element, string name) =>
         element.TryGetProperty(name, out var value) ? value.GetString() : null;
 
     private static string NormalizeNetworkType(string value) =>
         value.Trim().ToLowerInvariant();
 }
+
+public sealed record GeoMapImportMetadata(
+    string SourceSystem,
+    int SourceSrid,
+    string Units,
+    ImportProject Project,
+    ImportNetwork Network,
+    DateTimeOffset ExportedAt);
 
 public sealed record ImportProject(string ExternalId, string Name);
 

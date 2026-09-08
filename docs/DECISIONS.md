@@ -170,6 +170,14 @@ O arquivo `.geomap.json` v0.1 representa o estado completo de uma rede. O import
 
 Projeto e rede recebem UUIDs determinísticos derivados de `sourceSystem` e dos respectivos `externalId`. Feições com `sourceId` usam rede + `sourceType` + `sourceId`; feições anônimas usam sua posição no documento. Assim, a reimportação idêntica mantém IDs e quantidade, enquanto qualquer falha provoca rollback e preserva o snapshot anterior. A transformação espacial usa o EPSG declarado e as definições instaladas no PostGIS, armazenando sempre EPSG:4326.
 
+## DEC-023 — NDJSON com staging temporário para importação escalável
+
+Status: aprovada.
+
+Grandes volumes usam o transporte UTF-8 `.geomap.ndjson`, media type `application/vnd.geomap.v0.1+ndjson`. A primeira linha contém os metadados do documento sem `features`; cada linha seguinte contém uma única feição do mesmo modelo lógico v0.1. Isso permite validação e leitura sequenciais sem materializar milhões de objetos no processo.
+
+O tamanho padrão do lote é 10.000 feições, configurável entre 100 e 50.000. Cada lote recebe commit em uma tabela temporária exclusiva da sessão; nenhum desses commits altera a rede publicada. Após validar e carregar todas as linhas, uma transação final atualiza os contêineres e substitui o snapshot. Falha, duplicata ou cancelamento antes do commit final preserva integralmente a rede anterior. Um lock de sessão por rede impede concorrência entre importações durante todos os lotes.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

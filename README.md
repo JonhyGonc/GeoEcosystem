@@ -134,6 +134,16 @@ dotnet run --project tools/importer/GeoMap.Importer -- \
 
 O comando valida o documento inteiro antes de gravar, transforma o CRS declarado para EPSG:4326 e emite um resumo JSON. Uma reimportação substitui atomicamente o conteúdo da mesma rede, sem duplicar feições.
 
+Para MEDIUM e LARGE, use o transporte NDJSON e um lote entre 100 e 50.000:
+
+~~~bash
+dotnet run --project tools/importer/GeoMap.Importer -- \
+  --file caminho/rede.geomap.ndjson \
+  --batch-size 10000
+~~~
+
+O progresso de cada lote aparece como JSON em stderr. O leitor não carrega o arquivo inteiro; falha ou `Ctrl+C` preserva o snapshot anterior da rede.
+
 ### Consultar feições por região
 
 A API aceita somente consultas com projeto, rede e bounding box EPSG:4326 explícitos:
@@ -189,7 +199,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, o contrato GeoMap v0.1 e seu importador inicial estão implementados. O transporte de importação por streaming e os demais itens finais pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos e a importação GeoMap v0.1 em JSON ou NDJSON estão implementados. A primeira rede CAD real e o exportador Civil 3D pertencem às próximas Issues.
 
 ## Documentação
 

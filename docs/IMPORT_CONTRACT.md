@@ -58,11 +58,19 @@ Exemplo resumido:
 
 Exemplos executáveis ficam em `contracts/geomap/0.1/examples`.
 
-## Formato físico inicial
+## Formatos físicos
 
 O formato inicial é um único documento JSON UTF-8 com extensão `.geomap.json` e media type `application/vnd.geomap.v0.1+json`. O objeto raiz contém exatamente os metadados e o array `features` descritos neste documento. Não é GeoJSON `FeatureCollection` e não contém classes, assemblies ou nomes de namespace da Autodesk.
 
-Esse documento atende ao importador inicial da Issue #15 e possui limites deliberados. A Issue #16 poderá acrescentar uma representação por streaming ou pacote segmentado preservando os mesmos objetos lógicos e a versão explícita, sem transformar o documento v0.1 em uma carga integral sem limite.
+Para grandes volumes, a mesma versão lógica usa NDJSON UTF-8 com extensão `.geomap.ndjson` e media type `application/vnd.geomap.v0.1+ndjson`:
+
+1. a linha 1 contém todos os campos do objeto raiz, exceto `features`;
+2. cada linha seguinte contém exatamente um objeto de feição;
+3. linhas vazias, comentários e vírgulas finais são inválidos;
+4. LF e CRLF são aceitos; BOM UTF-8 é aceito somente no início do arquivo;
+5. a ordem das feições define a identidade das feições que não possuem `sourceId`.
+
+O exemplo `valid-stream.geomap.ndjson` demonstra os dois tipos geométricos. Os dois transportes preservam os mesmos campos, validações, códigos de erro, IDs determinísticos e semântica de snapshot.
 
 ## CRS, unidades e dimensionalidade
 
@@ -86,6 +94,8 @@ Esse documento atende ao importador inicial da Issue #15 e possui limites delibe
 | profundidade de `properties` | 4 níveis |
 | nome de propriedade | 128 caracteres |
 | string dentro de `properties` | 4.096 caracteres |
+
+No transporte NDJSON, os limites adicionais são 64 KiB para a linha de metadados, 16 MiB por linha de feição e 5.000.000 de feições por arquivo. O leitor usa buffer de 64 KiB e nunca carrega o arquivo inteiro.
 
 `project.externalId`, `network.externalId` e `sourceId` possuem até 255 caracteres. Nomes de projeto e rede possuem até 200 caracteres. O tipo da rede e `sourceType` possuem até 100 caracteres.
 
@@ -139,10 +149,12 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 - `sourceType` + `sourceId` produz uma identidade estável; feições sem `sourceId` dependem da posição no documento;
 - o resumo informa `received`, `imported`, `rejected`, `replaced`, IDs resolvidos, duração e erros.
 
+No NDJSON, lotes temporários recebem commit sem alterar a rede publicada. Somente a transação final substitui o snapshot. O tamanho padrão é 10.000 e pode variar de 100 a 50.000 com `--batch-size`. Cada lote concluído emite um evento JSON `progress` em stderr; o resumo final é emitido em stdout. Cancelamento por `Ctrl+C` retorna `GMI_CANCELLED`, encerra o staging e preserva o snapshot anterior.
+
 Falhas operacionais usam `GMI_FILE_INVALID`, `GMI_CRS_UNAVAILABLE` ou `GMI_PERSISTENCE_FAILED`. Os códigos `GMC_*` permanecem reservados à validação do contrato.
 
 ## Exemplos e testes
 
 Há exemplos válidos de `LineString` e `MultiLineString` e exemplos inválidos de versão, CRS, Z e tipo geométrico. Os testes automatizados executam o mesmo validador que será reutilizado pelo importador, verificam os limites de propriedades, campos futuros incompatíveis e identidades de origem duplicadas.
 
-A integração gera e importa um contrato SMALL com 1.000 feições, confirma transformação de EPSG:31982 para EPSG:4326, propriedades JSONB, reimportação idempotente e preservação do banco após documento inválido. A representação escalável por streaming será definida na Issue #16.
+A integração gera e importa contratos SMALL, MEDIUM e LARGE, confirma propriedades JSONB, validade espacial, contagens, progresso, reimportação idempotente e preservação do banco após falha no meio de um lote. Testes unitários cobrem validação por registro, leitura limitada e cancelamento.

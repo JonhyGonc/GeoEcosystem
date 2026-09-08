@@ -108,4 +108,18 @@ O resultado é JSON e contém sucesso, totais recebidos/importados/rejeitados/su
 
 Na CI da Issue #15, o contrato SMALL gerado possuía 1.000 linhas e 265.218 bytes. A validação, transformação EPSG:31982 → EPSG:4326 e persistência consumiram 3.616 ms no cronômetro interno. A execução fria completa por `dotnet run` consumiu 9,79 s e 127.556 KiB de memória residente máxima no runner Ubuntu.
 
-O gerador de datasets continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato. A Issue #16 adicionará o fluxo apropriado para volumes superiores aos limites do JSON inicial.
+## Importação MEDIUM e LARGE por streaming
+
+O transporte `.geomap.ndjson` possui metadados na primeira linha e uma feição por linha a partir da segunda. Exemplo:
+
+~~~bash
+dotnet run --project tools/importer/GeoMap.Importer -- \
+  --file contracts/geomap/0.1/examples/valid-stream.geomap.ndjson \
+  --batch-size 10000
+~~~
+
+O lote padrão é 10.000 e aceita valores de 100 a 50.000. Eventos compactos `progress` são escritos em stderr após cada lote confirmado no staging; o resumo final formatado é escrito em stdout. O leitor mantém somente um registro e um lote em memória, aceita até 5.000.000 de feições e interrompe em registro acima de 16 MiB.
+
+Os lotes usam uma tabela temporária da sessão. Mesmo após vários lotes concluídos, a rede pública só é substituída na transação final. Arquivo inválido, duplicata, erro do PostGIS ou `Ctrl+C` fecham a sessão e preservam o snapshot anterior.
+
+O gerador de datasets continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato.
