@@ -97,7 +97,11 @@ A seleção no mapa usa um identificador mínimo presente no tile. A consulta de
 
 ## Mapa base
 
-A configuração do frontend deve abstrair a fonte. O MVP poderá apontar para XYZ gratuito compatível com seus termos. A arquitetura deve admitir posteriormente XYZ, WMS, WMTS, ortofoto própria, COG ou provedor comercial sem alterar o modelo das redes.
+O frontend converte uma configuração validada em uma fonte raster XYZ e nas camadas de estilo do mapa base. URL, nome, tamanho de tile, limites de zoom e atribuição são definidos em um único módulo e podem ser substituídos por variáveis de ambiente.
+
+A fonte e as camadas do fundo usam identificadores reservados com prefixo `basemap-`. As camadas das redes devem usar o prefixo `geomap-`. A troca do mapa base remove e recria somente os elementos `basemap-`, inserindo-os antes da primeira camada GeoMap; assim, a visualização das redes permanece independente do provedor.
+
+O padrão inicial é o raster XYZ OpenStreetMap Standard, restrito ao protótipo interno de baixo tráfego e às regras públicas de uso e atribuição do serviço. A arquitetura admite adaptadores posteriores para outro XYZ, WMS, WMTS, ortofoto própria, COG ou provedor comercial sem alterar o modelo das redes. Somente raster XYZ está implementado nesta etapa.
 
 ## Limites entre componentes
 

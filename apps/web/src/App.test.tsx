@@ -47,15 +47,26 @@ describe('GeoMap app', () => {
       screen.getByRole('heading', { level: 1, name: 'GeoMap' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Mapa interativo GeoMap')).toBeInTheDocument()
-    expect(screen.getByText('Mapa interativo disponível')).toBeInTheDocument()
+    expect(screen.getByText('Mapa base: OpenStreetMap Standard')).toBeInTheDocument()
 
     expect(mapMocks.createMap).toHaveBeenCalledWith(
       expect.objectContaining({
         center: [-48.845, -26.304],
         maxZoom: 22,
         minZoom: 1,
-        style: 'https://demotiles.maplibre.org/style.json',
+        attributionControl: { compact: false },
         zoom: 13,
+      }),
+    )
+    expect(mapMocks.createMap.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        style: expect.objectContaining({
+          sources: expect.objectContaining({
+            'basemap-raster-source': expect.objectContaining({
+              attribution: expect.stringContaining('OpenStreetMap contributors'),
+            }),
+          }),
+        }),
       }),
     )
     expect(mapMocks.createNavigationControl).toHaveBeenCalledWith({
