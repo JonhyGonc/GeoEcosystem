@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace GeoMap.Importer.Tests;
 
 public sealed class ImporterCommandOptionsTests
