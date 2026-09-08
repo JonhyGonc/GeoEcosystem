@@ -6,6 +6,12 @@ coverage/
 *.user
 *.suo
 
+# Node.js
+**/node_modules/
+**/dist/
+**/.vite/
+*.tsbuildinfo
+
 # IDE
 .vs/
 .vscode/
