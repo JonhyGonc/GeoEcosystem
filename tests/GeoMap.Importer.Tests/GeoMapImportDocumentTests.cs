@@ -43,6 +43,21 @@ public sealed class GeoMapImportDocumentTests
         Assert.NotEqual(networkId, featureId);
     }
 
+    [Fact]
+    public void Streaming_records_parse_to_the_same_logical_model()
+    {
+        var metadata = GeoMapImportDocument.ParseStreamingMetadata(
+            StreamingMetadata());
+        var feature = GeoMapImportDocument.ParseStreamingFeature(
+            StreamingFeature(), 42);
+
+        Assert.Equal(31982, metadata.SourceSrid);
+        Assert.Equal("stormwater", metadata.Network.Type);
+        Assert.Equal(42, feature.Sequence);
+        Assert.Equal("2A7F", feature.SourceId);
+        Assert.Contains("LineString", feature.GeometryJson, StringComparison.Ordinal);
+    }
+
     internal static byte[] ValidDocument() => Encoding.UTF8.GetBytes("""
         {
           "contractVersion": "0.1",
@@ -62,5 +77,13 @@ public sealed class GeoMapImportDocumentTests
             }
           ]
         }
+        """);
+
+    internal static byte[] StreamingMetadata() => Encoding.UTF8.GetBytes("""
+        {"contractVersion":"0.1","sourceSystem":"Civil 3D","sourceCrs":"EPSG:31982","units":"metre","project":{"externalId":"project-001","name":"Projeto"},"network":{"externalId":"network-001","name":"Rede","type":"StormWater"},"exportedAt":"2026-09-08T14:00:00Z"}
+        """);
+
+    internal static byte[] StreamingFeature() => Encoding.UTF8.GetBytes("""
+        {"sourceId":"2A7F","sourceType":"Polyline","sourceLayer":"REDE-DRENAGEM","geometry":{"type":"LineString","coordinates":[[688100.25,7086400.75],[688112.5,7086411.0]]},"properties":{"diameter":300}}
         """);
 }

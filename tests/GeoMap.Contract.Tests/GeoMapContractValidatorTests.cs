@@ -88,6 +88,50 @@ public sealed class GeoMapContractValidatorTests
         Assert.Contains(result.Errors, error => error.Code == ContractErrorCodes.SourceIdDuplicate);
     }
 
+    [Fact]
+    public void Streaming_metadata_reuses_contract_rules_without_features_array()
+    {
+        var root = ReadValidRoot();
+        root.Remove("features");
+
+        var result = GeoMapContractValidator.ValidateStreamingMetadata(
+            Encoding.UTF8.GetBytes(root.ToJsonString()));
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors));
+    }
+
+    [Fact]
+    public void Streaming_feature_reports_its_global_index()
+    {
+        var root = ReadValidRoot();
+        var feature = root["features"]![0]!.DeepClone().AsObject();
+        feature["geometry"]!["coordinates"]![0]!.AsArray().Add(10);
+
+        var result = GeoMapContractValidator.ValidateStreamingFeature(
+            Encoding.UTF8.GetBytes(feature.ToJsonString()), 123);
+
+        Assert.Contains(result.Errors, error =>
+            error.Code == ContractErrorCodes.GeometryDimensionUnsupported &&
+            error.Path.StartsWith("$.features[123]", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Streaming_example_validates_record_by_record()
+    {
+        var lines = File.ReadAllLines(ExamplePath("valid-stream.geomap.ndjson"));
+
+        var metadata = GeoMapContractValidator.ValidateStreamingMetadata(
+            Encoding.UTF8.GetBytes(lines[0]));
+        var features = lines.Skip(1)
+            .Select((line, index) => GeoMapContractValidator.ValidateStreamingFeature(
+                Encoding.UTF8.GetBytes(line), index))
+            .ToArray();
+
+        Assert.True(metadata.IsValid, string.Join(Environment.NewLine, metadata.Errors));
+        Assert.All(features, result =>
+            Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors)));
+    }
+
     private static ContractValidationResult ValidateExample(string fileName) =>
         GeoMapContractValidator.Validate(File.ReadAllBytes(ExamplePath(fileName)));
 

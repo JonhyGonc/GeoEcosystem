@@ -27,7 +27,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
             await AcquireNetworkLockAsync(
                 connection, transaction, networkId, cancellationToken);
             await UpsertContainersAsync(
-                connection, transaction, projectId, networkId, document, cancellationToken);
+                connection, transaction, projectId, networkId, document.Metadata, cancellationToken);
             await CreateStagingTableAsync(connection, transaction, cancellationToken);
             await CopyFeaturesAsync(connection, networkId, document.Features, cancellationToken);
 
@@ -54,9 +54,9 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         }
     }
 
-    private static async Task VerifyDatabaseAsync(
+    internal static async Task VerifyDatabaseAsync(
         NpgsqlConnection connection,
-        NpgsqlTransaction transaction,
+        NpgsqlTransaction? transaction,
         int sourceSrid,
         CancellationToken cancellationToken)
     {
@@ -102,12 +102,12 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task UpsertContainersAsync(
+    internal static async Task UpsertContainersAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         Guid projectId,
         Guid networkId,
-        GeoMapImportDocument document,
+        GeoMapImportMetadata metadata,
         CancellationToken cancellationToken)
     {
         const string sql = """
@@ -125,10 +125,10 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
 
         await using var command = new NpgsqlCommand(sql, connection, transaction);
         command.Parameters.AddWithValue("project_id", projectId);
-        command.Parameters.AddWithValue("project_name", document.Project.Name);
+        command.Parameters.AddWithValue("project_name", metadata.Project.Name);
         command.Parameters.AddWithValue("network_id", networkId);
-        command.Parameters.AddWithValue("network_name", document.Network.Name);
-        command.Parameters.AddWithValue("network_type", document.Network.Type);
+        command.Parameters.AddWithValue("network_name", metadata.Network.Name);
+        command.Parameters.AddWithValue("network_type", metadata.Network.Type);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -153,7 +153,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task CopyFeaturesAsync(
+    internal static async Task CopyFeaturesAsync(
         NpgsqlConnection connection,
         Guid networkId,
         IReadOnlyList<GeoMapImportFeature> features,
@@ -192,7 +192,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
             ? writer.WriteNullAsync(cancellationToken)
             : writer.WriteAsync(value, NpgsqlDbType.Text, cancellationToken);
 
-    private static async Task<int> CountExistingFeaturesAsync(
+    internal static async Task<int> CountExistingFeaturesAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         Guid networkId,
@@ -206,7 +206,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         return (int)(await command.ExecuteScalarAsync(cancellationToken) ?? 0);
     }
 
-    private static async Task DeleteExistingFeaturesAsync(
+    internal static async Task DeleteExistingFeaturesAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         Guid networkId,
@@ -220,7 +220,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task<int> InsertStagedFeaturesAsync(
+    internal static async Task<int> InsertStagedFeaturesAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         Guid networkId,

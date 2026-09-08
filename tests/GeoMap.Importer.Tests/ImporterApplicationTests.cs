@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text;
 using Xunit;
 
 namespace GeoMap.Importer.Tests;
@@ -86,6 +87,89 @@ public sealed class ImporterApplicationTests
         }
     }
 
+    [Fact]
+    public async Task RunAsync_streams_features_and_emits_progress()
+    {
+        var path = await CreateStreamingFileAsync();
+        var previous = Environment.GetEnvironmentVariable(
+            ImporterCommandOptions.ConnectionStringEnvironmentVariable);
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ImporterCommandOptions.ConnectionStringEnvironmentVariable,
+                "Host=unused");
+            var streamingStore = new RecordingStreamingStore();
+            var output = new StringWriter();
+            var progress = new StringWriter();
+
+            var exitCode = await new ImporterApplication(
+                    new RecordingStore(), streamingStore)
+                .RunAsync(
+                    ["--file", path, "--batch-size", "100"],
+                    output,
+                    progress);
+
+            Assert.Equal(0, exitCode);
+            Assert.Equal(1, streamingStore.Received);
+            Assert.Contains("\"event\":\"progress\"", progress.ToString(), StringComparison.Ordinal);
+            using var summary = JsonDocument.Parse(output.ToString());
+            Assert.Equal(1, summary.RootElement.GetProperty("imported").GetInt32());
+            Assert.Equal(1, summary.RootElement.GetProperty("batches").GetInt32());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ImporterCommandOptions.ConnectionStringEnvironmentVariable,
+                previous);
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_reports_cancellation_without_success()
+    {
+        var path = await CreateStreamingFileAsync();
+        var previous = Environment.GetEnvironmentVariable(
+            ImporterCommandOptions.ConnectionStringEnvironmentVariable);
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ImporterCommandOptions.ConnectionStringEnvironmentVariable,
+                "Host=unused");
+            var output = new StringWriter();
+
+            var exitCode = await new ImporterApplication(
+                    new RecordingStore(), new CancellingStreamingStore())
+                .RunAsync(["--file", path], output, TextWriter.Null);
+
+            Assert.Equal(130, exitCode);
+            using var summary = JsonDocument.Parse(output.ToString());
+            Assert.False(summary.RootElement.GetProperty("success").GetBoolean());
+            Assert.Equal(
+                ImportErrorCodes.Cancelled,
+                summary.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ImporterCommandOptions.ConnectionStringEnvironmentVariable,
+                previous);
+            File.Delete(path);
+        }
+    }
+
+    private static async Task<string> CreateStreamingFileAsync()
+    {
+        var path = Path.Combine(
+            Path.GetTempPath(),
+            $"geomap-{Guid.NewGuid():N}.geomap.ndjson");
+        var content = Encoding.UTF8.GetString(GeoMapImportDocumentTests.StreamingMetadata()) +
+                      "\n" +
+                      Encoding.UTF8.GetString(GeoMapImportDocumentTests.StreamingFeature());
+        await File.WriteAllTextAsync(path, content, new UTF8Encoding(false));
+        return path;
+    }
+
     private sealed class RecordingStore : IGeoMapImportStore
     {
         public bool WasCalled { get; private set; }
@@ -98,6 +182,45 @@ public sealed class ImporterApplicationTests
         {
             WasCalled = true;
             return Task.FromResult(Result);
+        }
+    }
+
+    private sealed class RecordingStreamingStore : IGeoMapStreamingImportStore
+    {
+        public int Received { get; private set; }
+
+        public async Task<GeoMapImportResult> ImportAsync(
+            string connectionString,
+            GeoMapImportMetadata metadata,
+            IAsyncEnumerable<GeoMapImportFeature> features,
+            int batchSize,
+            Action<ImportProgress>? reportProgress = null,
+            CancellationToken cancellationToken = default)
+        {
+            await foreach (var _ in features.WithCancellation(cancellationToken))
+            {
+                Received++;
+            }
+            reportProgress?.Invoke(new("progress", Received, 1, Received, 1));
+            return new(Guid.NewGuid(), Guid.NewGuid(), Received, 0, 1);
+        }
+    }
+
+    private sealed class CancellingStreamingStore : IGeoMapStreamingImportStore
+    {
+        public async Task<GeoMapImportResult> ImportAsync(
+            string connectionString,
+            GeoMapImportMetadata metadata,
+            IAsyncEnumerable<GeoMapImportFeature> features,
+            int batchSize,
+            Action<ImportProgress>? reportProgress = null,
+            CancellationToken cancellationToken = default)
+        {
+            await foreach (var _ in features.WithCancellation(cancellationToken))
+            {
+                throw new OperationCanceledException();
+            }
+            throw new OperationCanceledException();
         }
     }
 }

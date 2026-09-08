@@ -78,7 +78,9 @@ Responsável por:
 
 O contrato não depende dos tipos internos do Civil 3D. A versão 0.1 usa um documento `.geomap.json` UTF-8 estrito para a importação inicial. O módulo `GeoMap.Contract` valida versão, campos, CRS EPSG, unidades, limites, identidade de origem e geometrias `LineString` ou `MultiLineString` antes de qualquer persistência. `GeoMap.Importer` lê o documento validado, resolve IDs determinísticos de projeto, rede e feições e usa PostGIS para transformar o SRID declarado em EPSG:4326.
 
-Cada arquivo representa o snapshot completo de uma rede. Projeto e rede são atualizados, as feições anteriores são substituídas e as novas são inseridas em uma única transação. Um lock transacional por rede serializa importações concorrentes; validação, CRS indisponível ou falha de banco causam rollback integral. Posições são estritamente 2D; Z é rejeitado para impedir perda silenciosa. A representação por streaming da Issue #16 deverá preservar os mesmos objetos lógicos, IDs e códigos de erro.
+Cada arquivo representa o snapshot completo de uma rede. Projeto e rede são atualizados, as feições anteriores são substituídas e as novas são inseridas em uma única transação. Um lock por rede serializa importações concorrentes; validação, CRS indisponível ou falha de banco causam rollback integral. Posições são estritamente 2D; Z é rejeitado para impedir perda silenciosa.
+
+Para grandes volumes, o mesmo modelo lógico v0.1 possui transporte `.geomap.ndjson`: a primeira linha contém os metadados e cada linha seguinte contém uma feição. O leitor trabalha com buffer de 64 KiB e materializa somente um registro por vez; lotes configuráveis são enviados por `COPY` para uma tabela temporária. Cada lote de staging recebe commit próprio, mas projeto, rede e snapshot público só mudam na transação final. Erro ou cancelamento fecha a sessão, descarta o staging temporário e preserva a rede anterior. O progresso de cada lote é emitido como JSON em stderr e o resumo final permanece em stdout.
 
 ### Civil 3D Exporter
 

@@ -15,11 +15,16 @@ public static partial class GeoMapContractValidator
     public const int MaximumPropertiesBytes = 64 * 1024;
     public const int MaximumPropertyDepth = 4;
     public const int MaximumPropertyStringLength = 4_096;
+    public const int MaximumStreamingMetadataBytes = 64 * 1024;
+    public const int MaximumStreamingFeatureBytes = 16 * 1024 * 1024;
+    public const int MaximumStreamingFeatures = 5_000_000;
 
     private static readonly HashSet<string> SupportedUnits =
         ["metre", "foot", "us-survey-foot", "degree"];
     private static readonly HashSet<string> RootFields =
         ["contractVersion", "sourceSystem", "sourceCrs", "units", "project", "network", "exportedAt", "features"];
+    private static readonly HashSet<string> MetadataFields =
+        ["contractVersion", "sourceSystem", "sourceCrs", "units", "project", "network", "exportedAt"];
     private static readonly HashSet<string> ProjectFields = ["externalId", "name"];
     private static readonly HashSet<string> NetworkFields = ["externalId", "name", "type"];
     private static readonly HashSet<string> FeatureFields =
@@ -59,6 +64,77 @@ public static partial class GeoMapContractValidator
         return new(errors);
     }
 
+    public static ContractValidationResult ValidateStreamingMetadata(
+        ReadOnlyMemory<byte> utf8Json)
+    {
+        var errors = new List<ContractValidationError>();
+        if (utf8Json.Length > MaximumStreamingMetadataBytes)
+        {
+            Add(errors, ContractErrorCodes.LimitExceeded, "$", "Streaming metadata exceeds 64 KiB.");
+            return new(errors);
+        }
+
+        try
+        {
+            using var document = ParseJson(utf8Json);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                Add(errors, ContractErrorCodes.DocumentInvalid, "$", "Metadata record must be an object.");
+            }
+            else
+            {
+                ValidateKnownFields(root, MetadataFields, "$", errors);
+                ValidateMetadataFields(root, errors);
+            }
+        }
+        catch (JsonException exception)
+        {
+            Add(errors, ContractErrorCodes.DocumentInvalid, "$", $"Invalid UTF-8 JSON metadata: {exception.Message}");
+        }
+
+        return new(errors);
+    }
+
+    public static ContractValidationResult ValidateStreamingFeature(
+        ReadOnlyMemory<byte> utf8Json,
+        int index)
+    {
+        var errors = new List<ContractValidationError>();
+        var path = $"$.features[{index}]";
+        if (utf8Json.Length > MaximumStreamingFeatureBytes)
+        {
+            Add(errors, ContractErrorCodes.LimitExceeded, path, "Streaming feature record exceeds 16 MiB.");
+            return new(errors);
+        }
+
+        try
+        {
+            using var document = ParseJson(utf8Json);
+            ValidateFeature(
+                document.RootElement,
+                index,
+                new HashSet<string>(StringComparer.Ordinal),
+                errors);
+        }
+        catch (JsonException exception)
+        {
+            Add(errors, ContractErrorCodes.DocumentInvalid, path, $"Invalid UTF-8 JSON feature: {exception.Message}");
+        }
+
+        return new(errors);
+    }
+
+    private static JsonDocument ParseJson(ReadOnlyMemory<byte> utf8Json) =>
+        JsonDocument.Parse(
+            utf8Json,
+            new JsonDocumentOptions
+            {
+                AllowTrailingCommas = false,
+                CommentHandling = JsonCommentHandling.Disallow,
+                MaxDepth = 64
+            });
+
     private static void ValidateRoot(
         JsonElement root,
         List<ContractValidationError> errors)
@@ -70,6 +146,14 @@ public static partial class GeoMapContractValidator
         }
 
         ValidateKnownFields(root, RootFields, "$", errors);
+        ValidateMetadataFields(root, errors);
+        ValidateFeatures(root, errors);
+    }
+
+    private static void ValidateMetadataFields(
+        JsonElement root,
+        List<ContractValidationError> errors)
+    {
         var version = RequiredString(root, "contractVersion", 16, "$", errors);
         if (version is not null && version != SupportedVersion)
         {
@@ -103,7 +187,6 @@ public static partial class GeoMapContractValidator
 
         ValidateProjectOrNetwork(root, "project", ProjectFields, false, errors);
         ValidateProjectOrNetwork(root, "network", NetworkFields, true, errors);
-        ValidateFeatures(root, errors);
     }
 
     private static void ValidateProjectOrNetwork(

@@ -325,6 +325,115 @@ jobs:
           tests/integration/benchmark-vector-tile.sh \
             http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
 
+      - name: Import and verify streaming MEDIUM
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-medium.geomap.ndjson medium 100000
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-medium-invalid.geomap.ndjson medium 15001 15000
+
+          /usr/bin/time --verbose --output=/tmp/geomap-stream-medium.time \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-stream-medium.geomap.ndjson \
+              --batch-size 10000 \
+              > /tmp/geomap-stream-medium-summary.json \
+              2> /tmp/geomap-stream-medium-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-medium-summary.json \
+            /tmp/geomap-stream-medium-progress.ndjson \
+            100000 10 0
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_profile=medium -v expected_count=100000' \
+            < tests/integration/verify-streaming-import.sql
+
+          NETWORK_STATE_SQL="SELECT count(*)::text || '|' || md5(string_agg(id::text, ',' ORDER BY id)) FROM network_features WHERE network_id = (SELECT id FROM networks WHERE name = 'Drenagem Streaming MEDIUM');"
+          BEFORE_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-stream-medium.geomap.ndjson \
+            --batch-size 5000 \
+            > /tmp/geomap-stream-medium-reimport-summary.json \
+            2> /tmp/geomap-stream-medium-reimport-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-medium-reimport-summary.json \
+            /tmp/geomap-stream-medium-reimport-progress.ndjson \
+            100000 20 100000
+
+          AFTER_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$BEFORE_REIMPORT" = "$AFTER_REIMPORT"
+
+          if dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-stream-medium-invalid.geomap.ndjson \
+            --batch-size 10000 \
+            > /tmp/geomap-stream-medium-invalid-summary.json \
+            2> /tmp/geomap-stream-medium-invalid-progress.ndjson; then
+            echo "Invalid streaming import unexpectedly succeeded"
+            exit 1
+          fi
+
+          python3 tests/integration/verify-streaming-failure.py \
+            /tmp/geomap-stream-medium-invalid-summary.json \
+            /tmp/geomap-stream-medium-invalid-progress.ndjson \
+            15001 10000
+
+          AFTER_INVALID="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$AFTER_REIMPORT" = "$AFTER_INVALID"
+          cat /tmp/geomap-stream-medium.time
+
+      - name: Import and verify streaming LARGE
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-large.geomap.ndjson large 1000000
+
+          /usr/bin/time --verbose --output=/tmp/geomap-stream-large.time \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-stream-large.geomap.ndjson \
+              --batch-size 25000 \
+              > /tmp/geomap-stream-large-summary.json \
+              2> /tmp/geomap-stream-large-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-large-summary.json \
+            /tmp/geomap-stream-large-progress.ndjson \
+            1000000 40 0
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_profile=large -v expected_count=1000000' \
+            < tests/integration/verify-streaming-import.sql
+
+          cat /tmp/geomap-stream-large.time
+
       - name: Clean up
         if: always()
         run: docker compose down --volumes

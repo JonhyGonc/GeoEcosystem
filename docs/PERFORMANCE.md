@@ -54,13 +54,26 @@ No cenário reproduzível LARGE em zoom 15, o tile deve permanecer abaixo de 512
 
 ### PERF-011 — Limites do contrato inicial
 
-Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; a carga LARGE deverá usar a representação por streaming da Issue #16.
+Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; MEDIUM e LARGE usam `.geomap.ndjson` sequencial.
 
 ### PERF-012 — Importação inicial limitada e transacional
 
-O importador da Issue #15 carrega somente um documento v0.1 já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica. O transporte LARGE não é aplicado a este formato; a Issue #16 deverá processá-lo em lotes ou streaming com memória limitada.
+O importador de JSON carrega somente um documento v0.1 já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica.
 
 No baseline da CI da Issue #15, um documento de 265.218 bytes com 1.000 `LineString` em EPSG:31982 foi validado, transformado para EPSG:4326 e persistido em 3.616 ms medidos pelo importador. O processo iniciado a frio por `dotnet run` levou 9,79 s e atingiu 127.556 KiB de memória residente máxima no runner Ubuntu hospedado. Esses valores registram a primeira referência reproduzível do protótipo e não constituem SLA.
+
+### PERF-013 — NDJSON com memória independente do total de feições
+
+O transporte `.geomap.ndjson` lê blocos de 64 KiB, limita cada registro a 16 MiB e mantém em memória somente o registro atual e o lote configurado. A tabela temporária recebe os lotes por `COPY`; o tamanho total do arquivo não é materializado no processo. A CI gera, importa e mede MEDIUM com 100.000 feições e LARGE com 1.000.000, verificando contagem, geometria, propriedades, reimportação e falha após um lote já confirmado no staging.
+
+No baseline verde da CI da Issue #16:
+
+| Perfil | Feições | Arquivo | Lote | Tempo total | Memória residente máxima |
+|---|---:|---:|---:|---:|---:|
+| MEDIUM | 100.000 | 27.766.036 bytes | 10.000 | 7,35 s | 123.608 KiB |
+| LARGE | 1.000.000 | 275.666.232 bytes | 25.000 | 50,26 s | 123.432 KiB |
+
+O crescimento de dez vezes na quantidade e no arquivo não aumentou o pico observado do processo, que permaneceu em aproximadamente 121 MiB. Isso confirma o objetivo de memória independente do total de feições para esse cenário. Os tempos incluem inicialização de `dotnet run --no-build`, validação, `COPY`, transformação e commit final no runner Ubuntu hospedado; são baseline reproduzível do protótipo, não SLA.
 
 ## Práticas de consulta
 
@@ -167,9 +180,9 @@ A integração verifica resposta existente, propriedades vazias e variáveis, HT
 
 ## Validação do contrato — Issue #14
 
-O contrato inicial impede documentos JSON sem limite: 50 MiB, 10.000 feições, 100.000 vértices por feição e limites próprios para `properties`. Isso não substitui o streaming necessário ao LARGE; separa deliberadamente a importação inicial da solução de escala da Issue #16.
+O contrato inicial impede documentos JSON sem limite: 50 MiB, 10.000 feições, 100.000 vértices por feição e limites próprios para `properties`. O transporte NDJSON da Issue #16 preserva as validações por registro e permite LARGE sem carga integral em memória.
 
-O validador percorre o documento uma vez após o parse, não realiza acesso ao banco e devolve códigos e caminhos estáveis. Os testes cobrem exemplos válidos de LineString/MultiLineString, versão e CRS inválidos, Z, geometria não suportada, limite de propriedades, compatibilidade estrita e identidade de origem duplicada. A Issue não altera consultas, tiles ou o baseline LARGE existente.
+O validador percorre o documento uma vez após o parse, não realiza acesso ao banco e devolve códigos e caminhos estáveis. Os testes cobrem exemplos válidos de LineString/MultiLineString, versão e CRS inválidos, Z, geometria não suportada, limite de propriedades, compatibilidade estrita e identidade de origem duplicada. O modo NDJSON valida metadados e uma feição por vez com as mesmas regras.
 
 ## Antipadrões proibidos
 
