@@ -76,7 +76,9 @@ Cada rede pode ser ligada ou desligada, e os comandos `Mostrar todas` e `Ocultar
 
 Clique sobre uma linha visível para destacá-la e mostrar seu identificador, rede e tipo. Em uma sobreposição, vence a feição visualmente superior retornada pelo MapLibre. Outro clique troca a seleção; clicar fora ou usar `Limpar seleção` remove o destaque. Ocultar a rede selecionada, trocar o projeto ou recarregar o estilo também limpa a seleção.
 
-A seleção consulta somente as feições já renderizadas no ponto clicado e reutiliza a fonte MVT para o destaque. Zoom e pan não editam a geometria nem limpam a seleção. Atributos completos e ferramentas de desenho continuam fora desta etapa.
+A seleção consulta somente as feições já renderizadas no ponto clicado e reutiliza a fonte MVT para o destaque. Em seguida, o painel busca apenas a feição escolhida e apresenta metadados de origem e as propriedades disponíveis. A interface trata carregamento, ausência, propriedades vazias e falha com opção de nova tentativa.
+
+Trocar ou limpar a seleção cancela a consulta anterior. Zoom e pan não editam a geometria nem limpam a seleção. O painel é somente leitura; edição de atributos e ferramentas de desenho continuam fora desta etapa.
 
 ## Verificações
 

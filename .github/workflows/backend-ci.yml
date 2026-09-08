@@ -206,6 +206,12 @@ jobs:
       - name: Verify project network catalog API
         run: tests/integration/verify-network-catalog-api.sh http://localhost:8080
 
+      - name: Verify selected feature details API
+        run: tests/integration/verify-feature-details-api.sh http://localhost:8080
+
+      - name: Verify selected feature details with LARGE
+        run: tests/integration/verify-feature-details-large.sh http://localhost:8080
+
       - name: Verify spatial query plans
         run: |
           docker compose exec -T database sh -ec \

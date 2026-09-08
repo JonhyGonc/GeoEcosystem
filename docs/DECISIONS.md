@@ -144,6 +144,14 @@ O clique consulta somente as camadas de rede visíveis no ponto indicado e aceit
 
 O destaque usa uma camada de linha adicional por rede sobre a mesma fonte MVT e filtra pelo `id` selecionado. A seleção fica no estado local da sessão, sobrevive a zoom e pan e é limpa quando sua rede é ocultada, o projeto muda ou o estilo é reinstalado. Nenhuma geometria é editada e nenhum atributo detalhado é carregado nesta etapa.
 
+## DEC-020 — Atributos sob demanda e isolados pelo contexto completo
+
+Status: aprovada.
+
+Os atributos básicos de uma feição serão obtidos por `GET /api/projects/{projectId}/networks/{networkId}/features/{featureId}`. A consulta exige correspondência simultânea entre projeto, rede e feição; ausência ou combinação cruzada retorna HTTP 404 para não revelar a existência de dados fora do contexto solicitado.
+
+A resposta inclui identificadores, nome e tipo da rede, metadados de origem, data de registro e o objeto JSONB `properties`. A geometria não é repetida e os tiles continuam contendo apenas `id`. O frontend consulta somente após a seleção, cancela requisições obsoletas e oferece visualização sem edição.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

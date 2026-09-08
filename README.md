@@ -173,7 +173,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas e a seleção de elementos estão implementados. O importador do contrato, a consulta detalhada de atributos e os demais endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção e a consulta de atributos básicos estão implementados. O importador do contrato e os demais endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 
