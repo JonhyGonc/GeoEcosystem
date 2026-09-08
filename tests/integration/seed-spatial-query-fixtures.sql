@@ -18,6 +18,11 @@ VALUES
         '61000000-0000-4000-8000-000000000002',
         '60000000-0000-4000-8000-000000000001',
         'Spatial query other network',
+        'stormwater'),
+    (
+        '61000000-0000-4000-8000-000000000003',
+        '60000000-0000-4000-8000-000000000002',
+        'Empty network from other project',
         'test');
 
 INSERT INTO network_features (

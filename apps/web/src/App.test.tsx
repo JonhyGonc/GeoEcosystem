@@ -49,7 +49,8 @@ describe('GeoMap app', () => {
       screen.getByRole('heading', { level: 1, name: 'GeoMap' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Mapa interativo GeoMap')).toBeInTheDocument()
-    expect(screen.getByText('Rede não configurada')).toBeInTheDocument()
+    expect(screen.getByText('Projeto não configurado')).toBeInTheDocument()
+    expect(screen.getByLabelText('Status das redes')).toBeInTheDocument()
 
     expect(mapMocks.createMap).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -126,6 +126,16 @@ O MapLibre decide os tiles necessários a cada viewport, pan e zoom. Não há ca
 
 Esta etapa limita deliberadamente a interface a uma rede configurada. Seleção de projetos, múltiplas redes e controles completos de camadas pertencem às Issues posteriores.
 
+## DEC-018 — Catálogo por projeto e visibilidade local das camadas
+
+Status: aprovada.
+
+As redes disponíveis serão obtidas por `GET /api/projects/{projectId}/networks`. O endpoint retorna somente `id`, `name` e `type`, filtra no banco pelo projeto e não conta nem lê `network_features`. Um projeto sem redes retorna uma lista vazia.
+
+Cada rede recebe fonte e camada MapLibre próprias, com IDs derivados de seu UUID e cor simples determinística. Ligar ou desligar uma rede altera apenas a propriedade `visibility`; fontes não são recriadas durante zoom, pan ou alternância normal. O estado permanece apenas na sessão atual e não constitui preferência persistida.
+
+`VITE_GEOMAP_PROJECT_ID` define o projeto atual. `VITE_GEOMAP_NETWORK_ID` passa a ser opcional e, quando pertence ao catálogo, indica a única camada inicialmente visível; sem ela, todas começam visíveis. A troca futura do projeto reutiliza o mesmo fluxo, removendo as camadas anteriores antes de instalar as novas.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

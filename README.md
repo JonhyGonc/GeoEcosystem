@@ -97,7 +97,7 @@ npm run dev
 
 Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O padrão usa OpenStreetMap Standard sem chave e mantém sua atribuição visível. Consulte [apps/web/README.md](apps/web/README.md) para trocar a fonte e conhecer os limites de uso.
 
-Para exibir uma rede, informe `VITE_GEOMAP_PROJECT_ID` e `VITE_GEOMAP_NETWORK_ID` no arquivo `apps/web/.env`. O frontend solicita somente os tiles MVT da região visível; sem esses IDs, o mapa base continua disponível e indica que a rede não está configurada. Consulte [apps/web/README.md](apps/web/README.md) para obter os IDs e ajustar a URL da API.
+Para listar as camadas, informe `VITE_GEOMAP_PROJECT_ID` no arquivo `apps/web/.env`. `VITE_GEOMAP_NETWORK_ID` é opcional e apenas escolhe a camada inicialmente visível; sem ela, todas as redes do projeto começam ligadas. O frontend solicita somente os tiles MVT da região visível. Consulte [apps/web/README.md](apps/web/README.md) para obter os IDs e ajustar a URL da API.
 
 Antes de enviar uma alteração do frontend:
 
@@ -131,6 +131,16 @@ GET /api/projects/{projectId}/networks/{networkId}/features
 
 Não existe endpoint para carregar uma rede completa. Consulte [docs/API.md](docs/API.md) para parâmetros, limites e formato da resposta.
 
+### Listar redes do projeto
+
+O controle de camadas usa o catálogo leve do projeto atual:
+
+~~~text
+GET /api/projects/{projectId}/networks
+~~~
+
+A resposta traz apenas identificador, nome e tipo de cada rede; geometrias continuam sendo obtidas exclusivamente pelos tiles regionais.
+
 ### Solicitar um tile vetorial
 
 As redes também podem ser obtidas em MVT, já recortadas por zoom e tile:
@@ -163,7 +173,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável e a visualização de uma rede MVT no MapLibre estão implementados. O importador do contrato, os controles completos de camadas e os endpoints de domínio pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT e o controle de múltiplas camadas estão implementados. O importador do contrato, a seleção de elementos, os atributos e os demais endpoints de domínio pertencem às próximas Issues.
 
 ## Documentação
 

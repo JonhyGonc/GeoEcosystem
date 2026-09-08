@@ -1,5 +1,30 @@
 # API GeoMap
 
+## Catálogo de redes do projeto
+
+~~~http
+GET /api/projects/{projectId}/networks
+~~~
+
+Lista as camadas disponíveis no projeto atual sem consultar nem contar `network_features`. A resposta contém somente `id`, `name` e `type`, ordenados por nome e identificador. O frontend usa cada identificador para montar a fonte MVT regional correspondente.
+
+Um projeto existente sem redes e um UUID de projeto sem correspondência retornam HTTP 200 com `networks: []`. O identificador na rota deve ser um UUID válido. A consulta possui timeout de 5 segundos e usa o índice relacional de `networks.project_id`.
+
+Exemplo:
+
+~~~json
+{
+  "projectId": "60000000-0000-4000-8000-000000000001",
+  "networks": [
+    {
+      "id": "61000000-0000-4000-8000-000000000001",
+      "name": "Drenagem principal",
+      "type": "stormwater"
+    }
+  ]
+}
+~~~
+
 ## Tiles vetoriais da rede
 
 ~~~http
