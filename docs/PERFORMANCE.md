@@ -60,6 +60,8 @@ Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Ca
 
 O importador da Issue #15 carrega somente um documento v0.1 já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica. O transporte LARGE não é aplicado a este formato; a Issue #16 deverá processá-lo em lotes ou streaming com memória limitada.
 
+No baseline da CI da Issue #15, um documento de 265.218 bytes com 1.000 `LineString` em EPSG:31982 foi validado, transformado para EPSG:4326 e persistido em 3.616 ms medidos pelo importador. O processo iniciado a frio por `dotnet run` levou 9,79 s e atingiu 127.556 KiB de memória residente máxima no runner Ubuntu hospedado. Esses valores registram a primeira referência reproduzível do protótipo e não constituem SLA.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;

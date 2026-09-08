@@ -106,4 +106,6 @@ No PowerShell, defina a conexão com `$env:GEOMAP_DB_CONNECTION_STRING = '...'` 
 
 O resultado é JSON e contém sucesso, totais recebidos/importados/rejeitados/substituídos, IDs de projeto e rede, duração e erros. O arquivo inteiro é validado antes do banco; a gravação substitui atomicamente o snapshot da rede e transforma o EPSG declarado para 4326. Reimportar o mesmo arquivo mantém os IDs e não duplica feições.
 
+Na CI da Issue #15, o contrato SMALL gerado possuía 1.000 linhas e 265.218 bytes. A validação, transformação EPSG:31982 → EPSG:4326 e persistência consumiram 3.616 ms no cronômetro interno. A execução fria completa por `dotnet run` consumiu 9,79 s e 127.556 KiB de memória residente máxima no runner Ubuntu.
+
 O gerador de datasets continua sendo uma ferramenta de escala com gravação direta no banco; ele não representa o importador do contrato. A Issue #16 adicionará o fluxo apropriado para volumes superiores aos limites do JSON inicial.
