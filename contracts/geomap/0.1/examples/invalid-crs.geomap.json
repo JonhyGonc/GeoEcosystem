@@ -1,7 +1,7 @@
 {
   "contractVersion": "0.1",
   "sourceSystem": "Civil 3D",
-  "sourceCrs": "SIRGAS-2000-UTM-22S",
+  "sourceCrs": "SRID:31982",
   "units": "metre",
   "project": { "externalId": "project-001", "name": "Projeto inválido" },
   "network": { "externalId": "network-001", "name": "Rede", "type": "stormwater" },
