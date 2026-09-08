@@ -10,6 +10,8 @@ import {
   buildNetworkCatalogUrl,
   buildNetworkLayer,
   buildNetworkLayerId,
+  buildNetworkSelectionLayer,
+  buildNetworkSelectionLayerId,
   buildNetworkSourceId,
   buildNetworkTileUrl,
   createNetworkLayerViews,
@@ -22,6 +24,7 @@ import {
   type NetworkDefinition,
   type NetworkLayerStatus,
   type NetworkMapTarget,
+  type SelectedNetworkFeature,
 } from './networkLayer'
 
 const projectId = '60000000-0000-4000-8000-000000000001'
@@ -127,6 +130,12 @@ describe('network layer control', () => {
       minzoom: NETWORK_MIN_ZOOM,
       layout: { visibility: 'none' },
     })
+    expect(buildNetworkSelectionLayer(views[0])).toMatchObject({
+      id: buildNetworkSelectionLayerId(networkId),
+      source: buildNetworkSourceId(networkId),
+      filter: ['==', ['get', 'id'], ''],
+      layout: { visibility: 'visible' },
+    })
   })
 
   it('toggles layers without recreating sources and keeps states coherent on pan', () => {
@@ -134,13 +143,25 @@ describe('network layer control', () => {
     const sourceIds = new Set<string>()
     const layerIds = new Set<string>()
     const visibleFeatures = new Map<string, MapGeoJSONFeature[]>()
-    const listeners = new Map<string, Array<(event: { sourceId?: string; isSourceLoaded?: boolean }) => void>>()
+    let clickedFeatures: MapGeoJSONFeature[] = []
+    const listeners = new Map<
+      string,
+      Array<
+        (event: {
+          sourceId?: string
+          isSourceLoaded?: boolean
+          point?: { x: number; y: number }
+        }) => void
+      >
+    >()
     const addSource = vi.fn((id: string) => sourceIds.add(id))
     const addLayer = vi.fn((layer: LayerSpecification) => layerIds.add(layer.id))
     const removeLayer = vi.fn((id: string) => layerIds.delete(id))
     const removeSource = vi.fn((id: string) => sourceIds.delete(id))
     const setLayoutProperty = vi.fn()
+    const setFilter = vi.fn()
     const updates: Array<{ id: string; status: NetworkLayerStatus }> = []
+    const selections: Array<SelectedNetworkFeature | null> = []
     const unsubscribes: ReturnType<typeof vi.fn>[] = []
     const map: NetworkMapTarget = {
       addLayer,
@@ -154,14 +175,23 @@ describe('network layer control', () => {
         unsubscribes.push(unsubscribe)
         return { unsubscribe }
       },
-      queryRenderedFeatures: ({ layers }) => visibleFeatures.get(layers[0]) ?? [],
+      queryRenderedFeatures: (geometryOrOptions, options) => {
+        if (options) return clickedFeatures
+        const layers = 'layers' in geometryOrOptions ? geometryOrOptions.layers : []
+        return visibleFeatures.get(layers[0]) ?? []
+      },
       removeLayer,
       removeSource,
       setLayoutProperty,
+      setFilter,
     }
     const emit = (
       event: string,
-      data: { sourceId?: string; isSourceLoaded?: boolean } = {},
+      data: {
+        sourceId?: string
+        isSourceLoaded?: boolean
+        point?: { x: number; y: number }
+      } = {},
     ) => listeners.get(event)?.forEach((listener) => listener(data))
     const views = createNetworkLayerViews(networks, networkId)
     const controller = installNetworkLayers(
@@ -169,10 +199,11 @@ describe('network layer control', () => {
       readyConfiguration(),
       views,
       (id, status) => updates.push({ id, status }),
+      (selection) => selections.push(selection),
     )
 
     expect(addSource).toHaveBeenCalledTimes(2)
-    expect(addLayer).toHaveBeenCalledTimes(2)
+    expect(addLayer).toHaveBeenCalledTimes(4)
 
     controller.setVisibility(otherNetworkId, true)
     expect(setLayoutProperty).toHaveBeenCalledWith(
@@ -180,8 +211,38 @@ describe('network layer control', () => {
       'visibility',
       'visible',
     )
+    expect(setLayoutProperty).toHaveBeenCalledWith(
+      buildNetworkSelectionLayerId(otherNetworkId),
+      'visibility',
+      'visible',
+    )
     expect(addSource).toHaveBeenCalledTimes(2)
-    expect(addLayer).toHaveBeenCalledTimes(2)
+    expect(addLayer).toHaveBeenCalledTimes(4)
+
+    clickedFeatures = [
+      renderedFeature(buildNetworkLayerId(otherNetworkId), otherNetworkId),
+      renderedFeature(buildNetworkLayerId(networkId), networkId),
+    ]
+    emit('click', { point: { x: 10, y: 20 } })
+    expect(selections.at(-1)).toMatchObject({
+      featureId: otherNetworkId,
+      networkId: otherNetworkId,
+      networkName: 'Rede de esgoto',
+    })
+    expect(setFilter).toHaveBeenCalledWith(
+      buildNetworkSelectionLayerId(otherNetworkId),
+      ['==', ['get', 'id'], otherNetworkId],
+    )
+
+    clickedFeatures = [
+      renderedFeature(buildNetworkLayerId(networkId), networkId),
+    ]
+    emit('click', { point: { x: 10, y: 20 } })
+    expect(selections.at(-1)?.networkId).toBe(networkId)
+
+    clickedFeatures = []
+    emit('click', { point: { x: 10, y: 20 } })
+    expect(selections.at(-1)).toBeNull()
 
     emit('movestart')
     expect(updates.filter(({ status }) => status.kind === 'loading')).toHaveLength(3)
@@ -217,6 +278,17 @@ describe('network layer control', () => {
       status: { kind: 'hidden', message: 'Oculta' },
     })
 
+    controller.setVisibility(otherNetworkId, true)
+    clickedFeatures = [
+      renderedFeature(buildNetworkLayerId(otherNetworkId), otherNetworkId),
+    ]
+    emit('click', { point: { x: 10, y: 20 } })
+    controller.setVisibility(otherNetworkId, false)
+    expect(selections.at(-1)).toBeNull()
+
+    controller.clearSelection()
+    expect(selections.at(-1)).toBeNull()
+
     zoom = 13
     emit('movestart')
     expect(updates.at(-1)).toEqual({
@@ -225,9 +297,9 @@ describe('network layer control', () => {
     })
 
     controller.cleanup()
-    expect(removeLayer).toHaveBeenCalledTimes(2)
+    expect(removeLayer).toHaveBeenCalledTimes(4)
     expect(removeSource).toHaveBeenCalledTimes(2)
-    expect(unsubscribes).toHaveLength(5)
+    expect(unsubscribes).toHaveLength(6)
     unsubscribes.forEach((unsubscribe) => expect(unsubscribe).toHaveBeenCalledOnce())
   })
 
@@ -253,6 +325,7 @@ describe('network layer control', () => {
       },
       removeSource: (id) => sourceIds.delete(id),
       setLayoutProperty: vi.fn(),
+      setFilter: vi.fn(),
     }
     const former = installNetworkLayers(
       map,
@@ -275,7 +348,9 @@ describe('network layer control', () => {
     )
 
     expect(removedLayers).toEqual([
+      buildNetworkSelectionLayerId(otherNetworkId),
       buildNetworkLayerId(otherNetworkId),
+      buildNetworkSelectionLayerId(networkId),
       buildNetworkLayerId(networkId),
     ])
     expect(addedSources.at(-1)?.source).toMatchObject({
@@ -308,3 +383,10 @@ describe('network layer control', () => {
     expect(summarizeNetworkLayers([])).toMatchObject({ kind: 'empty' })
   })
 })
+
+function renderedFeature(layerId: string, featureId: string): MapGeoJSONFeature {
+  return {
+    layer: { id: layerId },
+    properties: { id: featureId },
+  } as unknown as MapGeoJSONFeature
+}

@@ -72,6 +72,12 @@ Sem o identificador do projeto, o mapa base abre e informa que o projeto não fo
 
 Cada rede pode ser ligada ou desligada, e os comandos `Mostrar todas` e `Ocultar todas` ajudam em projetos com várias camadas. A troca de visibilidade altera apenas o estilo do MapLibre, preservando as fontes e o estado durante zoom e pan. O mapa solicita somente os tiles visíveis entre os zooms 14 e 22, diferencia carregamento, região vazia e falha e nunca carrega uma rede inteira.
 
+## Selecionar um elemento
+
+Clique sobre uma linha visível para destacá-la e mostrar seu identificador, rede e tipo. Em uma sobreposição, vence a feição visualmente superior retornada pelo MapLibre. Outro clique troca a seleção; clicar fora ou usar `Limpar seleção` remove o destaque. Ocultar a rede selecionada, trocar o projeto ou recarregar o estilo também limpa a seleção.
+
+A seleção consulta somente as feições já renderizadas no ponto clicado e reutiliza a fonte MVT para o destaque. Zoom e pan não editam a geometria nem limpam a seleção. Atributos completos e ferramentas de desenho continuam fora desta etapa.
+
 ## Verificações
 
 ~~~bash
@@ -80,4 +86,4 @@ npm run test
 npm run build
 ~~~
 
-O frontend oferece visualização, camadas, zoom e navegação. Não há ferramentas de desenho ou edição.
+O frontend oferece visualização, camadas, seleção, zoom e navegação. Não há ferramentas de desenho ou edição.

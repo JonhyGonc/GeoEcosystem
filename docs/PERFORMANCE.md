@@ -143,6 +143,12 @@ Alternar visibilidade usa a propriedade de layout do MapLibre e não remove nem 
 
 Os testes do frontend verificam alternância individual e combinada, projeto trocado, rede vazia, falha isolada e ausência de carga integral. A Backend CI mantém a carga LARGE de 1.000.000 de feições e as guardas quantitativas do tile; esta Issue não altera a consulta MVT nem seus limites.
 
+## Validação de seleção — Issue #12
+
+A identificação acontece somente em resposta ao clique, por `queryRenderedFeatures` nas camadas visíveis e sobre os tiles que o MapLibre já possui no viewport. O destaque reutiliza a fonte MVT da rede e muda apenas um filtro por UUID; não há nova requisição, duplicação de fonte, leitura de JSONB ou carga integral.
+
+Os testes do frontend cobrem seleção, troca, limpeza, clique sem feição, sobreposição pela ordem visual, ocultação da rede selecionada e remoção segura das camadas. A Backend CI continua validando o dataset LARGE com 1.000.000 de feições, payload máximo de 512 KiB e p95 máximo de 100 ms. Esta Issue não altera SQL, índice, conteúdo MVT ou limites do backend.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;
