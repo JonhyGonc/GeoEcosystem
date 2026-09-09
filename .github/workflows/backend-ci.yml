@@ -23,6 +23,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test provisional DXF bridge
+        run: python3 -m unittest discover -s tests/dxf-converter -p 'test_*.py' -v
+
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -118,6 +121,36 @@ jobs:
           dotnet build tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
             --configuration Release \
             --no-restore
+
+      - name: Convert and verify synthetic DXF bridge
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tools/dxf-converter/geomap_dxf.py \
+            --input tests/fixtures/dxf/synthetic-network.dxf \
+            --output /tmp/geomap-issue-17-dxf.geomap.json \
+            --layer TEST-NETWORK \
+            --source-crs EPSG:31982 \
+            --units metre \
+            --project-external-id dxf-fixture-project \
+            --project-name "DXF Fixture Project" \
+            --network-external-id dxf-fixture-network \
+            --network-name "DXF Fixture Network" \
+            --network-type stormwater \
+            --exported-at 2026-09-09T09:00:00Z \
+            --project-to-2d
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-17-dxf.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-dxf-import.sql
 
       - name: Import and verify GeoMap SMALL contract
         shell: bash

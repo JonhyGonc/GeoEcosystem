@@ -184,6 +184,21 @@ O contrato inicial impede documentos JSON sem limite: 50 MiB, 10.000 feições, 
 
 O validador percorre o documento uma vez após o parse, não realiza acesso ao banco e devolve códigos e caminhos estáveis. Os testes cobrem exemplos válidos de LineString/MultiLineString, versão e CRS inválidos, Z, geometria não suportada, limite de propriedades, compatibilidade estrita e identidade de origem duplicada. O modo NDJSON valida metadados e uma feição por vez com as mesmas regras.
 
+## Validação CAD real — Issue #17
+
+O desenho autorizado possui 5,2 MiB em DXF ASCII. A camada pluvial selecionada
+no Model Space resultou em 15 `LWPOLYLINE`, 73 vértices e aproximadamente
+1.143,60 m de comprimento projetado. A ponte descartou 16 cópias de Paper Space
+e ignorou 58 textos da mesma camada, sem incluí-los como feições. O contrato
+privado gerado possui 12.499 bytes.
+
+Em uma execução local isolada, leitura, validação estrutural do DXF e conversão
+consumiram 63,917 ms e o processo Python registrou RSS máximo de 41.888 KiB.
+Esses números são apenas referência da rede real pequena, não SLA. A mudança não
+altera consulta MVT, payload, índices ou os baselines SMALL/MEDIUM/LARGE. A CI
+usa uma fixture DXF sintética para verificar conversão, importação, transformação
+`EPSG:31982` → `EPSG:4326` e atributos sem expor o dataset real.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;

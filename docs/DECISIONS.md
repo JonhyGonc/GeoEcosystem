@@ -178,11 +178,29 @@ Grandes volumes usam o transporte UTF-8 `.geomap.ndjson`, media type `applicatio
 
 O tamanho padrão do lote é 10.000 feições, configurável entre 100 e 50.000. Cada lote recebe commit em uma tabela temporária exclusiva da sessão; nenhum desses commits altera a rede publicada. Após validar e carregar todas as linhas, uma transação final atualiza os contêineres e substitui o snapshot. Falha, duplicata ou cancelamento antes do commit final preserva integralmente a rede anterior. Um lock de sessão por rede impede concorrência entre importações durante todos os lotes.
 
+## DEC-024 — Primeiro dataset real privado e ponte DXF descartável
+
+Status: aprovada.
+
+O primeiro dataset real é uma rede pluvial proveniente de um desenho Civil 3D
+autorizado pelo fornecedor em 9 de setembro de 2026 para desenvolvimento e
+validação privados. A origem declara SIRGAS 2000 / UTM zona 22S
+(`EPSG:31982`) e metros. Arquivos DWG/DXF, o contrato gerado e coordenadas
+precisas não serão versionados; somente resultados agregados e fixtures
+sintéticas podem entrar no repositório.
+
+Até o exportador da Issue #18, uma ponte provisória sem Autodesk converte DXF
+ASCII para o contrato GeoMap v0.1. Ela considera somente o Model Space, aceita
+`LINE` e `LWPOLYLINE`, preserva handles e elevações como atributos e exige
+consentimento explícito para projetar geometria em 2D. Bulges, extrusões e
+geometrias lineares não suportadas são rejeitados. A ponte é descartável e não
+se torna uma segunda arquitetura de importação: sua saída passa integralmente
+pelo validador e importador existentes.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
 |---|---|---|
 | PEND-007 | Estratégia de hospedagem do protótipo | após fluxo local |
-| PEND-008 | Primeiro dataset real e autorização de uso | Issue #17 |
 
 Uma decisão pendente não deve ser resolvida silenciosamente. A Issue indicada deve registrar a conclusão neste documento.
