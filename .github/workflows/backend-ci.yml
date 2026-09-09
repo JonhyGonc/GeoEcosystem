@@ -122,6 +122,21 @@ jobs:
             --configuration Release \
             --no-restore
 
+      - name: Import and verify GeoAutoEngine reference export
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-geoautoengine-export.sql
+
       - name: Convert and verify synthetic DXF bridge
         shell: bash
         env:
@@ -293,6 +308,9 @@ jobs:
 
           docker compose logs api
           exit 1
+
+      - name: Verify GeoAutoEngine export through the web pipeline
+        run: tests/integration/verify-geoautoengine-export-api.sh http://localhost:8080
 
       - name: Seed and verify spatial query API
         run: |
