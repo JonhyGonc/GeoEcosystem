@@ -86,6 +86,18 @@ Para grandes volumes, o mesmo modelo lógico v0.1 possui transporte `.geomap.ndj
 
 Componente futuro, carregado no Civil 3D, responsável apenas por extrair e converter objetos CAD para o contrato GeoMap. O primeiro tipo planejado é Polyline.
 
+Para a validação real anterior ao exportador definitivo, existe uma ponte DXF
+ASCII isolada em `tools/dxf-converter`. Ela lê somente `LINE` e `LWPOLYLINE` do
+Model Space e produz o mesmo contrato v0.1 consumido pelo importador. O uso
+exige camada, CRS, unidade e metadados explícitos. Elevações só podem ser
+projetadas em XY com autorização pela opção `--project-to-2d` e permanecem nos
+atributos. Curvas, extrusões e tipos lineares ainda não suportados interrompem a
+conversão para evitar alteração silenciosa da geometria.
+
+Essa ponte não referencia bibliotecas Autodesk, não substitui o exportador da
+Issue #18 e não altera os limites entre importador, banco, API e frontend. DWG,
+DXF e saídas reais permanecem fora do controle de versão.
+
 ## Fluxo de visualização
 
 1. O MapLibre solicita um tile z/x/y.

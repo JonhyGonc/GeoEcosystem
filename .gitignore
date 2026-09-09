@@ -22,6 +22,18 @@ coverage/
 .env.*
 !.env.example
 
+# Private CAD validation data
+*.dwg
+*.dxf
+!tests/fixtures/dxf/
+!tests/fixtures/dxf/*.dxf
+private-data/
+validation-output/
+
+# Python
+__pycache__/
+*.py[cod]
+
 # Operating system
 .DS_Store
 Thumbs.db

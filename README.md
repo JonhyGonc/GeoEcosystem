@@ -144,6 +144,20 @@ dotnet run --project tools/importer/GeoMap.Importer -- \
 
 O progresso de cada lote aparece como JSON em stderr. O leitor não carrega o arquivo inteiro; falha ou `Ctrl+C` preserva o snapshot anterior da rede.
 
+### Converter um DXF para validação real
+
+Antes do exportador Civil 3D definitivo, uma ponte provisória converte uma camada
+linear de DXF ASCII para o mesmo contrato v0.1:
+
+~~~bash
+python3 tools/dxf-converter/geomap_dxf.py --help
+~~~
+
+Ela lê apenas o Model Space, exige CRS e unidade explícitos e não descarta Z ou
+curvas silenciosamente. Arquivos CAD e saídas reais permanecem fora do Git. Veja
+[a ferramenta](tools/dxf-converter/README.md) e o
+[registro sanitizado da primeira validação](docs/REAL_DATA_VALIDATION.md).
+
 ### Consultar feições por região
 
 A API aceita somente consultas com projeto, rede e bounding box EPSG:4326 explícitos:
@@ -191,6 +205,7 @@ database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
 tools/importer/GeoMap.Contract/        validador do contrato de importação v0.1
 tools/importer/GeoMap.Importer/        importador transacional do contrato v0.1
+tools/dxf-converter/                    ponte DXF provisória da validação real
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
 tests/GeoMap.Importer.Tests/        testes do parser, CLI e identidade
@@ -199,7 +214,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos e a importação GeoMap v0.1 em JSON ou NDJSON estão implementados. A primeira rede CAD real e o exportador Civil 3D pertencem às próximas Issues.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, a importação GeoMap v0.1 e a conversão privada da primeira rede CAD real estão implementados. O exportador Civil 3D pertence à próxima Issue.
 
 ## Documentação
 
@@ -209,6 +224,7 @@ O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles v
 - [Modelo de dados](docs/DATA_MODEL.md)
 - [API](docs/API.md)
 - [Contrato de importação](docs/IMPORT_CONTRACT.md)
+- [Validação da rede CAD real](docs/REAL_DATA_VALIDATION.md)
 - [Performance](docs/PERFORMANCE.md)
 - [Decisões](docs/DECISIONS.md)
 - [Backlog e roadmap](docs/BACKLOG.md)
