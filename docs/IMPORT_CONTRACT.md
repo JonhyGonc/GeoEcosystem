@@ -58,6 +58,8 @@ Exemplo resumido:
 
 Exemplos executáveis ficam em `contracts/geomap/0.1/examples`.
 
+O exemplo `valid-geoautoengine-polyline.geomap.json` é produzido pelo mesmo serializador usado no comando `GEOAUTO3GEOMAPEXPORT` do GeoAutoEngine. A CI o valida e o importa para confirmar a compatibilidade entre os dois repositórios.
+
 ## Formatos físicos
 
 O formato inicial é um único documento JSON UTF-8 com extensão `.geomap.json` e media type `application/vnd.geomap.v0.1+json`. O objeto raiz contém exatamente os metadados e o array `features` descritos neste documento. Não é GeoJSON `FeatureCollection` e não contém classes, assemblies ou nomes de namespace da Autodesk.

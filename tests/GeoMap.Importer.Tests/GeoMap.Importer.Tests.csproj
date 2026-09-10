@@ -22,4 +22,10 @@
     <ProjectReference Include="../../tools/importer/GeoMap.Importer/GeoMap.Importer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="../../contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json"
+             Link="fixtures/valid-geoautoengine-polyline.geomap.json"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

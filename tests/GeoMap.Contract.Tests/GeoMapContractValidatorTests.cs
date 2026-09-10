@@ -9,6 +9,7 @@ public sealed class GeoMapContractValidatorTests
     [Theory]
     [InlineData("valid-linestring.geomap.json")]
     [InlineData("valid-multilinestring.geomap.json")]
+    [InlineData("valid-geoautoengine-polyline.geomap.json")]
     public void Valid_examples_pass(string fileName)
     {
         var result = ValidateExample(fileName);

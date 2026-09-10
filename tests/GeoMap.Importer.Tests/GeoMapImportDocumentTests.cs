@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Xunit;
 
 namespace GeoMap.Importer.Tests;
@@ -20,6 +21,31 @@ public sealed class GeoMapImportDocumentTests
         Assert.Equal("Polyline", feature.SourceType);
         Assert.Contains("LineString", feature.GeometryJson, StringComparison.Ordinal);
         Assert.Contains("diameter", feature.PropertiesJson, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Parse_accepts_the_reference_GeoAutoEngine_export()
+    {
+        var path = Path.Combine(
+            AppContext.BaseDirectory,
+            "fixtures",
+            "valid-geoautoengine-polyline.geomap.json");
+
+        var document = GeoMapImportDocument.Parse(File.ReadAllBytes(path));
+
+        Assert.Equal("project-001", document.Project.ExternalId);
+        Assert.Equal("project-001:aguas_pluviais", document.Network.ExternalId);
+        Assert.Equal("Águas pluviais", document.Network.Name);
+        Assert.Equal("stormwater", document.Network.Type);
+        var feature = Assert.Single(document.Features);
+        Assert.Equal("2A7F", feature.SourceId);
+        Assert.Equal("GF-Rede Pluvial", feature.SourceLayer);
+        Assert.Equal("Polyline", feature.SourceType);
+        using var properties = JsonDocument.Parse(feature.PropertiesJson);
+        Assert.Equal("2A7F", properties.RootElement.GetProperty("cadHandle").GetString());
+        Assert.Equal("Polyline", properties.RootElement.GetProperty("cadEntityType").GetString());
+        Assert.Equal(2, properties.RootElement.GetProperty("vertexCount").GetInt32());
+        Assert.False(properties.RootElement.GetProperty("projectedTo2D").GetBoolean());
     }
 
     [Fact]

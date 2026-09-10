@@ -4,7 +4,7 @@
 
 ~~~mermaid
 flowchart TD
-    CAD["Civil 3D"] --> EXP["Exportador futuro"]
+    CAD["Civil 3D"] --> EXP["GeoAutoEngine Exporter"]
     EXP --> IMP["Importador GeoMap"]
     IMP --> DB["PostgreSQL + PostGIS"]
     DB --> API["ASP.NET Core API"]
@@ -12,7 +12,7 @@ flowchart TD
     MVT --> WEB["React + MapLibre"]
 ~~~
 
-A primeira prova técnica cobre PostGIS → API → MVT → MapLibre. O exportador do Civil 3D entra somente depois que esse fluxo funcionar com grande volume.
+A prova técnica PostGIS → API → MVT → MapLibre foi concluída antes da integração do exportador do Civil 3D, inclusive com o dataset LARGE.
 
 ## Estilo arquitetural
 
@@ -22,7 +22,7 @@ Monólito modular simples:
 - um backend;
 - um banco PostgreSQL/PostGIS;
 - uma ferramenta de importação;
-- um exportador Civil 3D futuro.
+- um exportador Civil 3D hospedado no GeoAutoEngine.
 
 Não há justificativa no MVP para serviços distribuídos, mensageria ou infraestrutura complexa.
 
@@ -84,7 +84,11 @@ Para grandes volumes, o mesmo modelo lógico v0.1 possui transporte `.geomap.ndj
 
 ### Civil 3D Exporter
 
-Componente futuro, carregado no Civil 3D, responsável apenas por extrair e converter objetos CAD para o contrato GeoMap. O primeiro tipo planejado é Polyline.
+O exportador é hospedado no aplicativo C# GeoAutoEngine, instalado como bundle do Civil 3D 2024, 2025 e 2026. O comando `GEOAUTO3GEOMAPEXPORT` extrai `LWPOLYLINE` abertas ou fechadas, preserva handle e layer e produz o contrato GeoMap v0.1. CRS e unidade são confirmados pelo operador; nenhum tipo Autodesk atravessa o arquivo de integração.
+
+A versão inicial aceita somente segmentos retos. Polylines fechadas repetem a primeira posição no final da `LineString`; bulges e entidades fora do escopo interrompem a exportação com diagnóstico. A projeção de Z para X/Y fica registrada em `properties.projectedTo2D` e a elevação original em `properties.cadElevation`.
+
+O código Autodesk permanece no repositório GeoAutoEngine. Este repositório mantém o contrato neutro, a fixture de referência e o teste ponta a ponta pelo importador, PostGIS e MVT.
 
 Para a validação real anterior ao exportador definitivo, existe uma ponte DXF
 ASCII isolada em `tools/dxf-converter`. Ela lê somente `LINE` e `LWPOLYLINE` do

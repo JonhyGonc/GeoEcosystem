@@ -197,6 +197,18 @@ geometrias lineares não suportadas são rejeitados. A ponte é descartável e n
 se torna uma segunda arquitetura de importação: sua saída passa integralmente
 pelo validador e importador existentes.
 
+## DEC-025 — Exportador de Polyline hospedado no GeoAutoEngine
+
+Status: aprovada.
+
+O exportador inicial do Civil 3D será um comando do aplicativo existente GeoAutoEngine, em vez de um segundo plugin Autodesk. Essa escolha preserva uma única instalação compatível com Civil 3D 2024, 2025 e 2026 e mantém o código dependente da Autodesk fora do GeoMap.
+
+O comando `GEOAUTO3GEOMAPEXPORT` seleciona apenas `LWPOLYLINE`, lê o desenho sem modificá-lo e produz o contrato GeoMap v0.1. A primeira versão aceita Polylines abertas ou fechadas com segmentos retos; `Polyline2d`, `Polyline3d`, Feature Line, Pipe Network, Pressure Network e bulges permanecem fora do escopo. Tipos não suportados interrompem a exportação com diagnóstico, sem aproximação silenciosa.
+
+Handle, layer, fechamento, quantidade de vértices e elevação são preservados. CRS e unidade são explícitos. Quando existe elevação, a geometria é projetada para X/Y pelo produtor e essa perda fica declarada em `projectedTo2D`, com `cadElevation` preservado em propriedades.
+
+O GeoAutoEngine mantém implementação, build e instruções de instalação. O GeoMap mantém uma fixture sintética produzida pelo mesmo serializador e a executa pelo validador, importador, PostGIS, catálogo, detalhe de atributos e MVT. A integração entre repositórios continua sendo o contrato v0.1, sem referência binária ou classe Autodesk.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

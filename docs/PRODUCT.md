@@ -33,9 +33,9 @@ Permitir que uma rede já desenhada no Civil 3D seja:
 
 É a origem e o ambiente de autoria da geometria. Nele as tubulações são criadas e ajustadas.
 
-### Exportador futuro
+### Exportador Civil 3D
 
-Extrai objetos do Civil 3D e os converte para o contrato GeoMap. Pode futuramente suportar Polyline, Polyline2D, 3D Polyline, Feature Line, Pipe Network e Pressure Network.
+O exportador inicial é hospedado no GeoAutoEngine e converte `LWPOLYLINE` com segmentos retos para o contrato GeoMap. Polyline2D, 3D Polyline, Feature Line, Pipe Network e Pressure Network permanecem possibilidades futuras fora do Protótipo 0.1.
 
 ### Importador
 

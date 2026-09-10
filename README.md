@@ -21,7 +21,7 @@ O primeiro fluxo técnico a ser provado é:
 
 PostGIS → API → MVT → MapLibre
 
-O exportador do Civil 3D será tratado somente depois de o fluxo geográfico web funcionar com volume alto.
+O exportador inicial de Polyline é fornecido pelo aplicativo GeoAutoEngine depois da comprovação do fluxo geográfico web com volume alto.
 
 ## Desenvolvimento local
 
@@ -144,10 +144,16 @@ dotnet run --project tools/importer/GeoMap.Importer -- \
 
 O progresso de cada lote aparece como JSON em stderr. O leitor não carrega o arquivo inteiro; falha ou `Ctrl+C` preserva o snapshot anterior da rede.
 
+### Exportar Polylines diretamente do Civil 3D
+
+O GeoAutoEngine adiciona o comando `GEOAUTO3GEOMAPEXPORT` ao Civil 3D 2024, 2025 e 2026. O comando seleciona `LWPOLYLINE`, exige CRS e unidade explícitos e grava um arquivo `*.geomap.json` aceito pelo importador acima.
+
+Consulte [a integração com o Civil 3D](docs/CIVIL3D_EXPORTER.md) para instalação, escopo e fluxo completo. Um arquivo de referência produzido pelo mesmo serializador está em `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json` e percorre validador, banco, catálogo, atributos e MVT na CI.
+
 ### Converter um DXF para validação real
 
-Antes do exportador Civil 3D definitivo, uma ponte provisória converte uma camada
-linear de DXF ASCII para o mesmo contrato v0.1:
+A ponte provisória usada antes do exportador definitivo continua disponível para
+reproduzir a validação por DXF ASCII e converte uma camada linear para o mesmo contrato v0.1:
 
 ~~~bash
 python3 tools/dxf-converter/geomap_dxf.py --help
@@ -214,7 +220,7 @@ tests/integration/                  testes reais de schema, integridade e datase
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, a importação GeoMap v0.1 e a conversão privada da primeira rede CAD real estão implementados. O exportador Civil 3D pertence à próxima Issue.
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, a importação GeoMap v0.1, a conversão privada da primeira rede CAD real e o exportador inicial de Polyline no GeoAutoEngine estão implementados.
 
 ## Documentação
 
@@ -224,6 +230,7 @@ O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles v
 - [Modelo de dados](docs/DATA_MODEL.md)
 - [API](docs/API.md)
 - [Contrato de importação](docs/IMPORT_CONTRACT.md)
+- [Exportador do Civil 3D](docs/CIVIL3D_EXPORTER.md)
 - [Validação da rede CAD real](docs/REAL_DATA_VALIDATION.md)
 - [Performance](docs/PERFORMANCE.md)
 - [Decisões](docs/DECISIONS.md)

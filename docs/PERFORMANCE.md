@@ -199,6 +199,12 @@ altera consulta MVT, payload, índices ou os baselines SMALL/MEDIUM/LARGE. A CI
 usa uma fixture DXF sintética para verificar conversão, importação, transformação
 `EPSG:31982` → `EPSG:4326` e atributos sem expor o dataset real.
 
+## Validação do exportador Civil 3D — Issue #18
+
+O exportador reutiliza os limites do documento GeoMap v0.1: até 10.000 Polylines por arquivo e 100.000 posições por feição. A leitura do DWG é somente leitura e a saída JSON é validada integralmente antes de persistir. Volumes acima desse limite exigirão um exportador NDJSON futuro; não há divisão silenciosa do snapshot nesta versão.
+
+A fixture de referência do GeoAutoEngine contém uma `Polyline` de dois vértices em `EPSG:31982`. A CI confirma o contrato, a transformação para `EPSG:4326`, os metadados Autodesk neutralizados em JSON, o catálogo da rede, os atributos sob demanda e a geração do MVT no tile que contém a geometria. Esse teste pequeno comprova compatibilidade funcional e não altera os baselines SMALL, MEDIUM e LARGE nem suas guardas de memória, latência ou payload.
+
 ## Antipadrões proibidos
 
 - endpoint all-network-features para visualização;

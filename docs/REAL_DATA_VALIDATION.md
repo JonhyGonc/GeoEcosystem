@@ -71,7 +71,7 @@ importar seu contrato pelo importador .NET e verificar no PostGIS:
   trecho; diâmetro e material ainda não são extraídos. O painel já consegue
   consultar os atributos de proveniência disponíveis.
 - A ponte provisória rejeita bulges, extrusões não padrão, `POLYLINE`, `ARC` e
-  `SPLINE`; o suporte completo pertence ao exportador Civil 3D da Issue #18.
+  `SPLINE`; o fluxo definitivo de `LWPOLYLINE` pertence ao exportador Civil 3D implementado pela Issue #18.
 - Os 15 objetos representam a geometria desenhada na camada, inclusive trechos
   paralelos; a ponte não tenta inferir ou reconstruir eixos.
 - A conferência visual interativa sobre o mapa base será repetida no ensaio final
