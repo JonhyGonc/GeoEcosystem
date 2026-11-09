@@ -115,6 +115,8 @@ DXF e saídas reais permanecem fora do controle de versão.
 
 O frontend configura uma fonte vetorial `geomap-network` com o template `/api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, a source-layer `network_features` e zoom de 14 a 22. A base da API e as escolhas iniciais de projeto e rede são configuração de ambiente validada; uma configuração inválida mantém o mapa base funcional e informa o estado ao usuário.
 
+O MapLibre 6 decodifica os tiles vetoriais em um Web Worker distribuído como arquivo separado (`maplibre-gl-worker.mjs`). O `main.tsx` informa a URL desse arquivo com `setWorkerUrl`, importando-o com o sufixo `?url` do Vite. Sem isso, o pré-empacotamento em desenvolvimento e o bundle de produção movem o módulo, o worker não é encontrado e as redes nunca aparecem, sem erro visível. A Frontend CI verifica se o worker está presente no bundle de produção.
+
 Pan e zoom fazem o MapLibre requisitar apenas os tiles necessários para a região visível. A aplicação não usa o endpoint de feições como alternativa nem carrega a rede completa. Eventos da fonte controlam os estados de carregamento, região vazia, conteúdo visível e falha; erros da rede ficam isolados do mapa base.
 
 ## Catálogo e controle de camadas
