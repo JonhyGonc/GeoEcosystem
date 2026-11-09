@@ -14,11 +14,13 @@ Status: aprovada.
 
 MapLibre será o visualizador web. Evita dependência obrigatória de um provedor comercial e suporta tiles vetoriais.
 
-## DEC-003 — ASP.NET Core / .NET 8
+## DEC-003 — ASP.NET Core / .NET 10 (LTS)
 
-Status: aprovada.
+Status: aprovada; revisada em 9 de novembro de 2026 (Issue #38).
 
-O backend inicial será ASP.NET Core em C# e .NET 8, mantendo alinhamento com a experiência e os projetos existentes da equipe.
+O backend e as ferramentas usam ASP.NET Core em C#, mantendo alinhamento com a experiência e os projetos existentes da equipe. A versão original era o .NET 8. Ela foi substituída pelo .NET 10 LTS porque o .NET 8 deixa de receber correções de segurança em 10 de novembro de 2026, e o .NET 10 tem suporte até novembro de 2028.
+
+A migração altera somente o target framework, as imagens Docker, a CI e os pacotes de teste ligados à versão do ASP.NET Core. O Npgsql continua na série 8.0.x. Uma atualização major dele exige Issue própria.
 
 ## DEC-004 — React + TypeScript
 

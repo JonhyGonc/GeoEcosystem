@@ -26,10 +26,10 @@ jobs:
       - name: Test provisional DXF bridge
         run: python3 -m unittest discover -s tests/dxf-converter -p 'test_*.py' -v
 
-      - name: Set up .NET 8
+      - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
           cache: true
           cache-dependency-path: "**/*.csproj"
 
@@ -51,10 +51,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up .NET 8 for dataset loading
+      - name: Set up .NET 10 for dataset loading
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
           cache: true
           cache-dependency-path: "**/*.csproj"
 

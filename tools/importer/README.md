@@ -18,7 +18,7 @@ Cada feição é uma `LineString` 2D em EPSG:4326 e possui diâmetro, material, 
 
 1. PostgreSQL/PostGIS iniciado.
 2. Migration `001_initial_spatial_model.up.sql` aplicada.
-3. .NET 8 SDK instalado.
+3. .NET 10 SDK instalado.
 
 ## Uso
 
