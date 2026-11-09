@@ -97,7 +97,7 @@ npm run dev
 
 Abra http://localhost:5173 para navegar pelo mapa com zoom, arraste e controles visuais. O padrão usa OpenStreetMap Standard sem chave e mantém sua atribuição visível. Consulte [apps/web/README.md](apps/web/README.md) para trocar a fonte e conhecer os limites de uso.
 
-Para listar as camadas, informe `VITE_GEOMAP_PROJECT_ID` no arquivo `apps/web/.env`. `VITE_GEOMAP_NETWORK_ID` é opcional e apenas escolhe a camada inicialmente visível; sem ela, todas as redes do projeto começam ligadas. O frontend solicita somente os tiles MVT da região visível. Consulte [apps/web/README.md](apps/web/README.md) para obter os IDs e ajustar a URL da API.
+O projeto é escolhido no seletor do cabeçalho, que lista os projetos importados. `VITE_GEOMAP_PROJECT_ID` é opcional e apenas indica o projeto aberto na inicialização; sem ela, abre o primeiro da lista. `VITE_GEOMAP_NETWORK_ID` também é opcional e escolhe a camada inicialmente visível desse projeto; sem ela, todas as redes começam ligadas. O frontend solicita somente os tiles MVT da região visível. Consulte [apps/web/README.md](apps/web/README.md) para obter os IDs e ajustar a URL da API.
 
 Antes de enviar uma alteração do frontend:
 
@@ -173,6 +173,16 @@ GET /api/projects/{projectId}/networks/{networkId}/features
 ~~~
 
 Não existe endpoint para carregar uma rede completa. Consulte [docs/API.md](docs/API.md) para parâmetros, limites e formato da resposta.
+
+### Listar projetos
+
+O seletor do cabeçalho usa o catálogo leve de projetos:
+
+~~~text
+GET /api/projects
+~~~
+
+A resposta traz apenas identificador e nome de cada projeto.
 
 ### Listar redes do projeto
 

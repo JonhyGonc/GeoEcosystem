@@ -1,6 +1,7 @@
 using GeoMap.Api;
 using GeoMap.Api.FeatureDetails;
 using GeoMap.Api.Networks;
+using GeoMap.Api.Projects;
 using GeoMap.Api.SpatialQueries;
 using GeoMap.Api.VectorTiles;
 using Microsoft.Extensions.Options;
@@ -26,6 +27,7 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider =>
 });
 builder.Services.AddScoped<SpatialFeatureQuery>();
 builder.Services.AddScoped<VectorTileQuery>();
+builder.Services.AddScoped<ProjectCatalogQuery>();
 builder.Services.AddScoped<NetworkCatalogQuery>();
 builder.Services.AddScoped<FeatureDetailsQuery>();
 builder.Services.AddHealthChecks();
@@ -41,6 +43,7 @@ app.MapGet("/", () => Results.Ok(new
 app.MapHealthChecks("/health");
 app.MapSpatialQueryEndpoints();
 app.MapVectorTileEndpoints();
+app.MapProjectCatalogEndpoints();
 app.MapNetworkCatalogEndpoints();
 app.MapFeatureDetailsEndpoints();
 
