@@ -52,6 +52,27 @@ A API ficará disponível em http://localhost:8080 e o health check em http://lo
 
 O arquivo .env é ignorado pelo Git. Troque a senha de exemplo antes de usar e nunca versione credenciais reais.
 
+#### PostgreSQL já instalado no Windows
+
+Um PostgreSQL instalado diretamente no Windows também escuta a porta 5432. Nesse caso, os comandos `docker compose exec` funcionam, porque rodam dentro do container, mas o gerador de datasets e o importador conectam pelo `localhost` e chegam ao PostgreSQL do Windows. O sintoma é o erro `28P01`, de falha de autenticação por senha, muitas vezes com a mensagem em português.
+
+Para confirmar no PowerShell:
+
+~~~powershell
+Get-NetTCPConnection -LocalPort 5432 -State Listen |
+  ForEach-Object { (Get-Process -Id $_.OwningProcess).ProcessName }
+~~~
+
+Se aparecerem `postgres` e `com.docker.backend`, publique o banco do Docker em outra porta e use essa mesma porta nas strings de conexão das ferramentas:
+
+~~~powershell
+(Get-Content .env) -replace '^POSTGRES_PORT=.*', 'POSTGRES_PORT=5433' | Set-Content .env
+docker compose up -d
+$env:GEOMAP_DB_CONNECTION_STRING = 'Host=localhost;Port=5433;Database=geomap;Username=geomap;Password=change-me-local-only'
+~~~
+
+A API não muda, porque fala com o banco pela rede interna do Docker.
+
 ### Verificar o PostGIS
 
 ~~~bash
