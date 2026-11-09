@@ -5,6 +5,14 @@ namespace GeoMap.Importer;
 
 public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
 {
+    /// <summary>
+    /// Limite explícito para os comandos que contam, removem e inserem o snapshot
+    /// completo da rede. O padrão de 30 s do Npgsql é insuficiente para o cenário
+    /// LARGE; o valor permanece finito para que um bloqueio não prenda a importação
+    /// indefinidamente.
+    /// </summary>
+    public const int SnapshotCommandTimeoutSeconds = 600;
+
     public async Task<GeoMapImportResult> ImportAsync(
         string connectionString,
         GeoMapImportDocument document,
@@ -198,7 +206,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         Guid networkId,
         CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand(
+        await using var command = CreateSnapshotCommand(
             "SELECT count(*)::integer FROM network_features WHERE network_id = @network_id;",
             connection,
             transaction);
@@ -212,7 +220,7 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         Guid networkId,
         CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand(
+        await using var command = CreateSnapshotCommand(
             "DELETE FROM network_features WHERE network_id = @network_id;",
             connection,
             transaction);
@@ -245,9 +253,18 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
             ORDER BY sequence;
             """;
 
-        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        await using var command = CreateSnapshotCommand(sql, connection, transaction);
         command.Parameters.AddWithValue("network_id", networkId);
         command.Parameters.AddWithValue("source_srid", sourceSrid);
         return await command.ExecuteNonQueryAsync(cancellationToken);
     }
+
+    internal static NpgsqlCommand CreateSnapshotCommand(
+        string sql,
+        NpgsqlConnection? connection,
+        NpgsqlTransaction? transaction) =>
+        new(sql, connection, transaction)
+        {
+            CommandTimeout = SnapshotCommandTimeoutSeconds
+        };
 }
