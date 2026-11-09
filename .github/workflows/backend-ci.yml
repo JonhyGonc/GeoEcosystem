@@ -323,6 +323,9 @@ jobs:
       - name: Verify vector tile API and MVT payload
         run: tests/integration/verify-vector-tile-api.sh http://localhost:8080
 
+      - name: Verify project catalog API
+        run: tests/integration/verify-project-catalog-api.sh http://localhost:8080
+
       - name: Verify project network catalog API
         run: tests/integration/verify-network-catalog-api.sh http://localhost:8080
 

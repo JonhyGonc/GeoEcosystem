@@ -1,16 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import { LayerControl } from './LayerControl'
+import { ProjectSelector } from './ProjectSelector'
 import { SelectionSummary } from './SelectionSummary'
 import {
   fetchFeatureDetails,
   type FeatureDetailsState,
 } from './api/featureDetails'
+import {
+  chooseInitialProjectId,
+  fetchProjects,
+  type ProjectCatalogState,
+} from './api/projectCatalog'
 import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
 import {
+  buildNetworkCatalogConfig,
   createNetworkLayerViews,
   fetchProjectNetworks,
-  initialNetworkStatus,
   installNetworkLayers,
   networkConfiguration,
   summarizeNetworkLayers,
@@ -28,15 +34,26 @@ interface AppProps {
   readonly configuration?: NetworkConfiguration
 }
 
+const LOADING_LAYERS_STATUS: NetworkStatus = {
+  kind: 'loading',
+  message: 'Carregando camadas…',
+}
+
 function App({ configuration = networkConfiguration }: AppProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<NetworkMapTarget>(null)
   const layerController = useRef<NetworkLayerController>(null)
   const [styleRevision, setStyleRevision] = useState(0)
-  const [layers, setLayers] = useState<NetworkLayerView[]>([])
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() =>
-    initialNetworkStatus(configuration),
+  const [projectCatalog, setProjectCatalog] = useState<ProjectCatalogState>({
+    kind: 'loading',
+  })
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null,
   )
+  const [startupProjectId, setStartupProjectId] = useState<string | null>(null)
+  const [layers, setLayers] = useState<NetworkLayerView[]>([])
+  const [networkStatus, setNetworkStatus] =
+    useState<NetworkStatus>(LOADING_LAYERS_STATUS)
   const [selectedFeature, setSelectedFeature] =
     useState<SelectedNetworkFeature | null>(null)
   const [featureDetails, setFeatureDetails] = useState<FeatureDetailsState>({
@@ -84,6 +101,44 @@ function App({ configuration = networkConfiguration }: AppProps) {
   }, [])
 
   useEffect(() => {
+    if (configuration.kind !== 'ready') return
+
+    const abortController = new AbortController()
+    void fetchProjects(configuration.value.apiBaseUrl, abortController.signal)
+      .then((projects) => {
+        if (abortController.signal.aborted) return
+        const initialProjectId = chooseInitialProjectId(
+          projects,
+          configuration.value.initialProjectId,
+        )
+        setProjectCatalog({ kind: 'ready', projects })
+        setSelectedProjectId(initialProjectId)
+        setStartupProjectId(initialProjectId)
+      })
+      .catch((error: unknown) => {
+        if (abortController.signal.aborted) return
+        setProjectCatalog({
+          kind: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível listar os projetos',
+        })
+      })
+
+    return () => abortController.abort()
+  }, [configuration])
+
+  const catalogConfig = useMemo(() => {
+    if (configuration.kind !== 'ready' || !selectedProjectId) return null
+    return buildNetworkCatalogConfig(
+      configuration.value,
+      selectedProjectId,
+      selectedProjectId === startupProjectId,
+    )
+  }, [configuration, selectedProjectId, startupProjectId])
+
+  useEffect(() => {
     if (styleRevision === 0 || !mapInstance.current) return
 
     layerController.current?.cleanup()
@@ -91,18 +146,18 @@ function App({ configuration = networkConfiguration }: AppProps) {
     setSelectedFeature(null)
     setFeatureDetails({ kind: 'idle' })
     setLayers([])
-    setNetworkStatus(initialNetworkStatus(configuration))
-    if (configuration.kind !== 'ready') return
+    setNetworkStatus(LOADING_LAYERS_STATUS)
+    if (!catalogConfig) return
 
     const abortController = new AbortController()
     const map = mapInstance.current
 
-    void fetchProjectNetworks(configuration.value, abortController.signal)
+    void fetchProjectNetworks(catalogConfig, abortController.signal)
       .then((networks) => {
         if (abortController.signal.aborted) return
         const nextLayers = createNetworkLayerViews(
           networks,
-          configuration.value.initialNetworkId,
+          catalogConfig.initialNetworkId,
         )
         setLayers(nextLayers)
         setNetworkStatus(summarizeNetworkLayers(nextLayers))
@@ -110,7 +165,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
         layerController.current = installNetworkLayers(
           map,
-          configuration.value,
+          catalogConfig,
           nextLayers,
           (networkId, status) => {
             setLayers((current) =>
@@ -141,14 +196,14 @@ function App({ configuration = networkConfiguration }: AppProps) {
       layerController.current?.cleanup()
       layerController.current = null
     }
-  }, [configuration, styleRevision])
+  }, [catalogConfig, styleRevision])
 
   useEffect(() => {
-    if (!selectedFeature || configuration.kind !== 'ready') return
+    if (!selectedFeature || !catalogConfig) return
 
     const abortController = new AbortController()
     void fetchFeatureDetails(
-      configuration.value,
+      catalogConfig,
       selectedFeature,
       abortController.signal,
     )
@@ -170,7 +225,12 @@ function App({ configuration = networkConfiguration }: AppProps) {
       })
 
     return () => abortController.abort()
-  }, [configuration, detailsRevision, selectedFeature])
+  }, [catalogConfig, detailsRevision, selectedFeature])
+
+  const changeProject = (projectId: string) => {
+    setStartupProjectId(null)
+    setSelectedProjectId(projectId)
+  }
 
   const changeVisibility = (networkId: string, visible: boolean) => {
     layerController.current?.setVisibility(networkId, visible)
@@ -197,7 +257,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
   }
 
   const displayedNetworkStatus =
-    layers.length > 0 ? summarizeNetworkLayers(layers) : networkStatus
+    projectCatalogStatus(configuration, projectCatalog) ??
+    (layers.length > 0 ? summarizeNetworkLayers(layers) : networkStatus)
 
   return (
     <main className="map-shell">
@@ -211,6 +272,13 @@ function App({ configuration = networkConfiguration }: AppProps) {
         <span className="map-header__eyebrow">Protótipo 0.1</span>
         <h1>GeoMap</h1>
         <p>Visualizador geográfico de redes de tubulação</p>
+        {projectCatalog.kind === 'ready' && selectedProjectId && (
+          <ProjectSelector
+            projects={projectCatalog.projects}
+            selectedProjectId={selectedProjectId}
+            onProjectChange={changeProject}
+          />
+        )}
       </header>
 
       {layers.length > 0 && (
@@ -244,6 +312,25 @@ function App({ configuration = networkConfiguration }: AppProps) {
       </aside>
     </main>
   )
+}
+
+function projectCatalogStatus(
+  configuration: NetworkConfiguration,
+  projectCatalog: ProjectCatalogState,
+): NetworkStatus | null {
+  if (configuration.kind === 'invalid') {
+    return { kind: 'error', message: configuration.message }
+  }
+  if (projectCatalog.kind === 'loading') {
+    return { kind: 'loading', message: 'Carregando projetos…' }
+  }
+  if (projectCatalog.kind === 'error') {
+    return { kind: 'error', message: projectCatalog.message }
+  }
+  if (projectCatalog.projects.length === 0) {
+    return { kind: 'unconfigured', message: 'Nenhum projeto importado' }
+  }
+  return null
 }
 
 function visibilityStatus(visible: boolean): NetworkLayerStatus {

@@ -50,6 +50,51 @@
   line-height: 1.45;
 }
 
+.project-selector {
+  display: grid;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.project-selector__label {
+  color: #63808d;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-selector select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cadde4;
+  border-radius: 7px;
+  color: #12364a;
+  background: #f6fafb;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.project-selector select:hover:not(:disabled) {
+  border-color: #8fb6c4;
+  background: #edf6f8;
+}
+
+.project-selector select:focus-visible {
+  outline: 3px solid rgb(45 122 151 / 28%);
+  outline-offset: 2px;
+}
+
+.project-selector select:disabled {
+  color: #345767;
+  cursor: default;
+  opacity: 1;
+}
+
 .map-status {
   position: absolute;
   z-index: 1;

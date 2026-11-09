@@ -31,6 +31,12 @@ export interface NetworkEnvironment {
   readonly VITE_GEOMAP_PROJECT_ID?: string
 }
 
+export interface GeoMapConfig {
+  readonly apiBaseUrl: string
+  readonly initialNetworkId?: string
+  readonly initialProjectId?: string
+}
+
 export interface NetworkCatalogConfig {
   readonly apiBaseUrl: string
   readonly initialNetworkId?: string
@@ -49,8 +55,7 @@ export interface NetworkCatalogResponse {
 }
 
 export type NetworkConfiguration =
-  | { readonly kind: 'ready'; readonly value: NetworkCatalogConfig }
-  | { readonly kind: 'missing'; readonly message: string }
+  | { readonly kind: 'ready'; readonly value: GeoMapConfig }
   | { readonly kind: 'invalid'; readonly message: string }
 
 export type NetworkLayerStatus =
@@ -134,15 +139,11 @@ export interface NetworkLayerController {
 export function loadNetworkConfiguration(
   environment: NetworkEnvironment,
 ): NetworkConfiguration {
-  const projectId = environment.VITE_GEOMAP_PROJECT_ID?.trim() ?? ''
+  const initialProjectId = environment.VITE_GEOMAP_PROJECT_ID?.trim() || undefined
   const initialNetworkId = environment.VITE_GEOMAP_NETWORK_ID?.trim() || undefined
 
-  if (!projectId) {
-    return { kind: 'missing', message: 'Projeto não configurado' }
-  }
-
   if (
-    !UUID_PATTERN.test(projectId) ||
+    (initialProjectId && !UUID_PATTERN.test(initialProjectId)) ||
     (initialNetworkId && !UUID_PATTERN.test(initialNetworkId))
   ) {
     return {
@@ -156,7 +157,7 @@ export function loadNetworkConfiguration(
       kind: 'ready',
       value: {
         apiBaseUrl: normalizeApiBaseUrl(environment.VITE_GEOMAP_API_BASE_URL),
-        projectId,
+        initialProjectId,
         initialNetworkId,
       },
     }
@@ -170,16 +171,16 @@ export function loadNetworkConfiguration(
 
 export const networkConfiguration = loadNetworkConfiguration(import.meta.env)
 
-export function initialNetworkStatus(
-  configuration: NetworkConfiguration,
-): NetworkStatus {
-  if (configuration.kind === 'missing') {
-    return { kind: 'unconfigured', message: configuration.message }
+export function buildNetworkCatalogConfig(
+  config: GeoMapConfig,
+  projectId: string,
+  applyInitialNetwork: boolean,
+): NetworkCatalogConfig {
+  return {
+    apiBaseUrl: config.apiBaseUrl,
+    projectId,
+    initialNetworkId: applyInitialNetwork ? config.initialNetworkId : undefined,
   }
-  if (configuration.kind === 'invalid') {
-    return { kind: 'error', message: configuration.message }
-  }
-  return { kind: 'loading', message: 'Carregando camadas…' }
 }
 
 export function buildNetworkCatalogUrl(config: NetworkCatalogConfig): string {

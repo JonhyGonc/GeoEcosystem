@@ -16,7 +16,7 @@ import {
   buildNetworkTileUrl,
   createNetworkLayerViews,
   fetchProjectNetworks,
-  initialNetworkStatus,
+  buildNetworkCatalogConfig,
   installNetworkLayers,
   loadNetworkConfiguration,
   summarizeNetworkLayers,
@@ -46,7 +46,7 @@ afterEach(() => {
 })
 
 describe('network catalog configuration', () => {
-  it('requires one project and keeps the former network id as an optional initial layer', () => {
+  it('treats project and network ids as optional initial choices', () => {
     const configuration = loadNetworkConfiguration({
       VITE_GEOMAP_PROJECT_ID: projectId,
       VITE_GEOMAP_NETWORK_ID: networkId,
@@ -54,12 +54,26 @@ describe('network catalog configuration', () => {
 
     expect(configuration).toEqual({
       kind: 'ready',
-      value: readyConfiguration(),
+      value: {
+        apiBaseUrl: '/api',
+        initialProjectId: projectId,
+        initialNetworkId: networkId,
+      },
     })
     expect(loadNetworkConfiguration({ VITE_GEOMAP_PROJECT_ID: projectId })).toMatchObject({
       kind: 'ready',
     })
-    expect(loadNetworkConfiguration({})).toMatchObject({ kind: 'missing' })
+    expect(loadNetworkConfiguration({})).toEqual({
+      kind: 'ready',
+      value: {
+        apiBaseUrl: '/api',
+        initialProjectId: undefined,
+        initialNetworkId: undefined,
+      },
+    })
+    expect(
+      loadNetworkConfiguration({ VITE_GEOMAP_PROJECT_ID: 'invalid' }),
+    ).toMatchObject({ kind: 'invalid' })
     expect(
       loadNetworkConfiguration({
         VITE_GEOMAP_PROJECT_ID: projectId,
@@ -72,9 +86,22 @@ describe('network catalog configuration', () => {
         VITE_GEOMAP_PROJECT_ID: projectId,
       }),
     ).toMatchObject({ kind: 'invalid' })
-    expect(initialNetworkStatus(loadNetworkConfiguration({}))).toEqual({
-      kind: 'unconfigured',
-      message: 'Projeto não configurado',
+  })
+
+  it('applies the initial network only when requested', () => {
+    const config = {
+      apiBaseUrl: '/api',
+      initialProjectId: projectId,
+      initialNetworkId: networkId,
+    }
+
+    expect(buildNetworkCatalogConfig(config, projectId, true)).toEqual(
+      readyConfiguration(),
+    )
+    expect(buildNetworkCatalogConfig(config, otherProjectId, false)).toEqual({
+      apiBaseUrl: '/api',
+      projectId: otherProjectId,
+      initialNetworkId: undefined,
     })
   })
 

@@ -49,11 +49,11 @@ Antes de uso público ou de alto tráfego, deve-se contratar um provedor compat�
 
 ## Configurar as camadas de rede
 
-O frontend consulta as redes pertencentes ao projeto e cria uma camada MVT para cada uma. Preencha o projeto no arquivo `.env`; a rede inicial é opcional:
+O frontend lista os projetos importados no seletor do cabeçalho, consulta as redes do projeto escolhido e cria uma camada MVT para cada uma. O projeto e a rede iniciais são opcionais. Sem eles, abre o primeiro projeto da lista com todas as redes visíveis:
 
 ~~~dotenv
 VITE_GEOMAP_API_BASE_URL=/api
-VITE_GEOMAP_PROJECT_ID=UUID_DO_PROJETO
+VITE_GEOMAP_PROJECT_ID=UUID_DO_PROJETO_INICIAL_OPCIONAL
 VITE_GEOMAP_NETWORK_ID=UUID_DA_REDE_INICIAL_OPCIONAL
 ~~~
 

@@ -211,6 +211,14 @@ Handle, layer, fechamento, quantidade de vértices e elevação são preservados
 
 O GeoAutoEngine mantém implementação, build e instruções de instalação. O GeoMap mantém uma fixture sintética produzida pelo mesmo serializador e a executa pelo validador, importador, PostGIS, catálogo, detalhe de atributos e MVT. A integração entre repositórios continua sendo o contrato v0.1, sem referência binária ou classe Autodesk.
 
+## DEC-026 — Seleção de projeto pela interface
+
+Status: aprovada (Issue #40).
+
+O frontend lista os projetos por `GET /api/projects`, que retorna somente `id` e `name` sem ler redes ou feições, e oferece um seletor no cabeçalho. `VITE_GEOMAP_PROJECT_ID` deixa de ser obrigatório e passa a indicar apenas o projeto aberto na inicialização. Quando a variável não é informada ou aponta para um projeto inexistente, a interface abre o primeiro projeto da lista. `VITE_GEOMAP_NETWORK_ID` só vale para esse projeto inicial e é descartado na primeira troca feita pelo usuário.
+
+A troca de projeto reutiliza o fluxo da DEC-018: as requisições pendentes são canceladas, as camadas e a seleção anteriores são removidas e o catálogo do novo projeto é instalado. A escolha vale somente para a sessão atual. Criar ou editar projetos pela interface, paginação, permissões e enquadramento automático do mapa ficam fora do protótipo, porque os projetos continuam nascendo da importação.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

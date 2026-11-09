@@ -1,5 +1,26 @@
 # API GeoMap
 
+## Catálogo de projetos
+
+~~~http
+GET /api/projects
+~~~
+
+Lista os projetos que podem ser abertos no visualizador. A resposta contém somente `id` e `name`, ordenados por nome (na collation do banco) e identificador. A consulta não lê redes nem feições, então projetos sem redes também aparecem. Uma base sem projetos retorna HTTP 200 com `projects: []`. A consulta tem timeout de 5 segundos.
+
+Exemplo:
+
+~~~json
+{
+  "projects": [
+    {
+      "id": "60000000-0000-4000-8000-000000000001",
+      "name": "Drenagem — Bairro Centro"
+    }
+  ]
+}
+~~~
+
 ## Catálogo de redes do projeto
 
 ~~~http

@@ -113,15 +113,17 @@ DXF e saídas reais permanecem fora do controle de versão.
 
 ## Integração MapLibre com MVT
 
-O frontend configura uma fonte vetorial `geomap-network` com o template `/api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, a source-layer `network_features` e zoom de 14 a 22. Projeto, rede e base da API são configuração de ambiente validada; uma configuração ausente ou inválida mantém o mapa base funcional e informa o estado ao usuário.
+O frontend configura uma fonte vetorial `geomap-network` com o template `/api/projects/{projectId}/networks/{networkId}/tiles/{z}/{x}/{y}.mvt`, a source-layer `network_features` e zoom de 14 a 22. A base da API e as escolhas iniciais de projeto e rede são configuração de ambiente validada; uma configuração inválida mantém o mapa base funcional e informa o estado ao usuário.
 
 Pan e zoom fazem o MapLibre requisitar apenas os tiles necessários para a região visível. A aplicação não usa o endpoint de feições como alternativa nem carrega a rede completa. Eventos da fonte controlam os estados de carregamento, região vazia, conteúdo visível e falha; erros da rede ficam isolados do mapa base.
 
 ## Catálogo e controle de camadas
 
+Ao iniciar, o frontend pede `GET /api/projects`, que retorna apenas `id` e `name`, e abre o projeto indicado por `VITE_GEOMAP_PROJECT_ID` ou, se ele não for informado ou não existir, o primeiro da lista. O seletor de projeto fica no cabeçalho. Sem projetos ou com falha na API de projetos, o mapa base continua funcional e o estado aparece na barra de status (DEC-026).
+
 A API lista `id`, `name` e `type` das redes filtradas por `project_id`, sem acessar geometrias ou contar feições. O frontend cria uma fonte e uma camada MapLibre por rede do catálogo; seus identificadores `geomap-network-source-{networkId}` e `geomap-network-lines-{networkId}` evitam colisões.
 
-A visibilidade é estado local da sessão e muda por `setLayoutProperty`, mantendo as fontes instaladas e permitindo reutilizar o cache de tiles. Zoom e pan não recriam camadas. Ao trocar o projeto configurado, requisições pendentes são canceladas e as camadas anteriores são removidas antes de instalar o novo catálogo. Cores simples e determinísticas diferenciam as redes, sem editor de estilo.
+A visibilidade é estado local da sessão e muda por `setLayoutProperty`, mantendo as fontes instaladas e permitindo reutilizar o cache de tiles. Zoom e pan não recriam camadas. Ao trocar o projeto pelo seletor, requisições pendentes são canceladas e as camadas anteriores são removidas antes de instalar o novo catálogo. Cores simples e determinísticas diferenciam as redes, sem editor de estilo.
 
 ## Seleção de elementos
 
