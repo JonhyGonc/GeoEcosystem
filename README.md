@@ -11,7 +11,7 @@ O site é um visualizador geográfico. A criação e a edição das tubulações
 ## Arquitetura aprovada
 
 - Frontend: React, TypeScript e MapLibre GL JS.
-- Backend: ASP.NET Core, .NET 8 e C#.
+- Backend: ASP.NET Core, .NET 10 (LTS) e C#.
 - Banco: PostgreSQL e PostGIS.
 - Desenvolvimento local: Docker Compose.
 - Entrega das redes ao mapa: Vector Tiles (MVT).
@@ -29,7 +29,7 @@ O exportador inicial de Polyline é fornecido pelo aplicativo GeoAutoEngine depo
 
 - Git;
 - Docker Desktop com Docker Compose;
-- .NET 8 SDK, apenas para executar build e testes fora do Docker;
+- .NET 10 SDK, apenas para executar build e testes fora do Docker;
 - Node.js 24, para executar o frontend fora do Docker.
 
 ### Iniciar banco e API
