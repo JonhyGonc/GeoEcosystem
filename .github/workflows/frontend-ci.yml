@@ -43,3 +43,17 @@ jobs:
           VITE_GEOMAP_PROJECT_ID: 60000000-0000-4000-8000-000000000001
           VITE_GEOMAP_NETWORK_ID: 61000000-0000-4000-8000-000000000001
         run: npm run build
+
+      - name: Verify MapLibre worker in production bundle
+        shell: bash
+        run: |
+          worker="$(find dist/assets -name 'maplibre-gl-worker-*.mjs' -print -quit)"
+          if [ -z "$worker" ]; then
+            echo "MapLibre worker is missing from dist/assets"
+            exit 1
+          fi
+          if ! grep -rqF "$(basename "$worker")" dist/assets --include='*.js'; then
+            echo "Production bundle does not reference $(basename "$worker")"
+            exit 1
+          fi
+          echo "MapLibre worker bundled as $worker"
