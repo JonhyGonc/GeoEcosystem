@@ -485,6 +485,26 @@ jobs:
 
           cat /tmp/geomap-stream-large.time
 
+      - name: Show streaming import diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          for summary in /tmp/geomap-stream-*-summary.json; do
+            [ -f "$summary" ] || continue
+            echo "::group::$summary"
+            cat "$summary"
+            echo "::endgroup::"
+          done
+          for progress in /tmp/geomap-stream-*-progress.ndjson; do
+            [ -f "$progress" ] || continue
+            echo "::group::$progress (últimas 20 linhas)"
+            tail -n 20 "$progress"
+            echo "::endgroup::"
+          done
+          echo "::group::database logs"
+          docker compose logs --tail 100 database || true
+          echo "::endgroup::"
+
       - name: Clean up
         if: always()
         run: docker compose down --volumes

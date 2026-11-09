@@ -16,4 +16,8 @@
     <ProjectReference Include="../GeoMap.Contract/GeoMap.Contract.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="GeoMap.Importer.Tests" />
+  </ItemGroup>
+
 </Project>

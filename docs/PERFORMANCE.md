@@ -75,6 +75,8 @@ No baseline verde da CI da Issue #16:
 
 O crescimento de dez vezes na quantidade e no arquivo não aumentou o pico observado do processo, que permaneceu em aproximadamente 121 MiB. Isso confirma o objetivo de memória independente do total de feições para esse cenário. Os tempos incluem inicialização de `dotnet run --no-build`, validação, `COPY`, transformação e commit final no runner Ubuntu hospedado; são baseline reproduzível do protótipo, não SLA.
 
+Os comandos que contam, removem e inserem o snapshot completo da rede usam timeout explícito de 600 s (`PostgresGeoMapImportStore.SnapshotCommandTimeoutSeconds`), aplicado tanto ao JSON quanto ao NDJSON. Antes disso eles herdavam o padrão de 30 s do Npgsql, e o `INSERT … SELECT` final do LARGE, com transformação de CRS e manutenção do índice GiST, ficava perto desse limite. Em 10 de setembro de 2026 a CI da `main` falhou com código 3 nessa etapa, embora o mesmo commit tivesse passado no Pull Request. O valor continua finito para que um bloqueio não prenda a importação indefinidamente. Se o importador falhar, a CI imprime o resumo JSON, o progresso e o log do banco.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;
