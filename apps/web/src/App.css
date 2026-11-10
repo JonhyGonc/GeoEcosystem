@@ -64,6 +64,40 @@
   text-transform: uppercase;
 }
 
+.project-selector__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.project-selector__locate {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #cadde4;
+  border-radius: 7px;
+  color: #12364a;
+  background: #f6fafb;
+  cursor: pointer;
+}
+
+.project-selector__locate:hover:not(:disabled) {
+  border-color: #8fb6c4;
+  background: #edf6f8;
+}
+
+.project-selector__locate:focus-visible {
+  outline: 3px solid rgb(45 122 151 / 28%);
+  outline-offset: 2px;
+}
+
+.project-selector__locate:disabled {
+  color: #9db3bd;
+  cursor: default;
+}
+
 .project-selector select {
   width: 100%;
   min-height: 36px;

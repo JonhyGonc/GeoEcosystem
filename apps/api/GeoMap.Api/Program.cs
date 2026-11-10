@@ -28,6 +28,7 @@ builder.Services.AddSingleton<NpgsqlDataSource>(serviceProvider =>
 builder.Services.AddScoped<SpatialFeatureQuery>();
 builder.Services.AddScoped<VectorTileQuery>();
 builder.Services.AddScoped<ProjectCatalogQuery>();
+builder.Services.AddScoped<ProjectExtentQuery>();
 builder.Services.AddScoped<NetworkCatalogQuery>();
 builder.Services.AddScoped<FeatureDetailsQuery>();
 builder.Services.AddHealthChecks();

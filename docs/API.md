@@ -21,6 +21,29 @@ Exemplo:
 }
 ~~~
 
+## Extensão e foco do projeto
+
+~~~http
+GET /api/projects/{projectId}/extent
+~~~
+
+Retorna a caixa envolvente, em EPSG:4326, de todas as feições do projeto, e um **ponto de foco**: o ponto da rede mais próximo do centro dessa caixa. O visualizador usa o foco quando enquadrar o projeto inteiro exigiria um zoom abaixo do mínimo das redes (14). Projeto sem feições ou inexistente retorna HTTP 200 com `extent` e `focus` nulos. Cada um dos dois comandos SQL tem timeout de 5 segundos.
+
+A extensão é calculada sob demanda com `ST_Extent`, localizando as feições pelo índice de `network_id`. O foco usa a busca de vizinho mais próximo (`<->`) do índice GiST. O tempo com o dataset LARGE é medido na Backend CI (`PROJECT_EXTENT_BENCHMARK`).
+
+~~~json
+{
+  "projectId": "60000000-0000-4000-8000-000000000001",
+  "extent": {
+    "minLongitude": -48.90,
+    "minLatitude": -26.35,
+    "maxLongitude": -48.71,
+    "maxLatitude": -26.14
+  },
+  "focus": { "longitude": -48.80, "latitude": -26.25 }
+}
+~~~
+
 ## Catálogo de redes do projeto
 
 ~~~http

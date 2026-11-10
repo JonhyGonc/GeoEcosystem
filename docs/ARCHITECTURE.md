@@ -121,6 +121,8 @@ Pan e zoom fazem o MapLibre requisitar apenas os tiles necessários para a regi�
 
 ## Catálogo e controle de camadas
 
+Ao abrir ou trocar de projeto, o frontend pede `GET /api/projects/{id}/extent` e enquadra o mapa no projeto, ou no ponto de foco quando a extensão exigiria um zoom abaixo de 14. O botão ao lado do seletor repete esse enquadramento (DEC-027).
+
 Ao iniciar, o frontend pede `GET /api/projects`, que retorna apenas `id` e `name`, e abre o projeto indicado por `VITE_GEOMAP_PROJECT_ID` ou, se ele não for informado ou não existir, o primeiro da lista. O seletor de projeto fica no cabeçalho. Sem projetos ou com falha na API de projetos, o mapa base continua funcional e o estado aparece na barra de status (DEC-026).
 
 A API lista `id`, `name` e `type` das redes filtradas por `project_id`, sem acessar geometrias ou contar feições. O frontend cria uma fonte e uma camada MapLibre por rede do catálogo; seus identificadores `geomap-network-source-{networkId}` e `geomap-network-lines-{networkId}` evitam colisões.

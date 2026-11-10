@@ -219,6 +219,14 @@ O frontend lista os projetos por `GET /api/projects`, que retorna somente `id` e
 
 A troca de projeto reutiliza o fluxo da DEC-018: as requisições pendentes são canceladas, as camadas e a seleção anteriores são removidas e o catálogo do novo projeto é instalado. A escolha vale somente para a sessão atual. Criar ou editar projetos pela interface, paginação, permissões e enquadramento automático do mapa ficam fora do protótipo, porque os projetos continuam nascendo da importação.
 
+## DEC-027 — Localizar o projeto no mapa
+
+Status: aprovada (Issue #47).
+
+Um botão "Localizar projeto" fica ao lado do seletor de projeto, como pedido pelo responsável. Ao abrir ou trocar de projeto, o mapa também é enquadrado automaticamente. O teste com um projeto real em outro estado mostrou que, com o centro fixo, a rede ficava a mais de 1.000 km da área exibida.
+
+A API calcula sob demanda a extensão (`ST_Extent`) e um ponto de foco (o ponto da rede mais próximo do centro da extensão, pelo KNN do GiST). Quando o projeto inteiro cabe na tela com zoom de pelo menos 14, o mapa enquadra a extensão. Quando não cabe, o mapa vai até o ponto de foco no zoom 15. Enquadrar tudo abaixo do zoom 14 mostraria um mapa sem nenhuma rede, porque os tiles só existem a partir desse nível. Guardar a extensão durante a importação ficará reservado para o caso de a medição do LARGE indicar necessidade, porque exigiria mudar o esquema.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
