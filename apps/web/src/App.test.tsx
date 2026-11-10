@@ -37,10 +37,14 @@ vi.mock('maplibre-gl', () => {
     flyTo = mapMocks.flyTo
     on = mapMocks.on
     remove = mapMocks.remove
+    private readonly container: HTMLElement
 
     constructor(options: unknown) {
       mapMocks.createMap(options)
+      this.container = (options as { container: HTMLElement }).container
     }
+
+    getContainer = () => this.container
   }
 
   class NavigationControl {
@@ -142,6 +146,19 @@ describe('GeoMap app', () => {
 
     unmount()
     expect(mapMocks.remove).toHaveBeenCalledOnce()
+  })
+
+  it('shows the grabbing cursor only while the map is dragged', async () => {
+    stubApi({ '/api/projects': { projects: [] } })
+    render(<App />)
+    const mapElement = screen.getByLabelText('Mapa interativo GeoMap')
+    await screen.findByText('Nenhum projeto importado')
+
+    expect(mapElement).not.toHaveClass('map-canvas--dragging')
+    act(() => mapMocks.listeners.dragstart())
+    expect(mapElement).toHaveClass('map-canvas--dragging')
+    act(() => mapMocks.listeners.dragend())
+    expect(mapElement).not.toHaveClass('map-canvas--dragging')
   })
 
   it('opens the configured project and loads only the chosen project networks', async () => {
