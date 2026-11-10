@@ -10,6 +10,10 @@ import {
   buildNetworkCatalogUrl,
   buildNetworkLayer,
   buildNetworkLayerId,
+  buildNetworkPointLayer,
+  buildNetworkPointLayerId,
+  buildNetworkPointSelectionLayer,
+  buildNetworkPointSelectionLayerId,
   buildNetworkSelectionLayer,
   buildNetworkSelectionLayerId,
   buildNetworkSourceId,
@@ -32,6 +36,7 @@ const otherProjectId = '60000000-0000-4000-8000-000000000002'
 const networkId = '61000000-0000-4000-8000-000000000001'
 const otherNetworkId = '61000000-0000-4000-8000-000000000002'
 
+const blockFeatureId = '70000000-0000-4000-8000-000000000001'
 const networks: NetworkDefinition[] = [
   { id: networkId, name: 'Rede de drenagem', type: 'stormwater' },
   { id: otherNetworkId, name: 'Rede de esgoto', type: 'sewer' },
@@ -199,6 +204,36 @@ describe('network layer control', () => {
       filter: ['==', ['get', 'id'], ''],
       layout: { visibility: 'visible' },
     })
+    expect(buildNetworkLayer(views[0])).not.toHaveProperty('filter')
+  })
+
+  it('renders block points as colored circles limited to point geometries', () => {
+    const views = createNetworkLayerViews([
+      { ...networks[0], color: '#AA5500' },
+    ])
+    const pointGeometryFilter = [
+      'match',
+      ['geometry-type'],
+      ['Point', 'MultiPoint'],
+      true,
+      false,
+    ]
+
+    expect(buildNetworkPointLayer(views[0])).toMatchObject({
+      id: buildNetworkPointLayerId(networkId),
+      type: 'circle',
+      source: buildNetworkSourceId(networkId),
+      'source-layer': 'network_features',
+      minzoom: NETWORK_MIN_ZOOM,
+      filter: pointGeometryFilter,
+      layout: { visibility: 'visible' },
+      paint: { 'circle-color': '#AA5500' },
+    })
+    expect(buildNetworkPointSelectionLayer(views[0])).toMatchObject({
+      id: buildNetworkPointSelectionLayerId(networkId),
+      type: 'circle',
+      filter: ['all', pointGeometryFilter, ['==', ['get', 'id'], '']],
+    })
   })
 
   it('toggles layers without recreating sources and keeps states coherent on pan', () => {
@@ -241,7 +276,7 @@ describe('network layer control', () => {
       queryRenderedFeatures: (geometryOrOptions, options) => {
         if (options) return clickedFeatures
         const layers = 'layers' in geometryOrOptions ? geometryOrOptions.layers : []
-        return visibleFeatures.get(layers[0]) ?? []
+        return layers.flatMap((layer) => visibleFeatures.get(layer) ?? [])
       },
       removeLayer,
       removeSource,
@@ -266,7 +301,7 @@ describe('network layer control', () => {
     )
 
     expect(addSource).toHaveBeenCalledTimes(2)
-    expect(addLayer).toHaveBeenCalledTimes(4)
+    expect(addLayer).toHaveBeenCalledTimes(8)
 
     controller.setVisibility(otherNetworkId, true)
     expect(setLayoutProperty).toHaveBeenCalledWith(
@@ -280,7 +315,7 @@ describe('network layer control', () => {
       'visible',
     )
     expect(addSource).toHaveBeenCalledTimes(2)
-    expect(addLayer).toHaveBeenCalledTimes(4)
+    expect(addLayer).toHaveBeenCalledTimes(8)
 
     clickedFeatures = [
       renderedFeature(buildNetworkLayerId(otherNetworkId), otherNetworkId),
@@ -296,12 +331,29 @@ describe('network layer control', () => {
       buildNetworkSelectionLayerId(otherNetworkId),
       ['==', ['get', 'id'], otherNetworkId],
     )
+    expect(setFilter).toHaveBeenCalledWith(
+      buildNetworkPointSelectionLayerId(otherNetworkId),
+      [
+        'all',
+        ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false],
+        ['==', ['get', 'id'], otherNetworkId],
+      ],
+    )
 
     clickedFeatures = [
       renderedFeature(buildNetworkLayerId(networkId), networkId),
     ]
     emit('click', { point: { x: 10, y: 20 } })
     expect(selections.at(-1)?.networkId).toBe(networkId)
+
+    clickedFeatures = [
+      renderedFeature(buildNetworkPointLayerId(otherNetworkId), blockFeatureId),
+    ]
+    emit('click', { point: { x: 10, y: 20 } })
+    expect(selections.at(-1)).toMatchObject({
+      featureId: blockFeatureId,
+      networkId: otherNetworkId,
+    })
 
     clickedFeatures = []
     emit('click', { point: { x: 10, y: 20 } })
@@ -360,7 +412,7 @@ describe('network layer control', () => {
     })
 
     controller.cleanup()
-    expect(removeLayer).toHaveBeenCalledTimes(4)
+    expect(removeLayer).toHaveBeenCalledTimes(8)
     expect(removeSource).toHaveBeenCalledTimes(2)
     expect(unsubscribes).toHaveLength(6)
     unsubscribes.forEach((unsubscribe) => expect(unsubscribe).toHaveBeenCalledOnce())
@@ -411,9 +463,13 @@ describe('network layer control', () => {
     )
 
     expect(removedLayers).toEqual([
+      buildNetworkPointSelectionLayerId(otherNetworkId),
       buildNetworkSelectionLayerId(otherNetworkId),
+      buildNetworkPointLayerId(otherNetworkId),
       buildNetworkLayerId(otherNetworkId),
+      buildNetworkPointSelectionLayerId(networkId),
       buildNetworkSelectionLayerId(networkId),
+      buildNetworkPointLayerId(networkId),
       buildNetworkLayerId(networkId),
     ])
     expect(addedSources.at(-1)?.source).toMatchObject({

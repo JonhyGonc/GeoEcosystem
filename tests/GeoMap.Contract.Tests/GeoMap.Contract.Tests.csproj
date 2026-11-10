@@ -29,6 +29,9 @@
     <Content Include="../../contracts/geomap/0.1/examples/*.ndjson"
              Link="examples/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../contracts/geomap/0.3/examples/*.json"
+             Link="examples/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

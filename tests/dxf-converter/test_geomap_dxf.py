@@ -33,6 +33,22 @@ def layer_record(name: str, aci: int, true_color: int | None = None) -> str:
     return record
 
 
+def insert(handle: str, layer: str, block: str, attributes: dict[str, str] | None = None,
+           x: float = 700100, y: float = 7100100, rotation: float = 0, paper: bool = False) -> str:
+    text = (
+        "0\nINSERT\n5\n" + handle + "\n8\n" + layer + "\n"
+        + ("67\n1\n" if paper else "")
+        + ("66\n1\n" if attributes else "")
+        + "2\n" + block + "\n10\n" + str(x) + "\n20\n" + str(y) + "\n30\n0\n"
+        "41\n1\n42\n1\n50\n" + str(rotation) + "\n"
+    )
+    for index, (tag, value) in enumerate((attributes or {}).items()):
+        text += "0\nATTRIB\n5\n" + handle + "A" + str(index) + "\n8\n0\n1\n" + value + "\n2\n" + tag + "\n"
+    if attributes:
+        text += "0\nSEQEND\n5\n" + handle + "E\n8\n" + layer + "\n"
+    return text
+
+
 def lwpolyline(handle: str, layer: str, elevation: float = 0, bulge: float = 0) -> str:
     return (
         "0\nLWPOLYLINE\n5\n" + handle + "\n8\n" + layer + "\n90\n2\n70\n0\n"
@@ -153,6 +169,50 @@ class GeoMapDxfTests(unittest.TestCase):
             self.assertEqual("0.1", document["contractVersion"])
             self.assertNotIn("color", document["network"])
             self.assertIsNone(summary["networkColor"])
+
+    def block_options(self, root: Path):
+        return geomap_dxf.ConversionOptions(**{**self.options(root).__dict__, "blocks": True})
+
+    def test_converts_block_references_to_points_with_name_and_attributes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entities = (
+                insert("B1", "TEST-NETWORK", "TE", {"PV": "PV-12", "COTA": "512.30", "bloco": "x"},
+                       rotation=90)
+                + insert("B2", "TEST-NETWORK", "CAP")
+                + lwpolyline("L1", "TEST-NETWORK")
+                + insert("B3", "OTHER", "CRUZETA", {"PV": "PV-99"})
+                + insert("B4", "TEST-NETWORK", "TE", paper=True)
+            )
+            root.joinpath("input.dxf").write_text(
+                dxf_with_layers(layer_record("TEST-NETWORK", 3), entities), encoding="utf-8"
+            )
+            document, summary = geomap_dxf.convert(self.block_options(root))
+
+            self.assertEqual("0.3", document["contractVersion"])
+            self.assertEqual("#00FF00", document["network"]["color"])
+            self.assertEqual(["B1", "B2"], [f["sourceId"] for f in document["features"]])
+            first, second = document["features"]
+            self.assertEqual({"type": "Point", "coordinates": [700100.0, 7100100.0]}, first["geometry"])
+            self.assertEqual("BlockReference", first["sourceType"])
+            self.assertEqual("TE", first["properties"]["bloco"])
+            self.assertEqual(90.0, first["properties"]["rotacao"])
+            self.assertEqual("PV-12", first["properties"]["PV"])
+            self.assertEqual("512.30", first["properties"]["COTA"])
+            self.assertEqual("x", first["properties"]["atributo_bloco"])
+            self.assertEqual("CAP", second["properties"]["bloco"])
+            self.assertNotIn("PV", second["properties"])
+            self.assertEqual({"LWPOLYLINE": 1}, summary["ignoredEntities"])
+            self.assertEqual(1, summary["skippedPaperSpaceEntities"])
+
+    def test_blocks_mode_requires_at_least_one_block(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            root.joinpath("input.dxf").write_text(
+                dxf(lwpolyline("L1", "TEST-NETWORK")), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(geomap_dxf.DxfConversionError, "no block references"):
+                geomap_dxf.convert(self.block_options(root))
 
     def test_rejects_curved_bulge_instead_of_flattening_it(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -76,7 +76,7 @@ Responsável por:
 - registrar erros e resumo da importação;
 - limitar uso de memória.
 
-O contrato não depende dos tipos internos do Civil 3D. A versão 0.1 usa um documento `.geomap.json` UTF-8 estrito para a importação inicial. O módulo `GeoMap.Contract` valida versão, campos, CRS EPSG, unidades, limites, identidade de origem e geometrias `LineString` ou `MultiLineString` antes de qualquer persistência. `GeoMap.Importer` lê o documento validado, resolve IDs determinísticos de projeto, rede e feições e usa PostGIS para transformar o SRID declarado em EPSG:4326.
+O contrato não depende dos tipos internos do Civil 3D. A versão 0.1 usa um documento `.geomap.json` UTF-8 estrito para a importação inicial. O módulo `GeoMap.Contract` valida versão, campos, CRS EPSG, unidades, limites, identidade de origem e geometrias `LineString` ou `MultiLineString` (e, a partir da v0.3, `Point` ou `MultiPoint`) antes de qualquer persistência. `GeoMap.Importer` lê o documento validado, resolve IDs determinísticos de projeto, rede e feições e usa PostGIS para transformar o SRID declarado em EPSG:4326.
 
 Cada arquivo representa o snapshot completo de uma rede. Projeto e rede são atualizados, as feições anteriores são substituídas e as novas são inseridas em uma única transação. Um lock por rede serializa importações concorrentes; validação, CRS indisponível ou falha de banco causam rollback integral. Posições são estritamente 2D; Z é rejeitado para impedir perda silenciosa.
 
@@ -96,7 +96,9 @@ Model Space e produz o mesmo contrato v0.1 consumido pelo importador. O uso
 exige camada, CRS, unidade e metadados explícitos. Elevações só podem ser
 projetadas em XY com autorização pela opção `--project-to-2d` e permanecem nos
 atributos. Curvas, extrusões e tipos lineares ainda não suportados interrompem a
-conversão para evitar alteração silenciosa da geometria.
+conversão para evitar alteração silenciosa da geometria. Com `--blocks`, a ponte
+converte as inserções de bloco da layer em pontos (contrato v0.3), que o
+frontend desenha como círculos na cor da layer (DEC-029).
 
 Essa ponte não referencia bibliotecas Autodesk, não substitui o exportador da
 Issue #18 e não altera os limites entre importador, banco, API e frontend. DWG,

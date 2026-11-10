@@ -32,6 +32,12 @@ convertido.
 
 A cor da layer é lida da tabela LAYER do DXF: o true color (código 420) tem prioridade sobre o índice ACI (código 62), e o ACI 7 vira preto sobre o mapa claro. Com cor, a saída usa o contrato `0.2` com `network.color`; sem a tabela ou sem cor, continua no `0.1`. O resumo informa `networkColor`.
 
+### Blocos (`--blocks`)
+
+Com `--blocks`, a ponte converte as inserções de bloco (`INSERT`) da layer em pontos e gera o contrato `0.3`. Cada bloco vira uma feição `Point` no ponto de inserção, com `sourceType` `BlockReference` e as propriedades `bloco` (nome do bloco), `rotacao`, `escalaX`, `escalaY` e `cadElevation`. Os atributos do bloco (`ATTRIB`) entram como propriedades com o nome da tag; uma tag que coincida com uma propriedade gerada recebe o prefixo `atributo_`. Linhas e outras entidades da layer são apenas contabilizadas como ignoradas, então a mesma layer pode ser convertida duas vezes: uma para as linhas e outra, com `--blocks`, para os blocos, em redes separadas (por exemplo, "RD_50_PVC" e "RD_50_PVC (blocos)"). A cor da layer é preservada do mesmo jeito.
+
+Blocos dinâmicos aparecem com o nome anônimo que o DXF grava (`*U…`), e não com o nome do bloco original; essa limitação está registrada na DEC-029.
+
 O limite provisório é 512 MiB por DXF e 10.000 feições por documento JSON. Dados
 reais devem permanecer em `private-data/` e resultados em `validation-output/`;
 DWG e DXF também são ignorados pelo Git. A ferramenta não envia arquivos pela

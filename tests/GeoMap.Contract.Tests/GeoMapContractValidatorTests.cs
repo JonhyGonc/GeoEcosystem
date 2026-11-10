@@ -191,12 +191,95 @@ public sealed class GeoMapContractValidatorTests
     public void Unknown_versions_remain_unsupported()
     {
         var root = ReadValidRoot();
-        root["contractVersion"] = "0.3";
+        root["contractVersion"] = "9.9";
 
         var result = Validate(root);
 
         Assert.Contains(result.Errors, error => error.Code == ContractErrorCodes.VersionUnsupported);
     }
+
+    [Fact]
+    public void Version_03_example_with_block_points_passes()
+    {
+        var result = ValidateExample("valid-block-points.geomap.json");
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors));
+    }
+
+    [Theory]
+    [InlineData("0.1")]
+    [InlineData("0.2")]
+    public void Versions_before_03_reject_point_geometries(string version)
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = version;
+        root["features"]![0]!["geometry"] = PointGeometry();
+
+        var result = Validate(root);
+
+        Assert.Contains(result.Errors, error =>
+            error.Code == ContractErrorCodes.GeometryTypeUnsupported &&
+            error.Path == "$.features[0].geometry.type");
+    }
+
+    [Fact]
+    public void Version_03_accepts_points_lines_and_color_together()
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = GeoMapContractValidator.PointVersion;
+        root["network"]!["color"] = "#00A0FF";
+        var point = root["features"]![0]!.DeepClone().AsObject();
+        point["sourceId"] = "point-1";
+        point["sourceType"] = "BlockReference";
+        point["geometry"] = PointGeometry();
+        root["features"]!.AsArray().Add(point);
+
+        var result = Validate(root);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors));
+    }
+
+    [Theory]
+    [InlineData("""{"type":"Point","coordinates":[1]}""")]
+    [InlineData("""{"type":"Point","coordinates":[1,2,3]}""")]
+    [InlineData("""{"type":"Point","coordinates":[[1,2]]}""")]
+    [InlineData("""{"type":"MultiPoint","coordinates":[]}""")]
+    [InlineData("""{"type":"MultiPoint","coordinates":[[1,2],["a",2]]}""")]
+    public void Version_03_rejects_malformed_points(string geometryJson)
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = GeoMapContractValidator.PointVersion;
+        root["features"]![0]!["geometry"] = JsonNode.Parse(geometryJson);
+
+        var result = Validate(root);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error =>
+            error.Path.StartsWith("$.features[0].geometry", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Streaming_feature_follows_the_declared_contract_version()
+    {
+        var feature = ReadValidRoot()["features"]![0]!.DeepClone().AsObject();
+        feature["geometry"] = PointGeometry();
+        var utf8 = Encoding.UTF8.GetBytes(feature.ToJsonString());
+
+        var legacy = GeoMapContractValidator.ValidateStreamingFeature(utf8, 0);
+        var points = GeoMapContractValidator.ValidateStreamingFeature(
+            utf8, 0, GeoMapContractValidator.PointVersion);
+
+        Assert.Contains(legacy.Errors, error =>
+            error.Code == ContractErrorCodes.GeometryTypeUnsupported);
+        Assert.True(points.IsValid, string.Join(Environment.NewLine, points.Errors));
+    }
+
+    private static JsonObject PointGeometry() =>
+        new()
+        {
+            ["type"] = "Point",
+            ["coordinates"] = new JsonArray(688100.25, 7086400.75),
+        };
 
     private static ContractValidationResult ValidateExample(string fileName) =>
         GeoMapContractValidator.Validate(File.ReadAllBytes(ExamplePath(fileName)));

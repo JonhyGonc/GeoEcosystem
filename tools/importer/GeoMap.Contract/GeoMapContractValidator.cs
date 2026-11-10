@@ -9,6 +9,7 @@ public static partial class GeoMapContractValidator
 {
     public const string SupportedVersion = "0.1";
     public const string ColorVersion = "0.2";
+    public const string PointVersion = "0.3";
     public const int MaximumDocumentBytes = 50 * 1024 * 1024;
     public const int MaximumFeatures = 10_000;
     public const int MaximumVerticesPerFeature = 100_000;
@@ -29,7 +30,13 @@ public static partial class GeoMapContractValidator
     private static readonly HashSet<string> ProjectFields = ["externalId", "name"];
     private static readonly HashSet<string> NetworkFields = ["externalId", "name", "type"];
     private static readonly HashSet<string> NetworkFieldsV02 = ["externalId", "name", "type", "color"];
-    private static readonly HashSet<string> SupportedVersions = [SupportedVersion, ColorVersion];
+    private static readonly HashSet<string> SupportedVersions = [SupportedVersion, ColorVersion, PointVersion];
+
+    /// <summary>A partir da 0.3, feições podem ser Point ou MultiPoint (blocos do CAD).</summary>
+    public static bool AllowsPoints(string? contractVersion) => contractVersion == PointVersion;
+
+    private static bool AllowsColor(string? contractVersion) =>
+        contractVersion is ColorVersion or PointVersion;
     private static readonly HashSet<string> FeatureFields =
         ["sourceId", "sourceType", "sourceLayer", "geometry", "properties"];
     private static readonly HashSet<string> GeometryFields = ["type", "coordinates"];
@@ -101,7 +108,8 @@ public static partial class GeoMapContractValidator
 
     public static ContractValidationResult ValidateStreamingFeature(
         ReadOnlyMemory<byte> utf8Json,
-        int index)
+        int index,
+        string contractVersion = SupportedVersion)
     {
         var errors = new List<ContractValidationError>();
         var path = $"$.features[{index}]";
@@ -118,6 +126,7 @@ public static partial class GeoMapContractValidator
                 document.RootElement,
                 index,
                 new HashSet<string>(StringComparer.Ordinal),
+                AllowsPoints(contractVersion),
                 errors);
         }
         catch (JsonException exception)
@@ -150,7 +159,11 @@ public static partial class GeoMapContractValidator
 
         ValidateKnownFields(root, RootFields, "$", errors);
         ValidateMetadataFields(root, errors);
-        ValidateFeatures(root, errors);
+        var version = root.TryGetProperty("contractVersion", out var versionElement) &&
+                      versionElement.ValueKind == JsonValueKind.String
+            ? versionElement.GetString()
+            : null;
+        ValidateFeatures(root, AllowsPoints(version), errors);
     }
 
     private static void ValidateMetadataFields(
@@ -160,7 +173,7 @@ public static partial class GeoMapContractValidator
         var version = RequiredString(root, "contractVersion", 16, "$", errors);
         if (version is not null && !SupportedVersions.Contains(version))
         {
-            Add(errors, ContractErrorCodes.VersionUnsupported, "$.contractVersion", "Only contract versions 0.1 and 0.2 are supported.");
+            Add(errors, ContractErrorCodes.VersionUnsupported, "$.contractVersion", "Only contract versions 0.1, 0.2 and 0.3 are supported.");
         }
 
         RequiredString(root, "sourceSystem", 100, "$", errors);
@@ -189,9 +202,9 @@ public static partial class GeoMapContractValidator
         }
 
         ValidateProjectOrNetwork(root, "project", ProjectFields, false, errors);
-        var networkFields = version == ColorVersion ? NetworkFieldsV02 : NetworkFields;
+        var networkFields = AllowsColor(version) ? NetworkFieldsV02 : NetworkFields;
         ValidateProjectOrNetwork(root, "network", networkFields, true, errors);
-        if (version == ColorVersion) ValidateNetworkColor(root, errors);
+        if (AllowsColor(version)) ValidateNetworkColor(root, errors);
     }
 
     private static void ValidateNetworkColor(
@@ -238,6 +251,7 @@ public static partial class GeoMapContractValidator
 
     private static void ValidateFeatures(
         JsonElement root,
+        bool allowPoints,
         List<ContractValidationError> errors)
     {
         if (!root.TryGetProperty("features", out var features))
@@ -267,7 +281,7 @@ public static partial class GeoMapContractValidator
         foreach (var feature in features.EnumerateArray())
         {
             if (index >= MaximumFeatures) break;
-            ValidateFeature(feature, index, sourceKeys, errors);
+            ValidateFeature(feature, index, sourceKeys, allowPoints, errors);
             index++;
         }
     }
@@ -276,6 +290,7 @@ public static partial class GeoMapContractValidator
         JsonElement feature,
         int index,
         HashSet<string> sourceKeys,
+        bool allowPoints,
         List<ContractValidationError> errors)
     {
         var path = $"$.features[{index}]";
@@ -295,13 +310,14 @@ public static partial class GeoMapContractValidator
             Add(errors, ContractErrorCodes.SourceIdDuplicate, $"{path}.sourceId", "sourceId must be unique for each sourceType in the document.");
         }
 
-        ValidateGeometry(feature, path, errors);
+        ValidateGeometry(feature, path, allowPoints, errors);
         ValidateProperties(feature, path, errors);
     }
 
     private static void ValidateGeometry(
         JsonElement feature,
         string featurePath,
+        bool allowPoints,
         List<ContractValidationError> errors)
     {
         var path = $"{featurePath}.geometry";
@@ -343,9 +359,34 @@ public static partial class GeoMapContractValidator
                 lineIndex++;
             }
         }
+        else if (allowPoints && type == "Point")
+        {
+            vertices++;
+            ValidatePosition(coordinates, $"{path}.coordinates", errors);
+        }
+        else if (allowPoints && type == "MultiPoint")
+        {
+            if (coordinates.GetArrayLength() == 0)
+            {
+                Add(errors, ContractErrorCodes.GeometryEmpty, $"{path}.coordinates", "MultiPoint requires at least one position.");
+            }
+            var pointIndex = 0;
+            foreach (var position in coordinates.EnumerateArray())
+            {
+                vertices++;
+                ValidatePosition(position, $"{path}.coordinates[{pointIndex}]", errors);
+                pointIndex++;
+            }
+        }
         else if (type is not null)
         {
-            Add(errors, ContractErrorCodes.GeometryTypeUnsupported, $"{path}.type", "Only LineString and MultiLineString are supported.");
+            Add(
+                errors,
+                ContractErrorCodes.GeometryTypeUnsupported,
+                $"{path}.type",
+                allowPoints
+                    ? "Only LineString, MultiLineString, Point and MultiPoint are supported."
+                    : "Only LineString and MultiLineString are supported in this contract version.");
         }
 
         if (vertices > MaximumVerticesPerFeature)
@@ -370,29 +411,36 @@ public static partial class GeoMapContractValidator
         foreach (var position in line.EnumerateArray())
         {
             vertices++;
-            var positionPath = $"{path}[{positionIndex}]";
-            if (position.ValueKind != JsonValueKind.Array)
+            ValidatePosition(position, $"{path}[{positionIndex}]", errors);
+            positionIndex++;
+        }
+    }
+
+    private static void ValidatePosition(
+        JsonElement position,
+        string positionPath,
+        List<ContractValidationError> errors)
+    {
+        if (position.ValueKind != JsonValueKind.Array)
+        {
+            Add(errors, ContractErrorCodes.GeometryCoordinateInvalid, positionPath, "Position must be an array.");
+        }
+        else if (position.GetArrayLength() != 2)
+        {
+            Add(errors, ContractErrorCodes.GeometryDimensionUnsupported, positionPath, "The contract accepts exactly two coordinates and rejects Z.");
+        }
+        else
+        {
+            foreach (var coordinate in position.EnumerateArray())
             {
-                Add(errors, ContractErrorCodes.GeometryCoordinateInvalid, positionPath, "Position must be an array.");
-            }
-            else if (position.GetArrayLength() != 2)
-            {
-                Add(errors, ContractErrorCodes.GeometryDimensionUnsupported, positionPath, "Version 0.1 accepts exactly two coordinates and rejects Z.");
-            }
-            else
-            {
-                foreach (var coordinate in position.EnumerateArray())
+                if (coordinate.ValueKind != JsonValueKind.Number ||
+                    !coordinate.TryGetDouble(out var value) ||
+                    !double.IsFinite(value))
                 {
-                    if (coordinate.ValueKind != JsonValueKind.Number ||
-                        !coordinate.TryGetDouble(out var value) ||
-                        !double.IsFinite(value))
-                    {
-                        Add(errors, ContractErrorCodes.GeometryCoordinateInvalid, positionPath, "Coordinates must be finite JSON numbers.");
-                        break;
-                    }
+                    Add(errors, ContractErrorCodes.GeometryCoordinateInvalid, positionPath, "Coordinates must be finite JSON numbers.");
+                    break;
                 }
             }
-            positionIndex++;
         }
     }
 

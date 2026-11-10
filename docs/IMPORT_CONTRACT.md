@@ -1,6 +1,6 @@
 # Contrato de importação GeoMap
 
-Status: contrato GeoMap v0.1 definido pela Issue #14; v0.2 adiciona a cor da layer (Issue #52).
+Status: contrato GeoMap v0.1 definido pela Issue #14; v0.2 adiciona a cor da layer (Issue #52); v0.3 adiciona pontos para blocos do CAD (Issue #49).
 
 ## Objetivo
 
@@ -27,7 +27,7 @@ Separar a origem Autodesk do restante do sistema. Qualquer exportador deve produ
 | `sourceId` | não | identificador estável na origem, até 255 caracteres |
 | `sourceType` | sim | código neutro do tipo original, até 100 caracteres |
 | `sourceLayer` | não | layer original, até 255 caracteres |
-| `geometry` | sim | `LineString` ou `MultiLineString` 2D |
+| `geometry` | sim | `LineString` ou `MultiLineString` 2D; a partir da v0.3, também `Point` ou `MultiPoint` |
 | `properties` | sim | objeto JSON de atributos variáveis, inclusive vazio |
 
 Exemplo resumido:
@@ -68,6 +68,22 @@ A versão `0.2` é idêntica à `0.1`, com um único acréscimo: o campo opciona
 
 A ponte DXF lê a cor na tabela LAYER: o true color (código 420) tem prioridade sobre o índice ACI (código 62). O ACI 7, que é branco ou preto conforme o fundo, vira preto, porque o mapa base é claro. Quando a layer tem cor, a ponte gera `0.2`; quando não tem, gera `0.1`. Exemplo executável: `contracts/geomap/0.2/examples/valid-network-color.geomap.json`.
 
+## Versão 0.3: pontos de blocos
+
+A versão `0.3` mantém tudo da `0.2`, inclusive `network.color` opcional, e passa a aceitar geometrias `Point` (uma posição `[x, y]`) e `MultiPoint` (ao menos uma posição). Ela existe para os blocos do CAD (tês, registros, caps, poços de visita, postes), que são inserções pontuais. Versões `0.1` e `0.2` continuam rejeitando pontos com `GMC_GEOMETRY_TYPE_UNSUPPORTED`. Uma mesma rede `0.3` pode misturar linhas e pontos, mas a ponte DXF gera os blocos de cada layer como uma rede separada.
+
+~~~json
+{
+  "sourceId": "B10C1",
+  "sourceType": "BlockReference",
+  "sourceLayer": "CONEXOES",
+  "geometry": { "type": "Point", "coordinates": [688100.25, 7086400.75] },
+  "properties": { "bloco": "TE", "rotacao": 90 }
+}
+~~~
+
+O nome do bloco vai em `properties.bloco`, porque ele já descreve o que é o elemento. No NDJSON, a versão declarada na linha 1 vale para todas as feições do arquivo. Exemplo executável: `contracts/geomap/0.3/examples/valid-block-points.geomap.json`.
+
 O exemplo `valid-geoautoengine-polyline.geomap.json` é produzido pelo mesmo serializador usado no comando `GEOAUTO3GEOMAPEXPORT` do GeoAutoEngine. A CI o valida e o importa para confirmar a compatibilidade entre os dois repositórios.
 
 ## Formatos físicos
@@ -93,6 +109,7 @@ O exemplo `valid-stream.geomap.ndjson` demonstra os dois tipos geométricos. Os 
 - Coordenadas Z são rejeitadas no contrato v0.1. O exportador deve projetar explicitamente para 2D antes de gerar o arquivo quando essa perda for aceitável.
 - `LineString` exige pelo menos duas posições.
 - `MultiLineString` exige ao menos uma linha, cada uma com pelo menos duas posições.
+- `Point` (v0.3) exige exatamente uma posição; `MultiPoint` (v0.3) exige ao menos uma posição.
 
 ## Limites iniciais
 
@@ -128,7 +145,7 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 | `GMC_LIMIT_EXCEEDED` | um dos limites do contrato foi excedido |
 | `GMC_CRS_INVALID` | CRS ausente ou fora do formato EPSG |
 | `GMC_UNITS_UNSUPPORTED` | unidade não suportada |
-| `GMC_GEOMETRY_TYPE_UNSUPPORTED` | geometria diferente de LineString/MultiLineString |
+| `GMC_GEOMETRY_TYPE_UNSUPPORTED` | geometria diferente de LineString/MultiLineString (v0.1 e v0.2) ou de LineString/MultiLineString/Point/MultiPoint (v0.3) |
 | `GMC_GEOMETRY_EMPTY` | linha sem quantidade mínima de posições |
 | `GMC_GEOMETRY_COORDINATE_INVALID` | coordenada ausente, não numérica ou não finita |
 | `GMC_GEOMETRY_DIMENSION_UNSUPPORTED` | posição não é estritamente 2D |
