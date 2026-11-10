@@ -76,6 +76,7 @@ class ConversionOptions:
     network_type: str
     exported_at: str
     project_to_2d: bool
+    blocks: bool = False
 
 
 def _finite_number(value: str, field: str) -> float:
@@ -403,6 +404,59 @@ def _convert_line(entity: DxfEntity, options: ConversionOptions) -> dict[str, ob
     )
 
 
+# Propriedades geradas pela ponte; um atributo de bloco com o mesmo nome recebe
+# o prefixo "atributo_" para não sobrescrevê-las.
+_RESERVED_BLOCK_PROPERTIES = {
+    "cadHandle",
+    "cadEntityType",
+    "bloco",
+    "rotacao",
+    "escalaX",
+    "escalaY",
+    "cadElevation",
+    "projectedTo2D",
+}
+
+
+def _convert_insert(entity: DxfEntity, options: ConversionOptions) -> dict[str, object]:
+    _check_extrusion(entity)
+    block_name = (entity.first(2) or "").strip()
+    if not block_name:
+        raise DxfConversionError(f"Block reference {_entity_handle(entity)} has no block name.")
+    x = _finite_number(entity.first(10) or "", "insertion X") if entity.first(10) else None
+    y = _finite_number(entity.first(20) or "", "insertion Y") if entity.first(20) else None
+    if x is None or y is None:
+        raise DxfConversionError(f"Block reference {_entity_handle(entity)} has no insertion point.")
+    elevation = _finite_number(entity.first(30, "0") or "0", "insertion Z")
+    projected = _projection_required([elevation], options)
+    return {
+        "sourceId": _entity_handle(entity),
+        "sourceType": "BlockReference",
+        "sourceLayer": _entity_layer(entity),
+        "geometry": {"type": "Point", "coordinates": [x, y]},
+        "properties": {
+            "cadHandle": _entity_handle(entity),
+            "cadEntityType": entity.entity_type,
+            "bloco": block_name,
+            "rotacao": _finite_number(entity.first(50, "0") or "0", "rotation"),
+            "escalaX": _finite_number(entity.first(41, "1") or "1", "scale X"),
+            "escalaY": _finite_number(entity.first(42, "1") or "1", "scale Y"),
+            "cadElevation": elevation,
+            "projectedTo2D": projected,
+        },
+    }
+
+
+def _attach_attribute(feature: dict[str, object], attribute: DxfEntity) -> None:
+    tag = (attribute.first(2) or "").strip()
+    if not tag:
+        return
+    properties = feature["properties"]
+    assert isinstance(properties, dict)
+    name = f"atributo_{tag}" if tag in _RESERVED_BLOCK_PROPERTIES else tag
+    properties[name] = (attribute.first(1) or "").strip()
+
+
 def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, object]]:
     if not EPSG_PATTERN.fullmatch(options.source_crs):
         raise DxfConversionError("--source-crs must use the form EPSG:<code>.")
@@ -419,13 +473,33 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
     seen_handles: set[str] = set()
     skipped_paper_space = 0
 
+    # INSERT com atributos é seguido por entidades ATTRIB e um SEQEND; os
+    # atributos pertencem ao bloco anterior, mesmo que estejam em outra layer.
+    open_block: dict[str, object] | None = None
+
     for entity in entities_section(pairs):
+        if entity.entity_type in {"ATTRIB", "SEQEND"}:
+            if entity.entity_type == "ATTRIB" and open_block is not None:
+                _attach_attribute(open_block, entity)
+            elif entity.entity_type == "SEQEND":
+                open_block = None
+            if _entity_layer(entity) == options.layer and not options.blocks:
+                ignored[entity.entity_type] += 1
+            continue
+        open_block = None
         if _entity_layer(entity) != options.layer:
             continue
         if not _is_modelspace(entity):
             skipped_paper_space += 1
             continue
-        if entity.entity_type == "LWPOLYLINE":
+        if options.blocks:
+            if entity.entity_type != "INSERT":
+                ignored[entity.entity_type] += 1
+                continue
+            feature = _convert_insert(entity, options)
+            if (entity.first(66, "0") or "0").strip() == "1":
+                open_block = feature
+        elif entity.entity_type == "LWPOLYLINE":
             feature = _convert_lwpolyline(entity, options)
         elif entity.entity_type == "LINE":
             feature = _convert_line(entity, options)
@@ -445,7 +519,8 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
         features.append(feature)
 
     if not features:
-        raise DxfConversionError(f"Layer {options.layer!r} has no supported linear geometry.")
+        kind = "block references" if options.blocks else "supported linear geometry"
+        raise DxfConversionError(f"Layer {options.layer!r} has no {kind}.")
     if len(features) > MAX_JSON_FEATURES:
         raise DxfConversionError(
             f"Selected layer contains {len(features)} features; the JSON contract limit is "
@@ -461,9 +536,10 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
     if color:
         network["color"] = color
 
+    # Pontos exigem a 0.3; a 0.2 só é necessária quando há cor da layer.
+    contract_version = "0.3" if options.blocks else ("0.2" if color else "0.1")
     document: dict[str, object] = {
-        # A versão 0.2 só é necessária quando a cor da layer está disponível.
-        "contractVersion": "0.2" if color else "0.1",
+        "contractVersion": contract_version,
         "sourceSystem": "Civil 3D DXF",
         "sourceCrs": options.source_crs,
         "units": options.units,
@@ -511,6 +587,12 @@ def parse_args(argv: Sequence[str] | None = None) -> ConversionOptions:
         action="store_true",
         help="Explicitly discard Z/elevation from geometry and retain it in properties.",
     )
+    parser.add_argument(
+        "--blocks",
+        action="store_true",
+        help="Convert the layer block references (INSERT) to Point features with their "
+        "block name and attributes (contract 0.3) instead of linear geometry.",
+    )
     args = parser.parse_args(argv)
     return ConversionOptions(
         input_path=args.input,
@@ -525,6 +607,7 @@ def parse_args(argv: Sequence[str] | None = None) -> ConversionOptions:
         network_type=args.network_type,
         exported_at=args.exported_at,
         project_to_2d=args.project_to_2d,
+        blocks=args.blocks,
     )
 
 

@@ -164,7 +164,7 @@ public sealed class ImporterApplication(
                 featureCancellationToken.ThrowIfCancellationRequested();
                 state.Received++;
                 var validation = GeoMapContractValidator.ValidateStreamingFeature(
-                    lines.Current.Utf8Json, sequence);
+                    lines.Current.Utf8Json, sequence, metadata.ContractVersion);
                 if (!validation.IsValid)
                 {
                     var first = validation.Errors[0];

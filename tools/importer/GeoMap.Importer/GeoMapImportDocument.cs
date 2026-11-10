@@ -99,7 +99,10 @@ public sealed record GeoMapImportDocument(
             DateTimeOffset.Parse(
                 root.GetProperty("exportedAt").GetString()!,
                 CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal));
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal))
+        {
+            ContractVersion = root.GetProperty("contractVersion").GetString()!
+        };
     }
 
     public static GeoMapImportFeature ParseStreamingFeature(
@@ -133,7 +136,10 @@ public sealed record GeoMapImportMetadata(
     string Units,
     ImportProject Project,
     ImportNetwork Network,
-    DateTimeOffset ExportedAt);
+    DateTimeOffset ExportedAt)
+{
+    public string ContractVersion { get; init; } = "0.1";
+}
 
 public sealed record ImportProject(string ExternalId, string Name);
 

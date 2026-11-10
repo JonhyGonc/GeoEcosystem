@@ -59,7 +59,7 @@ erDiagram
 |---|---|---|
 | id | uuid | chave primária GeoMap |
 | network_id | uuid | FK obrigatória para networks |
-| geometry | geometry(Geometry, 4326) | somente LineString ou MultiLineString 2D, não vazia |
+| geometry | geometry(Geometry, 4326) | LineString, MultiLineString, Point ou MultiPoint 2D, não vazia (pontos desde a migration 003, DEC-029) |
 | source_id | varchar(255) | identificador opcional na origem |
 | source_layer | varchar(255) | layer opcional de origem |
 | source_type | varchar(100) | tipo de origem obrigatório |

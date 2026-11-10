@@ -44,6 +44,17 @@ Get-Content -Raw database/migrations/002_network_color.up.sql |
 
 O rollback (`002_network_color.down.sql`) remove apenas a coluna de cor e preserva redes e feições. A API passa a exigir a coluna, então a 002 precisa estar aplicada antes de subir a versão que lê a cor.
 
+## Migration 003: pontos de blocos
+
+Troca a restrição `ck_network_features_linear_geometry` por `ck_network_features_supported_geometry`, que aceita também `POINT` e `MULTIPOINT` (contrato v0.3, blocos do CAD). Não altera dados. Aplique-a depois da 002:
+
+~~~powershell
+Get-Content -Raw database/migrations/003_point_features.up.sql |
+  docker compose exec -T database sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+~~~
+
+O rollback (`003_point_features.down.sql`) recusa-se a rodar enquanto existirem feições pontuais, para não apagar dados sem aviso. Remova antes as redes de blocos, se o rollback for realmente necessário.
+
 ## Convenção
 
 Novas migrations devem usar número crescente, nome descritivo e pares up/down. Não altere uma migration já aplicada em ambientes compartilhados; crie uma nova.

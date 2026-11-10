@@ -46,6 +46,32 @@ public sealed class GeoMapImportDocumentTests
         var metadata = GeoMapImportDocument.ParseStreamingMetadata(Encoding.UTF8.GetBytes(json));
 
         Assert.Equal("#00FF7F", metadata.Network.Color);
+        Assert.Equal("0.2", metadata.ContractVersion);
+    }
+
+    [Fact]
+    public void Streaming_metadata_keeps_the_declared_contract_version()
+    {
+        var json = Encoding.UTF8.GetString(StreamingMetadata())
+            .Replace("\"contractVersion\":\"0.1\"", "\"contractVersion\":\"0.3\"", StringComparison.Ordinal);
+
+        Assert.Equal("0.1", GeoMapImportDocument.ParseStreamingMetadata(StreamingMetadata()).ContractVersion);
+        Assert.Equal(
+            "0.3",
+            GeoMapImportDocument.ParseStreamingMetadata(Encoding.UTF8.GetBytes(json)).ContractVersion);
+    }
+
+    [Fact]
+    public void Streaming_point_feature_parses_for_block_references()
+    {
+        var feature = GeoMapImportDocument.ParseStreamingFeature(
+            Encoding.UTF8.GetBytes("""
+                {"sourceId":"B10C","sourceType":"BlockReference","sourceLayer":"CONEXOES","geometry":{"type":"Point","coordinates":[688100.25,7086400.75]},"properties":{"bloco":"TE"}}
+                """),
+            7);
+
+        Assert.Equal("BlockReference", feature.SourceType);
+        Assert.Contains("Point", feature.GeometryJson, StringComparison.Ordinal);
     }
 
     [Fact]

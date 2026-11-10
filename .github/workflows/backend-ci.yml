@@ -136,6 +136,27 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < database/migrations/002_network_color.up.sql
 
+      - name: Apply point features migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-point-features-migration.sql
+
+      - name: Verify point features migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-point-features-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.up.sql
+
       - name: Build initial GeoMap importer
         run: |
           dotnet restore tools/importer/GeoMap.Importer/GeoMap.Importer.csproj
@@ -172,6 +193,21 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-network-color-import.sql
+
+      - name: Import and verify contract 0.3 block points
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.3/examples/valid-block-points.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-block-points-import.sql
 
       - name: Convert and verify synthetic DXF bridge
         shell: bash

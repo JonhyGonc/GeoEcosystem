@@ -233,6 +233,14 @@ Status: aprovada (Issue #52).
 
 O responsável definiu que cada camada deve aparecer "com a coloração correta", isto é, com a cor da layer no CAD, que a equipe já reconhece. O contrato ganha a versão 0.2 com `network.color` opcional (`#RRGGBB`), e a migration 002 adiciona `networks.color`, opcional e validada por CHECK. A 0.1 continua aceita, para não quebrar o exportador do GeoAutoEngine nem arquivos já gerados. Sem cor, o frontend mantém a paleta automática. Só a cor da layer (ByLayer) é considerada; cores por entidade, espessura e tipo de linha ficam fora do escopo.
 
+## DEC-029 — Blocos do CAD como pontos e contrato v0.3
+
+Status: aprovada (Issue #49).
+
+O responsável pediu que os blocos (tê, cap, registro, cruzeta, poço de visita, poste) apareçam em camadas separadas das linhas e que a descrição seja o próprio nome do bloco, porque "o nome dos blocos já fala o que são". O contrato ganha a versão 0.3, que aceita `Point` e `MultiPoint` além das linhas; a 0.1 e a 0.2 continuam válidas e continuam rejeitando pontos. A migration 003 amplia a restrição geométrica de `network_features` sem alterar dados nem a tabela, e o rollback falha se houver pontos.
+
+Cada layer de blocos é importada como uma rede própria, com a cor da layer, convertida pela ponte DXF com `--blocks`. O nome do bloco fica em `properties.bloco` e os atributos (`ATTRIB`) viram propriedades. No mapa, cada rede ganha uma camada de círculos filtrada por tipo geométrico, porque uma camada de círculos desenharia também os vértices das linhas; o tile MVT, a seleção e a visibilidade continuam os mesmos. Símbolos específicos por tipo de bloco, rótulos com o nome no mapa e blocos dinâmicos (que o DXF grava com nome anônimo `*U…`) ficam fora do escopo desta Issue. As 127 layers de pontos de levantamento topográfico vistas no projeto grande também não são importadas por padrão; a forma de apresentá-las depende de decisão do responsável.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

@@ -12,6 +12,20 @@ export const NETWORK_MAX_ZOOM = 22
 const NETWORK_SOURCE_PREFIX = 'geomap-network-source-'
 const NETWORK_LAYER_PREFIX = 'geomap-network-lines-'
 const NETWORK_SELECTION_LAYER_PREFIX = 'geomap-network-selection-'
+const NETWORK_POINT_LAYER_PREFIX = 'geomap-network-points-'
+const NETWORK_POINT_SELECTION_LAYER_PREFIX = 'geomap-network-point-selection-'
+const SELECTION_COLOR = '#ffd84d'
+
+// Camadas de círculo desenham um círculo em cada vértice de qualquer geometria;
+// por isso elas só recebem os blocos (Point/MultiPoint). Camadas de linha já
+// ignoram pontos naturalmente.
+const POINT_GEOMETRY_FILTER: FilterSpecification = [
+  'match',
+  ['geometry-type'],
+  ['Point', 'MultiPoint'],
+  true,
+  false,
+]
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const NETWORK_COLORS = [
@@ -232,6 +246,24 @@ export function buildNetworkLayerId(networkId: string): string {
   return `${NETWORK_LAYER_PREFIX}${networkId}`
 }
 
+export function buildNetworkPointLayerId(networkId: string): string {
+  return `${NETWORK_POINT_LAYER_PREFIX}${networkId}`
+}
+
+export function buildNetworkPointSelectionLayerId(networkId: string): string {
+  return `${NETWORK_POINT_SELECTION_LAYER_PREFIX}${networkId}`
+}
+
+/** Camadas de uma rede na ordem em que são adicionadas ao mapa. */
+export function networkLayerIds(networkId: string): string[] {
+  return [
+    buildNetworkLayerId(networkId),
+    buildNetworkPointLayerId(networkId),
+    buildNetworkSelectionLayerId(networkId),
+    buildNetworkPointSelectionLayerId(networkId),
+  ]
+}
+
 export function buildNetworkSelectionLayerId(networkId: string): string {
   return `${NETWORK_SELECTION_LAYER_PREFIX}${networkId}`
 }
@@ -287,6 +319,71 @@ export function buildNetworkLayer(
   }
 }
 
+export function buildNetworkPointLayer(
+  network: NetworkLayerView,
+): LayerSpecification {
+  return {
+    id: buildNetworkPointLayerId(network.id),
+    type: 'circle',
+    source: buildNetworkSourceId(network.id),
+    'source-layer': NETWORK_SOURCE_LAYER,
+    minzoom: NETWORK_MIN_ZOOM,
+    filter: POINT_GEOMETRY_FILTER,
+    layout: {
+      visibility: network.visible ? 'visible' : 'none',
+    },
+    paint: {
+      'circle-color': network.color,
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        NETWORK_MIN_ZOOM,
+        3,
+        18,
+        6,
+        NETWORK_MAX_ZOOM,
+        10,
+      ],
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 1,
+      'circle-opacity': 0.95,
+    },
+  }
+}
+
+export function buildNetworkPointSelectionLayer(
+  network: NetworkLayerView,
+): LayerSpecification {
+  return {
+    id: buildNetworkPointSelectionLayerId(network.id),
+    type: 'circle',
+    source: buildNetworkSourceId(network.id),
+    'source-layer': NETWORK_SOURCE_LAYER,
+    minzoom: NETWORK_MIN_ZOOM,
+    filter: pointSelectionFilter(emptySelectionFilter()),
+    layout: {
+      visibility: network.visible ? 'visible' : 'none',
+    },
+    paint: {
+      'circle-color': SELECTION_COLOR,
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        NETWORK_MIN_ZOOM,
+        6,
+        18,
+        9,
+        NETWORK_MAX_ZOOM,
+        14,
+      ],
+      'circle-stroke-color': '#12364a',
+      'circle-stroke-width': 2,
+    },
+  }
+}
+
 export function buildNetworkSelectionLayer(
   network: NetworkLayerView,
 ): LayerSpecification {
@@ -303,7 +400,7 @@ export function buildNetworkSelectionLayer(
       visibility: network.visible ? 'visible' : 'none',
     },
     paint: {
-      'line-color': '#ffd84d',
+      'line-color': SELECTION_COLOR,
       'line-opacity': 1,
       'line-width': [
         'interpolate',
@@ -335,7 +432,10 @@ export function installNetworkLayers(
   )
   const networkErrors = new Set<string>()
   const layerToNetwork = new Map(
-    networks.map((network) => [buildNetworkLayerId(network.id), network]),
+    networks.flatMap((network) => [
+      [buildNetworkLayerId(network.id), network] as const,
+      [buildNetworkPointLayerId(network.id), network] as const,
+    ]),
   )
   let selectedFeature: SelectedNetworkFeature | null = null
 
@@ -345,17 +445,22 @@ export function installNetworkLayers(
       buildNetworkSource(config, network.id),
     )
     map.addLayer(buildNetworkLayer(network))
+    map.addLayer(buildNetworkPointLayer(network))
     map.addLayer(buildNetworkSelectionLayer(network))
+    map.addLayer(buildNetworkPointSelectionLayer(network))
   }
 
   const applySelection = (selection: SelectedNetworkFeature | null) => {
     selectedFeature = selection
     for (const network of networks) {
-      map.setFilter(
-        buildNetworkSelectionLayerId(network.id),
+      const filter =
         selection?.networkId === network.id
           ? selectedFeatureFilter(selection.featureId)
-          : emptySelectionFilter(),
+          : emptySelectionFilter()
+      map.setFilter(buildNetworkSelectionLayerId(network.id), filter)
+      map.setFilter(
+        buildNetworkPointSelectionLayerId(network.id),
+        pointSelectionFilter(filter),
       )
     }
     updateSelection(selection)
@@ -372,7 +477,7 @@ export function installNetworkLayers(
     }
 
     const features = map.queryRenderedFeatures({
-      layers: [buildNetworkLayerId(network.id)],
+      layers: [buildNetworkLayerId(network.id), buildNetworkPointLayerId(network.id)],
     })
     updateStatus(
       network.id,
@@ -426,7 +531,10 @@ export function installNetworkLayers(
     }
     const visibleLayerIds = networks
       .filter((network) => visibility.get(network.id))
-      .map((network) => buildNetworkLayerId(network.id))
+      .flatMap((network) => [
+        buildNetworkLayerId(network.id),
+        buildNetworkPointLayerId(network.id),
+      ])
     if (visibleLayerIds.length === 0) {
       applySelection(null)
       return
@@ -473,16 +581,9 @@ export function installNetworkLayers(
       if (!visibility.has(networkId)) return
       visibility.set(networkId, visible)
       networkErrors.delete(networkId)
-      map.setLayoutProperty(
-        buildNetworkLayerId(networkId),
-        'visibility',
-        visible ? 'visible' : 'none',
-      )
-      map.setLayoutProperty(
-        buildNetworkSelectionLayerId(networkId),
-        'visibility',
-        visible ? 'visible' : 'none',
-      )
+      for (const layerId of networkLayerIds(networkId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+      }
       if (!visible && selectedFeature?.networkId === networkId) {
         applySelection(null)
       }
@@ -503,11 +604,10 @@ export function installNetworkLayers(
       errorSubscription.unsubscribe()
       clickSubscription.unsubscribe()
       for (const network of [...networks].reverse()) {
-        const layerId = buildNetworkLayerId(network.id)
-        const selectionLayerId = buildNetworkSelectionLayerId(network.id)
         const sourceId = buildNetworkSourceId(network.id)
-        if (map.getLayer(selectionLayerId)) map.removeLayer(selectionLayerId)
-        if (map.getLayer(layerId)) map.removeLayer(layerId)
+        for (const layerId of networkLayerIds(network.id).reverse()) {
+          if (map.getLayer(layerId)) map.removeLayer(layerId)
+        }
         if (map.getSource(sourceId)) map.removeSource(sourceId)
       }
     },
@@ -520,6 +620,10 @@ function emptySelectionFilter(): FilterSpecification {
 
 function selectedFeatureFilter(featureId: string): FilterSpecification {
   return ['==', ['get', 'id'], featureId]
+}
+
+function pointSelectionFilter(filter: FilterSpecification): FilterSpecification {
+  return ['all', POINT_GEOMETRY_FILTER, filter] as FilterSpecification
 }
 
 export function summarizeNetworkLayers(
