@@ -153,3 +153,83 @@ O responsável aprovou o resultado em 10 de novembro de 2026.
   tipo de rede.
 - **Vídeo-inspeção.** A camada de vídeo-inspeção foi importada apenas como
   geometria. Inspeções, anomalias e fotos continuam fora do MVP (ver `MVP.md`).
+
+## Terceira rede: projeto real grande de abastecimento de água
+
+### Autorização e privacidade
+
+Em 10 de novembro de 2026, o responsável confirmou a autorização para uso interno
+do desenho no desenvolvimento do GeoMap. Valem as mesmas regras das redes
+anteriores: arquivos, coordenadas, logradouros e município ficam somente na
+máquina autorizada.
+
+### Origem
+
+| Item | Valor registrado |
+|---|---|
+| Origem | desenho Autodesk Civil 3D exportado como DXF ASCII (`AC1032`), com 113 MB e 196 camadas |
+| CRS | SIRGAS 2000 / UTM zona 24S (`EPSG:31984`) |
+| Unidade | metro |
+| Tipo CAD convertido | `LWPOLYLINE` e `LINE` no Model Space |
+
+O cabeçalho não declara unidade (`$INSUNITS = 0`). Uma nota do próprio desenho
+informa medidas em metros e coordenadas UTM no datum SIRGAS 2000, sem o fuso.
+Desta vez, os três fusos candidatos caíam em terra firme, então o fuso foi
+confirmado pelo responsável a partir da região do projeto. A conferência visual
+confirmou a posição.
+
+### Seleção e preparação
+
+- As 17 camadas `RD_<diâmetro>[_<material>]` foram convertidas pela ponte DXF e
+  unidas, por um script privado de validação, em uma única rede. O diâmetro e o
+  material foram extraídos do nome da camada e gravados em `properties.diametroMm`
+  e `properties.material`.
+- A camada `GF-Rede Água` foi importada como uma segunda rede do mesmo projeto.
+- **Exclusões:** a ponte DXF rejeita a camada inteira quando encontra curvas. Para
+  a validação, 6 polilinhas com bulge e 1 `ARC` (0,26% dos trechos de rede) foram
+  movidas para uma camada de exclusão em uma cópia privada do DXF; a comparação
+  com o original mostrou exatamente 9 linhas alteradas. Também foram excluídos 2
+  trechos a mais de 20 km da área principal, provavelmente da legenda. O
+  tratamento definitivo das curvas é a Issue #48.
+
+### Resultado
+
+| Rede | Feições | Vértices 2D | Comprimento projetado |
+|---|---:|---:|---:|
+| Rede de água: tubulações (RD) | 2.261 | 12.707 | 175,77 km |
+| GF-Rede Água | 412 | 1.857 | 2,11 km |
+| **Total** | **2.673** | **14.564** | **177,88 km** |
+
+| Diâmetro (mm) | Extensão (km) | Diâmetro (mm) | Extensão (km) |
+|---:|---:|---:|---:|
+| 20 | 0,32 | 110 | 7,88 |
+| 32 | 1,54 | 150 | 9,12 |
+| 50 | 105,08 | 200 | 11,96 |
+| 60 | 12,82 | 250 | 0,60 |
+| 75 | 2,48 | 300 | 2,76 |
+| 80 | 1,17 | 400 | 0,92 |
+| 100 | 18,08 | 600 | 1,04 |
+
+A área principal tem cerca de 6,4 km × 7,1 km. Os documentos GeoMap privados
+somam 1.327.930 bytes, dentro dos limites do contrato (10.000 feições e 50 MB por
+documento).
+
+### Conferência no mapa
+
+- a rede caiu na posição esperada sobre o mapa base;
+- a navegação pela área completa ficou fluida;
+- o painel de atributos mostra todas as propriedades do trecho, inclusive
+  diâmetro e material.
+
+O responsável aprovou o resultado em 10 de novembro de 2026.
+
+### Limitações observadas
+
+- **Curvas** bloqueiam camadas inteiras na ponte DXF (Issue #48).
+- **85 mil blocos (INSERT) com 253 mil atributos** não são importados, porque o
+  contrato v0.1 só aceita linhas (Issue #49).
+- **O mapa não enquadra o projeto.** O centro inicial fica fixo e, para a
+  conferência, foi alterado temporariamente sem commit (Issue #47).
+- O mapeamento de nome de camada para diâmetro e material é uma convenção deste
+  desenho, aplicada fora do repositório. Generalizá-lo exige uma decisão no
+  exportador ou na importação de Shapefile (Issue #50).
