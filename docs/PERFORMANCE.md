@@ -77,6 +77,18 @@ O crescimento de dez vezes na quantidade e no arquivo não aumentou o pico obser
 
 Os comandos que contam, removem e inserem o snapshot completo da rede usam timeout explícito de 600 s (`PostgresGeoMapImportStore.SnapshotCommandTimeoutSeconds`), aplicado tanto ao JSON quanto ao NDJSON. Antes disso eles herdavam o padrão de 30 s do Npgsql, e o `INSERT … SELECT` final do LARGE, com transformação de CRS e manutenção do índice GiST, ficava perto desse limite. Em 10 de setembro de 2026 a CI da `main` falhou com código 3 nessa etapa, embora o mesmo commit tivesse passado no Pull Request. O valor continua finito para que um bloqueio não prenda a importação indefinidamente. Se o importador falhar, a CI imprime o resumo JSON, o progresso e o log do banco.
 
+## Extensão e foco do projeto (Issue #47)
+
+`GET /api/projects/{id}/extent` foi medido na Backend CI com 30 amostras por dataset, com os três datasets carregados na mesma base:
+
+| Dataset | Mediana | p95 | Máximo |
+|---|---:|---:|---:|
+| SMALL (1.000 feições) | 127,7 ms | 131,7 ms | 166,6 ms |
+| MEDIUM (100.000) | 139,1 ms | 144,3 ms | 180,4 ms |
+| LARGE (1.000.000) | 253,2 ms | 284,1 ms | 296,8 ms |
+
+O cálculo sob demanda atende ao uso, que é um clique ou uma troca de projeto, e dispensa guardar a extensão na importação (DEC-027). O SMALL não é proporcionalmente mais rápido porque os três datasets ocupam a mesma área: a busca do foco por vizinho mais próximo percorre feições de outros projetos antes de encontrar as do projeto pedido. A CI falha se o p95 de qualquer dataset passar de 2 s.
+
 ## Práticas de consulta
 
 - filtrar por projeto e rede antes ou junto do filtro espacial;

@@ -14,6 +14,7 @@ const mapMocks = vi.hoisted(() => {
   const listeners: Record<string, () => void> = {}
   return {
     addControl: vi.fn(),
+    cameraForBounds: vi.fn(() => ({ zoom: 16 })),
     createMap: vi.fn(),
     createNavigationControl: vi.fn(),
     createScaleControl: vi.fn(),
@@ -22,6 +23,8 @@ const mapMocks = vi.hoisted(() => {
       listeners[event] = listener
       return { unsubscribe: vi.fn() }
     }),
+    fitBounds: vi.fn(),
+    flyTo: vi.fn(),
     remove: vi.fn(),
   }
 })
@@ -29,6 +32,9 @@ const mapMocks = vi.hoisted(() => {
 vi.mock('maplibre-gl', () => {
   class Map {
     addControl = mapMocks.addControl
+    cameraForBounds = mapMocks.cameraForBounds
+    fitBounds = mapMocks.fitBounds
+    flyTo = mapMocks.flyTo
     on = mapMocks.on
     remove = mapMocks.remove
 
@@ -71,6 +77,17 @@ function stubApi(
 
 function emptyNetworkCatalog(projectId: string) {
   return { projectId, networks: [] }
+}
+
+const betaLocation = {
+  projectId: beta.id,
+  extent: {
+    minLongitude: -39.6,
+    minLatitude: -17.1,
+    maxLongitude: -39.59,
+    maxLatitude: -17.09,
+  },
+  focus: { longitude: -39.595, latitude: -17.095 },
 }
 
 afterEach(() => {
@@ -132,6 +149,12 @@ describe('GeoMap app', () => {
       '/api/projects': { projects: [alfa, beta] },
       [`/api/projects/${alfa.id}/networks`]: emptyNetworkCatalog(alfa.id),
       [`/api/projects/${beta.id}/networks`]: emptyNetworkCatalog(beta.id),
+      [`/api/projects/${alfa.id}/extent`]: {
+        projectId: alfa.id,
+        extent: null,
+        focus: null,
+      },
+      [`/api/projects/${beta.id}/extent`]: betaLocation,
     })
     const configuration: NetworkConfiguration = {
       kind: 'ready',
@@ -142,6 +165,18 @@ describe('GeoMap app', () => {
 
     const select = await screen.findByRole('combobox', { name: 'Projeto' })
     expect(select).toHaveValue(beta.id)
+
+    const locate = screen.getByRole('button', { name: 'Localizar projeto no mapa' })
+    await waitFor(() => expect(locate).toBeEnabled())
+    const betaBounds = [
+      [-39.6, -17.1],
+      [-39.59, -17.09],
+    ]
+    expect(mapMocks.fitBounds).toHaveBeenCalledOnce()
+    expect(mapMocks.fitBounds).toHaveBeenCalledWith(betaBounds, expect.anything())
+
+    fireEvent.click(locate)
+    expect(mapMocks.fitBounds).toHaveBeenCalledTimes(2)
 
     act(() => {
       mapMocks.listeners['style.load']?.()
@@ -166,6 +201,10 @@ describe('GeoMap app', () => {
       ),
     )
     expect(select).toHaveValue(alfa.id)
+    await waitFor(() => expect(locate).toBeDisabled())
+    expect(locate).toHaveAttribute('title', 'Projeto sem feições para localizar')
+    expect(mapMocks.fitBounds).toHaveBeenCalledTimes(2)
+    expect(mapMocks.flyTo).not.toHaveBeenCalled()
   })
 
   it('keeps the base map when the project catalog fails', async () => {

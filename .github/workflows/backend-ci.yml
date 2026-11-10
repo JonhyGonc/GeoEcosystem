@@ -326,6 +326,9 @@ jobs:
       - name: Verify project catalog API
         run: tests/integration/verify-project-catalog-api.sh http://localhost:8080
 
+      - name: Verify project extent API
+        run: tests/integration/verify-project-extent-api.sh http://localhost:8080
+
       - name: Verify project network catalog API
         run: tests/integration/verify-network-catalog-api.sh http://localhost:8080
 
@@ -378,6 +381,13 @@ jobs:
             http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
           tests/integration/benchmark-vector-tile.sh \
             http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
+
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID"
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID"
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID"
 
       - name: Import and verify streaming MEDIUM
         shell: bash

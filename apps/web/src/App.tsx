@@ -8,6 +8,10 @@ import {
   type FeatureDetailsState,
 } from './api/featureDetails'
 import {
+  fetchProjectLocation,
+  type ProjectLocation,
+} from './api/projectExtent'
+import {
   chooseInitialProjectId,
   fetchProjects,
   type ProjectCatalogState,
@@ -28,11 +32,21 @@ import {
   type NetworkStatus,
   type SelectedNetworkFeature,
 } from './map/networkLayer'
+import {
+  locateProject,
+  type ProjectLocatorTarget,
+} from './map/projectLocator'
 import './App.css'
 
 interface AppProps {
   readonly configuration?: NetworkConfiguration
 }
+
+type ProjectLocationState = { readonly projectId: string } & (
+  | { readonly kind: 'ready'; readonly location: ProjectLocation }
+  | { readonly kind: 'empty' }
+  | { readonly kind: 'error'; readonly message: string }
+)
 
 const LOADING_LAYERS_STATUS: NetworkStatus = {
   kind: 'loading',
@@ -42,6 +56,7 @@ const LOADING_LAYERS_STATUS: NetworkStatus = {
 function App({ configuration = networkConfiguration }: AppProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<NetworkMapTarget>(null)
+  const locatorTarget = useRef<ProjectLocatorTarget>(null)
   const layerController = useRef<NetworkLayerController>(null)
   const [styleRevision, setStyleRevision] = useState(0)
   const [projectCatalog, setProjectCatalog] = useState<ProjectCatalogState>({
@@ -51,6 +66,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
     null,
   )
   const [startupProjectId, setStartupProjectId] = useState<string | null>(null)
+  const [projectLocation, setProjectLocation] =
+    useState<ProjectLocationState | null>(null)
   const [layers, setLayers] = useState<NetworkLayerView[]>([])
   const [networkStatus, setNetworkStatus] =
     useState<NetworkStatus>(LOADING_LAYERS_STATUS)
@@ -74,6 +91,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
       attributionControl: { compact: false },
     })
     mapInstance.current = map as unknown as NetworkMapTarget
+    locatorTarget.current = map as unknown as ProjectLocatorTarget
     const styleSubscription = map.on('style.load', () => {
       setStyleRevision((revision) => revision + 1)
     })
@@ -96,6 +114,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
       layerController.current?.cleanup()
       layerController.current = null
       mapInstance.current = null
+      locatorTarget.current = null
       map.remove()
     }
   }, [])
@@ -128,6 +147,40 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
     return () => abortController.abort()
   }, [configuration])
+
+  useEffect(() => {
+    if (configuration.kind !== 'ready' || !selectedProjectId) return
+
+    const projectId = selectedProjectId
+    const abortController = new AbortController()
+    void fetchProjectLocation(
+      configuration.value.apiBaseUrl,
+      projectId,
+      abortController.signal,
+    )
+      .then((location) => {
+        if (abortController.signal.aborted) return
+        if (!location) {
+          setProjectLocation({ projectId, kind: 'empty' })
+          return
+        }
+        setProjectLocation({ projectId, kind: 'ready', location })
+        if (locatorTarget.current) locateProject(locatorTarget.current, location)
+      })
+      .catch((error: unknown) => {
+        if (abortController.signal.aborted) return
+        setProjectLocation({
+          projectId,
+          kind: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível localizar o projeto',
+        })
+      })
+
+    return () => abortController.abort()
+  }, [configuration, selectedProjectId])
 
   const catalogConfig = useMemo(() => {
     if (configuration.kind !== 'ready' || !selectedProjectId) return null
@@ -227,6 +280,16 @@ function App({ configuration = networkConfiguration }: AppProps) {
     return () => abortController.abort()
   }, [catalogConfig, detailsRevision, selectedFeature])
 
+  // A localização guardada só vale para o projeto em que foi obtida; enquanto
+  // a do projeto atual não chega, o botão fica em estado de carregamento.
+  const currentLocation =
+    projectLocation?.projectId === selectedProjectId ? projectLocation : null
+
+  const locateSelectedProject = () => {
+    if (currentLocation?.kind !== 'ready' || !locatorTarget.current) return
+    locateProject(locatorTarget.current, currentLocation.location)
+  }
+
   const changeProject = (projectId: string) => {
     setStartupProjectId(null)
     setSelectedProjectId(projectId)
@@ -277,6 +340,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
             projects={projectCatalog.projects}
             selectedProjectId={selectedProjectId}
             onProjectChange={changeProject}
+            onLocate={locateSelectedProject}
+            locateDisabledReason={locateDisabledReason(currentLocation)}
           />
         )}
       </header>
@@ -312,6 +377,20 @@ function App({ configuration = networkConfiguration }: AppProps) {
       </aside>
     </main>
   )
+}
+
+function locateDisabledReason(
+  state: ProjectLocationState | null,
+): string | undefined {
+  if (!state) return 'Carregando localização do projeto…'
+  switch (state.kind) {
+    case 'ready':
+      return undefined
+    case 'empty':
+      return 'Projeto sem feições para localizar'
+    case 'error':
+      return state.message
+  }
 }
 
 function projectCatalogStatus(
