@@ -8,6 +8,7 @@ namespace GeoMap.Contract;
 public static partial class GeoMapContractValidator
 {
     public const string SupportedVersion = "0.1";
+    public const string ColorVersion = "0.2";
     public const int MaximumDocumentBytes = 50 * 1024 * 1024;
     public const int MaximumFeatures = 10_000;
     public const int MaximumVerticesPerFeature = 100_000;
@@ -27,6 +28,8 @@ public static partial class GeoMapContractValidator
         ["contractVersion", "sourceSystem", "sourceCrs", "units", "project", "network", "exportedAt"];
     private static readonly HashSet<string> ProjectFields = ["externalId", "name"];
     private static readonly HashSet<string> NetworkFields = ["externalId", "name", "type"];
+    private static readonly HashSet<string> NetworkFieldsV02 = ["externalId", "name", "type", "color"];
+    private static readonly HashSet<string> SupportedVersions = [SupportedVersion, ColorVersion];
     private static readonly HashSet<string> FeatureFields =
         ["sourceId", "sourceType", "sourceLayer", "geometry", "properties"];
     private static readonly HashSet<string> GeometryFields = ["type", "coordinates"];
@@ -155,9 +158,9 @@ public static partial class GeoMapContractValidator
         List<ContractValidationError> errors)
     {
         var version = RequiredString(root, "contractVersion", 16, "$", errors);
-        if (version is not null && version != SupportedVersion)
+        if (version is not null && !SupportedVersions.Contains(version))
         {
-            Add(errors, ContractErrorCodes.VersionUnsupported, "$.contractVersion", "Only contract version 0.1 is supported.");
+            Add(errors, ContractErrorCodes.VersionUnsupported, "$.contractVersion", "Only contract versions 0.1 and 0.2 are supported.");
         }
 
         RequiredString(root, "sourceSystem", 100, "$", errors);
@@ -186,7 +189,26 @@ public static partial class GeoMapContractValidator
         }
 
         ValidateProjectOrNetwork(root, "project", ProjectFields, false, errors);
-        ValidateProjectOrNetwork(root, "network", NetworkFields, true, errors);
+        var networkFields = version == ColorVersion ? NetworkFieldsV02 : NetworkFields;
+        ValidateProjectOrNetwork(root, "network", networkFields, true, errors);
+        if (version == ColorVersion) ValidateNetworkColor(root, errors);
+    }
+
+    private static void ValidateNetworkColor(
+        JsonElement root,
+        List<ContractValidationError> errors)
+    {
+        if (!root.TryGetProperty("network", out var network) ||
+            network.ValueKind != JsonValueKind.Object ||
+            !network.TryGetProperty("color", out var color))
+        {
+            return;
+        }
+
+        if (color.ValueKind != JsonValueKind.String || !HexColor().IsMatch(color.GetString()!))
+        {
+            Add(errors, ContractErrorCodes.FieldInvalid, "$.network.color", "Color must use the #RRGGBB form.");
+        }
     }
 
     private static void ValidateProjectOrNetwork(
@@ -507,7 +529,7 @@ public static partial class GeoMapContractValidator
         {
             if (!seen.Add(property.Name) || !knownFields.Contains(property.Name))
             {
-                Add(errors, ContractErrorCodes.FieldInvalid, $"{path}.{property.Name}", "Field is duplicated or unknown in contract version 0.1.");
+                Add(errors, ContractErrorCodes.FieldInvalid, $"{path}.{property.Name}", "Field is duplicated or unknown in this contract version.");
             }
         }
     }
@@ -520,4 +542,7 @@ public static partial class GeoMapContractValidator
 
     [GeneratedRegex("^EPSG:[1-9][0-9]{2,5}$", RegexOptions.CultureInvariant)]
     private static partial Regex EpsgIdentifier();
+
+    [GeneratedRegex("^#[0-9A-Fa-f]{6}$", RegexOptions.CultureInvariant)]
+    private static partial Regex HexColor();
 }

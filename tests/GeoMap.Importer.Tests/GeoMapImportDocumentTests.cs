@@ -24,6 +24,31 @@ public sealed class GeoMapImportDocumentTests
     }
 
     [Fact]
+    public void Parse_reads_the_optional_network_color_in_uppercase()
+    {
+        var json = Encoding.UTF8.GetString(ValidDocument())
+            .Replace("\"contractVersion\": \"0.1\"", "\"contractVersion\": \"0.2\"", StringComparison.Ordinal)
+            .Replace("\"type\": \" StormWater \" }", "\"type\": \" StormWater \", \"color\": \"#1a2b3c\" }", StringComparison.Ordinal);
+
+        var document = GeoMapImportDocument.Parse(Encoding.UTF8.GetBytes(json));
+
+        Assert.Equal("#1A2B3C", document.Network.Color);
+        Assert.Null(GeoMapImportDocument.Parse(ValidDocument()).Network.Color);
+    }
+
+    [Fact]
+    public void Streaming_metadata_reads_the_optional_network_color()
+    {
+        var json = Encoding.UTF8.GetString(StreamingMetadata())
+            .Replace("\"contractVersion\":\"0.1\"", "\"contractVersion\":\"0.2\"", StringComparison.Ordinal)
+            .Replace("\"type\":\"StormWater\"}", "\"type\":\"StormWater\",\"color\":\"#00ff7f\"}", StringComparison.Ordinal);
+
+        var metadata = GeoMapImportDocument.ParseStreamingMetadata(Encoding.UTF8.GetBytes(json));
+
+        Assert.Equal("#00FF7F", metadata.Network.Color);
+    }
+
+    [Fact]
     public void Parse_accepts_the_reference_GeoAutoEngine_export()
     {
         var path = Path.Combine(

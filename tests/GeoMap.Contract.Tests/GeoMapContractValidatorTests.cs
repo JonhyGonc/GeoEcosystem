@@ -133,6 +133,71 @@ public sealed class GeoMapContractValidatorTests
             Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors)));
     }
 
+    [Theory]
+    [InlineData("#1A2B3C")]
+    [InlineData("#a0b1c2")]
+    public void Version_02_accepts_a_hex_network_color(string color)
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = GeoMapContractValidator.ColorVersion;
+        root["network"]!["color"] = color;
+
+        var result = Validate(root);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors));
+    }
+
+    [Fact]
+    public void Version_02_keeps_the_network_color_optional()
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = GeoMapContractValidator.ColorVersion;
+
+        var result = Validate(root);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Errors));
+    }
+
+    [Theory]
+    [InlineData("red")]
+    [InlineData("#12345")]
+    [InlineData("#1234567")]
+    [InlineData("1A2B3C")]
+    public void Version_02_rejects_an_invalid_network_color(string color)
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = GeoMapContractValidator.ColorVersion;
+        root["network"]!["color"] = color;
+
+        var result = Validate(root);
+
+        Assert.Contains(result.Errors, error =>
+            error.Code == ContractErrorCodes.FieldInvalid && error.Path == "$.network.color");
+    }
+
+    [Fact]
+    public void Version_01_rejects_the_network_color_field()
+    {
+        var root = ReadValidRoot();
+        root["network"]!["color"] = "#1A2B3C";
+
+        var result = Validate(root);
+
+        Assert.Contains(result.Errors, error =>
+            error.Code == ContractErrorCodes.FieldInvalid && error.Path == "$.network.color");
+    }
+
+    [Fact]
+    public void Unknown_versions_remain_unsupported()
+    {
+        var root = ReadValidRoot();
+        root["contractVersion"] = "0.3";
+
+        var result = Validate(root);
+
+        Assert.Contains(result.Errors, error => error.Code == ContractErrorCodes.VersionUnsupported);
+    }
+
     private static ContractValidationResult ValidateExample(string fileName) =>
         GeoMapContractValidator.Validate(File.ReadAllBytes(ExamplePath(fileName)));
 

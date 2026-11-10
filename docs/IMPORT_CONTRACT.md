@@ -1,6 +1,6 @@
 # Contrato de importação GeoMap
 
-Status: contrato GeoMap v0.1 definido e validável pela Issue #14.
+Status: contrato GeoMap v0.1 definido pela Issue #14; v0.2 adiciona a cor da layer (Issue #52).
 
 ## Objetivo
 
@@ -57,6 +57,16 @@ Exemplo resumido:
 ~~~
 
 Exemplos executáveis ficam em `contracts/geomap/0.1/examples`.
+
+## Versão 0.2: cor da layer
+
+A versão `0.2` é idêntica à `0.1`, com um único acréscimo: o campo opcional `network.color`, que guarda a cor da layer de origem no formato `#RRGGBB`. Os dígitos hexadecimais podem vir em maiúsculas ou minúsculas e são gravados em maiúsculas. Documentos `0.1` continuam válidos e não podem trazer `color`. Nesse caso, o visualizador usa a paleta automática.
+
+~~~json
+"network": { "externalId": "rd-50-pvc", "name": "RD_50_PVC", "type": "water", "color": "#FF7F00" }
+~~~
+
+A ponte DXF lê a cor na tabela LAYER: o true color (código 420) tem prioridade sobre o índice ACI (código 62). O ACI 7, que é branco ou preto conforme o fundo, vira preto, porque o mapa base é claro. Quando a layer tem cor, a ponte gera `0.2`; quando não tem, gera `0.1`. Exemplo executável: `contracts/geomap/0.2/examples/valid-network-color.geomap.json`.
 
 O exemplo `valid-geoautoengine-polyline.geomap.json` é produzido pelo mesmo serializador usado no comando `GEOAUTO3GEOMAPEXPORT` do GeoAutoEngine. A CI o valida e o importa para confirmar a compatibilidade entre os dois repositórios.
 

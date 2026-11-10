@@ -126,6 +126,8 @@ describe('network catalog configuration', () => {
     { projectId: otherProjectId, networks },
     { projectId, networks: [...networks, networks[0]] },
     { projectId, networks: [{ id: 'invalid', name: 'Rede', type: 'test' }] },
+    { projectId, networks: [{ ...networks[0], color: 'red' }] },
+    { projectId, networks: [{ ...networks[0], color: '#12345' }] },
   ])('rejects an invalid or cross-project catalog: %o', async (payload) => {
     vi.stubGlobal(
       'fetch',
@@ -135,6 +137,40 @@ describe('network catalog configuration', () => {
     await expect(fetchProjectNetworks(readyConfiguration())).rejects.toThrow(
       'Resposta inválida do catálogo de redes',
     )
+  })
+})
+
+describe('CAD layer color', () => {
+  it('keeps the CAD color from the catalog and ignores a null one', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          projectId,
+          networks: [
+            { ...networks[0], color: '#ff7f00' },
+            { ...networks[1], color: null },
+          ],
+        }),
+      }),
+    )
+
+    await expect(fetchProjectNetworks(readyConfiguration())).resolves.toEqual([
+      { ...networks[0], color: '#FF7F00' },
+      networks[1],
+    ])
+  })
+
+  it('uses the CAD color instead of the automatic palette', () => {
+    const [withColor, withoutColor] = createNetworkLayerViews([
+      { ...networks[0], color: '#FF7F00' },
+      networks[1],
+    ])
+
+    expect(withColor.color).toBe('#FF7F00')
+    expect(withoutColor.color).toBe(createNetworkLayerViews([networks[1]])[0].color)
+    expect(withoutColor.color).toMatch(/^#[0-9a-f]{6}$/i)
   })
 })
 

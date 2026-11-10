@@ -123,12 +123,13 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
             VALUES (@project_id, @project_name)
             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
-            INSERT INTO networks (id, project_id, name, type)
-            VALUES (@network_id, @project_id, @network_name, @network_type)
+            INSERT INTO networks (id, project_id, name, type, color)
+            VALUES (@network_id, @project_id, @network_name, @network_type, @network_color)
             ON CONFLICT (id) DO UPDATE SET
                 project_id = EXCLUDED.project_id,
                 name = EXCLUDED.name,
-                type = EXCLUDED.type;
+                type = EXCLUDED.type,
+                color = EXCLUDED.color;
             """;
 
         await using var command = new NpgsqlCommand(sql, connection, transaction);
@@ -137,6 +138,10 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
         command.Parameters.AddWithValue("network_id", networkId);
         command.Parameters.AddWithValue("network_name", metadata.Network.Name);
         command.Parameters.AddWithValue("network_type", metadata.Network.Type);
+        command.Parameters.AddWithValue(
+            "network_color",
+            NpgsqlTypes.NpgsqlDbType.Text,
+            (object?)metadata.Network.Color ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

@@ -50,6 +50,7 @@ erDiagram
 | project_id | uuid | FK obrigatória para projects |
 | name | varchar(200) | obrigatório e não vazio |
 | type | varchar(100) | categoria normalizada obrigatória |
+| color | varchar(7) | opcional; cor da layer no CAD em `#RRGGBB` maiúsculo (migration 002, DEC-028) |
 | created_at | timestamptz | obrigatório, padrão CURRENT_TIMESTAMP |
 
 ### network_features
