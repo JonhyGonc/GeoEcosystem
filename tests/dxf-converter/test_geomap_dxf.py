@@ -263,6 +263,27 @@ class GeoMapDxfTests(unittest.TestCase):
             self.assertFalse(pv["properties"]["posicaoPeloSimbolo"])
             self.assertEqual(1, summary["symbolPositionedBlocks"])
 
+    def test_survey_points_are_always_excluded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entities = (
+                insert("B1", "TEST-NETWORK", "TE")
+                + insert("B2", "TEST-NETWORK", "SIMB_PONTO", {"PONTO": "12", "DESC": "PT"})
+                + insert("B3", "_TG_06-03", "SIMB_PONTO")
+            )
+            root.joinpath("input.dxf").write_text(dxf(entities), encoding="utf-8")
+            document, summary = geomap_dxf.convert(self.block_options(root))
+            self.assertEqual(["B1"], [f["sourceId"] for f in document["features"]])
+            self.assertNotIn("PONTO", document["features"][0]["properties"])
+            self.assertEqual({"INSERT survey point": 1}, summary["ignoredEntities"])
+
+            for blocks in (True, False):
+                survey = geomap_dxf.ConversionOptions(
+                    **{**self.options(root).__dict__, "layer": "_TG_06-03", "blocks": blocks}
+                )
+                with self.assertRaisesRegex(geomap_dxf.DxfConversionError, "survey"):
+                    geomap_dxf.convert(survey)
+
     def test_blocks_mode_requires_at_least_one_block(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -38,6 +38,8 @@ Com `--blocks`, a ponte converte as inserções de bloco (`INSERT`) da layer em 
 
 Alguns blocos são criados com o desenho já nas coordenadas reais e o ponto base em 0,0. O AutoCAD mostra o símbolo no lugar certo, mas o ponto de inserção fica a centenas de quilômetros da obra. A ponte lê a seção BLOCKS e, quando o desenho do bloco está a mais de 50 vezes o próprio tamanho do ponto base, usa a posição em que o símbolo aparece: o centro do desenho, com a escala e a rotação da inserção aplicadas. Textos não entram nesse cálculo. Essas feições recebem `posicaoPeloSimbolo: true`, e o resumo informa `symbolPositionedBlocks`. Blocos desenhados em volta do ponto base continuam no ponto de inserção.
 
+Pontos de levantamento topográfico ficam sempre fora do GeoMap (DEC-029). A ponte recusa as layers `_TG*` em qualquer modo e, com `--blocks`, descarta os blocos `SIMB_PONTO`, contabilizados no resumo como `INSERT survey point`.
+
 Blocos dinâmicos aparecem com o nome anônimo que o DXF grava (`*U…`), e não com o nome do bloco original; essa limitação está registrada na DEC-029.
 
 O limite provisório é 512 MiB por DXF e 10.000 feições por documento JSON. Dados

@@ -419,6 +419,17 @@ _RESERVED_BLOCK_PROPERTIES = {
 }
 
 
+# Levantamento topográfico fica sempre fora do GeoMap (DEC-029): as layers
+# _TG* inteiras e o símbolo de ponto levantado, que também aparece misturado
+# nas layers de rede.
+SURVEY_LAYER_PREFIX = "_TG"
+SURVEY_BLOCK_NAMES = frozenset({"SIMB_PONTO"})
+
+
+def is_survey_layer(layer: str) -> bool:
+    return layer.strip().upper().startswith(SURVEY_LAYER_PREFIX)
+
+
 @dataclass(frozen=True)
 class BlockDefinition:
     """Ponto base e extensão do desenho de uma definição de bloco."""
@@ -614,6 +625,12 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
     if options.input_path.resolve() == options.output_path.resolve():
         raise DxfConversionError("Input and output paths must differ.")
 
+    if is_survey_layer(options.layer):
+        raise DxfConversionError(
+            f"Layer {options.layer!r} is a topographic survey layer (_TG*); survey points "
+            "are always excluded from GeoMap (DEC-029)."
+        )
+
     pairs = read_pairs(options.input_path)
     features: list[dict[str, object]] = []
     ignored: Counter[str] = Counter()
@@ -643,6 +660,9 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
         if options.blocks:
             if entity.entity_type != "INSERT":
                 ignored[entity.entity_type] += 1
+                continue
+            if (entity.first(2) or "").strip().upper() in SURVEY_BLOCK_NAMES:
+                ignored["INSERT survey point"] += 1
                 continue
             feature = _convert_insert(entity, options, definitions)
             if (entity.first(66, "0") or "0").strip() == "1":
