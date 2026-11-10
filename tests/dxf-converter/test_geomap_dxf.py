@@ -34,19 +34,42 @@ def layer_record(name: str, aci: int, true_color: int | None = None) -> str:
 
 
 def insert(handle: str, layer: str, block: str, attributes: dict[str, str] | None = None,
-           x: float = 700100, y: float = 7100100, rotation: float = 0, paper: bool = False) -> str:
+           x: float = 700100, y: float = 7100100, rotation: float = 0, paper: bool = False,
+           scale: float = 1) -> str:
     text = (
         "0\nINSERT\n5\n" + handle + "\n8\n" + layer + "\n"
         + ("67\n1\n" if paper else "")
         + ("66\n1\n" if attributes else "")
         + "2\n" + block + "\n10\n" + str(x) + "\n20\n" + str(y) + "\n30\n0\n"
-        "41\n1\n42\n1\n50\n" + str(rotation) + "\n"
+        "41\n" + str(scale) + "\n42\n" + str(scale) + "\n50\n" + str(rotation) + "\n"
     )
     for index, (tag, value) in enumerate((attributes or {}).items()):
         text += "0\nATTRIB\n5\n" + handle + "A" + str(index) + "\n8\n0\n1\n" + value + "\n2\n" + tag + "\n"
     if attributes:
         text += "0\nSEQEND\n5\n" + handle + "E\n8\n" + layer + "\n"
     return text
+
+
+def block_definition(name: str, entities: str, base: tuple[float, float] = (0, 0)) -> str:
+    return (
+        "0\nBLOCK\n8\n0\n2\n" + name + "\n70\n0\n10\n" + str(base[0]) + "\n20\n"
+        + str(base[1]) + "\n30\n0\n" + entities + "0\nENDBLK\n8\n0\n"
+    )
+
+
+def dxf_with_blocks(blocks: str, entities: str) -> str:
+    return (
+        "0\nSECTION\n2\nBLOCKS\n" + blocks + "0\nENDSEC\n"
+        + "0\nSECTION\n2\nENTITIES\n" + entities + "0\nENDSEC\n0\nEOF\n"
+    )
+
+
+def block_square(x0: float, y0: float, size: float) -> str:
+    return (
+        "0\nLWPOLYLINE\n8\n0\n90\n4\n70\n1\n"
+        f"10\n{x0}\n20\n{y0}\n10\n{x0 + size}\n20\n{y0}\n"
+        f"10\n{x0 + size}\n20\n{y0 + size}\n10\n{x0}\n20\n{y0 + size}\n"
+    )
 
 
 def lwpolyline(handle: str, layer: str, elevation: float = 0, bulge: float = 0) -> str:
@@ -204,6 +227,62 @@ class GeoMapDxfTests(unittest.TestCase):
             self.assertNotIn("PV", second["properties"])
             self.assertEqual({"LWPOLYLINE": 1}, summary["ignoredEntities"])
             self.assertEqual(1, summary["skippedPaperSpaceEntities"])
+
+    def test_block_drawn_far_from_its_base_point_uses_the_symbol_position(self):
+        # Bloco desenhado já nas coordenadas reais com ponto base em 0,0: o
+        # AutoCAD mostra o símbolo em inserção + escala x rotação x desenho.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            blocks = (
+                block_definition(
+                    "TE",
+                    block_square(700500, 7100500, 6)
+                    + "0\nARC\n8\n0\n10\n700503\n20\n7100503\n40\n1\n50\n0\n51\n180\n"
+                    + "0\nTEXT\n8\n0\n10\n0\n20\n0\n40\n1\n1\nT\n",
+                )
+                + block_definition("CAP", block_square(-1, -1, 2))
+                + block_definition("PV", block_square(0, 0, 2))
+            )
+            entities = (
+                insert("B1", "TEST-NETWORK", "TE", x=-1000, y=50, rotation=90, scale=0.5)
+                + insert("B2", "TEST-NETWORK", "CAP", x=700100, y=7100100, rotation=30, scale=3)
+                + insert("B3", "TEST-NETWORK", "PV", x=700200, y=7100200, rotation=45)
+            )
+            root.joinpath("input.dxf").write_text(dxf_with_blocks(blocks, entities), encoding="utf-8")
+            document, summary = geomap_dxf.convert(self.block_options(root))
+
+            te, cap, pv = document["features"]
+            # centro do desenho (700503, 7100503) x 0.5, girado 90 graus
+            expected = (-1000 - 7100503 * 0.5, 50 + 700503 * 0.5)
+            for actual, wanted in zip(te["geometry"]["coordinates"], expected):
+                self.assertAlmostEqual(wanted, actual, places=6)
+            self.assertTrue(te["properties"]["posicaoPeloSimbolo"])
+            self.assertEqual([700100.0, 7100100.0], cap["geometry"]["coordinates"])
+            self.assertFalse(cap["properties"]["posicaoPeloSimbolo"])
+            self.assertEqual([700200.0, 7100200.0], pv["geometry"]["coordinates"])
+            self.assertFalse(pv["properties"]["posicaoPeloSimbolo"])
+            self.assertEqual(1, summary["symbolPositionedBlocks"])
+
+    def test_survey_points_are_always_excluded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entities = (
+                insert("B1", "TEST-NETWORK", "TE")
+                + insert("B2", "TEST-NETWORK", "SIMB_PONTO", {"PONTO": "12", "DESC": "PT"})
+                + insert("B3", "_TG_06-03", "SIMB_PONTO")
+            )
+            root.joinpath("input.dxf").write_text(dxf(entities), encoding="utf-8")
+            document, summary = geomap_dxf.convert(self.block_options(root))
+            self.assertEqual(["B1"], [f["sourceId"] for f in document["features"]])
+            self.assertNotIn("PONTO", document["features"][0]["properties"])
+            self.assertEqual({"INSERT survey point": 1}, summary["ignoredEntities"])
+
+            for blocks in (True, False):
+                survey = geomap_dxf.ConversionOptions(
+                    **{**self.options(root).__dict__, "layer": "_TG_06-03", "blocks": blocks}
+                )
+                with self.assertRaisesRegex(geomap_dxf.DxfConversionError, "survey"):
+                    geomap_dxf.convert(survey)
 
     def test_blocks_mode_requires_at_least_one_block(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -415,10 +415,159 @@ _RESERVED_BLOCK_PROPERTIES = {
     "escalaY",
     "cadElevation",
     "projectedTo2D",
+    "posicaoPeloSimbolo",
 }
 
 
-def _convert_insert(entity: DxfEntity, options: ConversionOptions) -> dict[str, object]:
+# Levantamento topográfico fica sempre fora do GeoMap (DEC-029): as layers
+# _TG* inteiras e o símbolo de ponto levantado, que também aparece misturado
+# nas layers de rede.
+SURVEY_LAYER_PREFIX = "_TG"
+SURVEY_BLOCK_NAMES = frozenset({"SIMB_PONTO"})
+
+
+def is_survey_layer(layer: str) -> bool:
+    return layer.strip().upper().startswith(SURVEY_LAYER_PREFIX)
+
+
+@dataclass(frozen=True)
+class BlockDefinition:
+    """Ponto base e extensão do desenho de uma definição de bloco."""
+
+    base_x: float
+    base_y: float
+    min_x: float
+    min_y: float
+    max_x: float
+    max_y: float
+
+    @property
+    def center(self) -> tuple[float, float]:
+        return ((self.min_x + self.max_x) / 2, (self.min_y + self.max_y) / 2)
+
+    @property
+    def size(self) -> float:
+        return math.hypot(self.max_x - self.min_x, self.max_y - self.min_y)
+
+    def symbol_far_from_base(self) -> bool:
+        """Indica um bloco desenhado longe do próprio ponto base.
+
+        Alguns blocos são criados com o desenho já nas coordenadas reais e o
+        ponto base em 0,0. O AutoCAD mostra o símbolo no lugar certo, mas o
+        ponto de inserção fica a centenas de quilômetros. Blocos comuns têm o
+        desenho em volta do ponto base, a no máximo algumas vezes o próprio
+        tamanho, e mantêm o ponto de inserção.
+        """
+        center_x, center_y = self.center
+        offset = math.hypot(center_x - self.base_x, center_y - self.base_y)
+        return offset > _FAR_SYMBOL_FACTOR * max(self.size, _MIN_SYMBOL_SIZE)
+
+
+# Um símbolo a mais de 50 vezes o próprio tamanho do ponto base é tratado como
+# desenhado fora do ponto base.
+_FAR_SYMBOL_FACTOR = 50.0
+_MIN_SYMBOL_SIZE = 1e-6
+_BLOCK_GEOMETRY_X = {10, 11}
+_BLOCK_GEOMETRY_Y = {20, 21}
+
+
+def block_definitions(pairs: Sequence[tuple[int, str]]) -> dict[str, BlockDefinition]:
+    """Lê o ponto base e a extensão do desenho de cada bloco da seção BLOCKS."""
+    definitions: dict[str, BlockDefinition] = {}
+    in_blocks = False
+    name: str | None = None
+    base = (0.0, 0.0)
+    xs: list[float] = []
+    ys: list[float] = []
+    index = 0
+    while index < len(pairs):
+        code, value = pairs[index]
+        if code == 0 and value == "SECTION":
+            in_blocks = index + 1 < len(pairs) and pairs[index + 1][1] == "BLOCKS"
+            index += 2
+            continue
+        if not in_blocks or code != 0:
+            index += 1
+            continue
+        if value == "ENDSEC":
+            in_blocks = False
+            index += 1
+            continue
+        end = index + 1
+        while end < len(pairs) and pairs[end][0] != 0:
+            end += 1
+        body = pairs[index + 1 : end]
+        if value == "BLOCK":
+            fields = {group: text for group, text in body}
+            name = fields.get(2, "").strip()
+            base = (
+                _optional_number(fields.get(10), 0.0),
+                _optional_number(fields.get(20), 0.0),
+            )
+            xs, ys = [], []
+        elif value == "ENDBLK":
+            if name and xs and ys:
+                definitions[name] = BlockDefinition(
+                    base[0], base[1], min(xs), min(ys), max(xs), max(ys)
+                )
+            name = None
+        elif name is not None and value not in {"ATTDEF", "TEXT", "MTEXT"}:
+            _collect_block_geometry(value, body, xs, ys)
+        index = end
+    return definitions
+
+
+def _optional_number(value: str | None, default: float) -> float:
+    try:
+        number = float(value) if value is not None else default
+    except ValueError:
+        return default
+    return number if math.isfinite(number) else default
+
+
+def _collect_block_geometry(
+    entity_type: str,
+    body: Sequence[tuple[int, str]],
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    radius = 0.0
+    if entity_type in {"CIRCLE", "ARC"}:
+        radius = abs(_optional_number(next((v for c, v in body if c == 40), None), 0.0))
+    for code, text in body:
+        number = _optional_number(text, math.nan)
+        if not math.isfinite(number):
+            continue
+        if code in _BLOCK_GEOMETRY_X:
+            xs.extend((number - radius, number + radius))
+        elif code in _BLOCK_GEOMETRY_Y:
+            ys.extend((number - radius, number + radius))
+
+
+def _symbol_position(
+    insertion: tuple[float, float],
+    definition: BlockDefinition,
+    rotation_degrees: float,
+    scale_x: float,
+    scale_y: float,
+) -> tuple[float, float]:
+    """Posição do centro do símbolo no desenho, como o AutoCAD o mostra."""
+    center_x, center_y = definition.center
+    local_x = (center_x - definition.base_x) * scale_x
+    local_y = (center_y - definition.base_y) * scale_y
+    angle = math.radians(rotation_degrees)
+    cos_a, sin_a = math.cos(angle), math.sin(angle)
+    return (
+        insertion[0] + local_x * cos_a - local_y * sin_a,
+        insertion[1] + local_x * sin_a + local_y * cos_a,
+    )
+
+
+def _convert_insert(
+    entity: DxfEntity,
+    options: ConversionOptions,
+    definitions: dict[str, BlockDefinition] | None = None,
+) -> dict[str, object]:
     _check_extrusion(entity)
     block_name = (entity.first(2) or "").strip()
     if not block_name:
@@ -429,6 +578,14 @@ def _convert_insert(entity: DxfEntity, options: ConversionOptions) -> dict[str, 
         raise DxfConversionError(f"Block reference {_entity_handle(entity)} has no insertion point.")
     elevation = _finite_number(entity.first(30, "0") or "0", "insertion Z")
     projected = _projection_required([elevation], options)
+    rotation = _finite_number(entity.first(50, "0") or "0", "rotation")
+    scale_x = _finite_number(entity.first(41, "1") or "1", "scale X")
+    scale_y = _finite_number(entity.first(42, "1") or "1", "scale Y")
+    definition = (definitions or {}).get(block_name)
+    from_symbol = definition is not None and definition.symbol_far_from_base()
+    if from_symbol:
+        assert definition is not None
+        x, y = _symbol_position((x, y), definition, rotation, scale_x, scale_y)
     return {
         "sourceId": _entity_handle(entity),
         "sourceType": "BlockReference",
@@ -438,11 +595,12 @@ def _convert_insert(entity: DxfEntity, options: ConversionOptions) -> dict[str, 
             "cadHandle": _entity_handle(entity),
             "cadEntityType": entity.entity_type,
             "bloco": block_name,
-            "rotacao": _finite_number(entity.first(50, "0") or "0", "rotation"),
-            "escalaX": _finite_number(entity.first(41, "1") or "1", "scale X"),
-            "escalaY": _finite_number(entity.first(42, "1") or "1", "scale Y"),
+            "rotacao": rotation,
+            "escalaX": scale_x,
+            "escalaY": scale_y,
             "cadElevation": elevation,
             "projectedTo2D": projected,
+            "posicaoPeloSimbolo": from_symbol,
         },
     }
 
@@ -467,6 +625,12 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
     if options.input_path.resolve() == options.output_path.resolve():
         raise DxfConversionError("Input and output paths must differ.")
 
+    if is_survey_layer(options.layer):
+        raise DxfConversionError(
+            f"Layer {options.layer!r} is a topographic survey layer (_TG*); survey points "
+            "are always excluded from GeoMap (DEC-029)."
+        )
+
     pairs = read_pairs(options.input_path)
     features: list[dict[str, object]] = []
     ignored: Counter[str] = Counter()
@@ -476,6 +640,7 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
     # INSERT com atributos é seguido por entidades ATTRIB e um SEQEND; os
     # atributos pertencem ao bloco anterior, mesmo que estejam em outra layer.
     open_block: dict[str, object] | None = None
+    definitions = block_definitions(pairs) if options.blocks else {}
 
     for entity in entities_section(pairs):
         if entity.entity_type in {"ATTRIB", "SEQEND"}:
@@ -496,7 +661,10 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
             if entity.entity_type != "INSERT":
                 ignored[entity.entity_type] += 1
                 continue
-            feature = _convert_insert(entity, options)
+            if (entity.first(2) or "").strip().upper() in SURVEY_BLOCK_NAMES:
+                ignored["INSERT survey point"] += 1
+                continue
+            feature = _convert_insert(entity, options, definitions)
             if (entity.first(66, "0") or "0").strip() == "1":
                 open_block = feature
         elif entity.entity_type == "LWPOLYLINE":
@@ -560,6 +728,10 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
             bool(feature["properties"]["projectedTo2D"]) for feature in features  # type: ignore[index]
         ),
         "networkColor": color,
+        "symbolPositionedBlocks": sum(
+            bool(feature["properties"].get("posicaoPeloSimbolo"))  # type: ignore[union-attr]
+            for feature in features
+        ),
         "inputSha256": sha256_file(options.input_path),
     }
     return document, summary
