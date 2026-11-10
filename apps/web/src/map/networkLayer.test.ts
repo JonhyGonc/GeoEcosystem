@@ -36,6 +36,7 @@ const otherProjectId = '60000000-0000-4000-8000-000000000002'
 const networkId = '61000000-0000-4000-8000-000000000001'
 const otherNetworkId = '61000000-0000-4000-8000-000000000002'
 
+const blockFeatureId = '70000000-0000-4000-8000-000000000001'
 const networks: NetworkDefinition[] = [
   { id: networkId, name: 'Rede de drenagem', type: 'stormwater' },
   { id: otherNetworkId, name: 'Rede de esgoto', type: 'sewer' },
@@ -346,11 +347,11 @@ describe('network layer control', () => {
     expect(selections.at(-1)?.networkId).toBe(networkId)
 
     clickedFeatures = [
-      renderedFeature(buildNetworkPointLayerId(otherNetworkId), 'block-1'),
+      renderedFeature(buildNetworkPointLayerId(otherNetworkId), blockFeatureId),
     ]
     emit('click', { point: { x: 10, y: 20 } })
     expect(selections.at(-1)).toMatchObject({
-      featureId: 'block-1',
+      featureId: blockFeatureId,
       networkId: otherNetworkId,
     })
 
