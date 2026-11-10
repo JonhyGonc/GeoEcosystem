@@ -25,6 +25,7 @@ jq --exit-status '
     "Spatial query target network"
   ])
   and ([.networks[].type] == ["stormwater", "test"])
+  and ([.networks[].color] == ["#3366CC", null])
   and ([.networks[].id] | index("61000000-0000-4000-8000-000000000003") | not)
 ' "$response_file" > /dev/null
 
@@ -37,7 +38,8 @@ jq --exit-status '
   and .networks == [{
     "id": "61000000-0000-4000-8000-000000000003",
     "name": "Empty network from other project",
-    "type": "test"
+    "type": "test",
+    "color": null
   }]
 ' "$response_file" > /dev/null
 

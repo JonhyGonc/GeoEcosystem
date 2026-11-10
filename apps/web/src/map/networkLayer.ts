@@ -47,6 +47,8 @@ export interface NetworkDefinition {
   readonly id: string
   readonly name: string
   readonly type: string
+  /** Cor da layer no CAD (`#RRGGBB`), quando o contrato de origem a informa. */
+  readonly color?: string
 }
 
 export interface NetworkCatalogResponse {
@@ -577,14 +579,31 @@ function validateNetworkCatalog(
     ) {
       throw new Error('Resposta inválida do catálogo de redes')
     }
+    const color = item.color
+    if (
+      color !== undefined &&
+      color !== null &&
+      (typeof color !== 'string' || !HEX_COLOR_PATTERN.test(color))
+    ) {
+      throw new Error('Resposta inválida do catálogo de redes')
+    }
     ids.add(item.id)
-    return { id: item.id, name: item.name.trim(), type: item.type.trim() }
+    return {
+      id: item.id,
+      name: item.name.trim(),
+      type: item.type.trim(),
+      ...(typeof color === 'string' ? { color: color.toUpperCase() } : {}),
+    }
   })
 
   return { projectId, networks }
 }
 
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i
+
 function colorForNetwork(network: NetworkDefinition): string {
+  if (network.color) return network.color
+
   let hash = 0
   for (const character of `${network.type}:${network.id}`) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0

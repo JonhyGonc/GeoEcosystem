@@ -11,7 +11,8 @@ public sealed class NetworkCatalogQuery(NpgsqlDataSource dataSource)
         SELECT
             network.id,
             network.name,
-            network.type
+            network.type,
+            network.color
         FROM networks network
         WHERE network.project_id = @project_id
         ORDER BY network.name, network.id;
@@ -36,7 +37,8 @@ public sealed class NetworkCatalogQuery(NpgsqlDataSource dataSource)
             networks.Add(new NetworkCatalogItem(
                 reader.GetGuid(0),
                 reader.GetString(1),
-                reader.GetString(2)));
+                reader.GetString(2),
+                await reader.IsDBNullAsync(3, cancellationToken) ? null : reader.GetString(3)));
         }
 
         return new NetworkCatalogResponse(projectId, networks);
@@ -50,4 +52,5 @@ public sealed record NetworkCatalogResponse(
 public sealed record NetworkCatalogItem(
     Guid Id,
     string Name,
-    string Type);
+    string Type,
+    string? Color);

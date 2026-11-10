@@ -161,6 +161,101 @@ def entities_section(pairs: Sequence[tuple[int, str]]) -> Iterable[DxfEntity]:
         raise DxfConversionError("DXF does not contain an ENTITIES section.")
 
 
+# Índices fixos da paleta ACI do AutoCAD. O ACI 7 é branco sobre fundo escuro
+# e preto sobre fundo claro; como o mapa base é claro, ele vira preto.
+_ACI_FIXED = {
+    1: (255, 0, 0),
+    2: (255, 255, 0),
+    3: (0, 255, 0),
+    4: (0, 255, 255),
+    5: (0, 0, 255),
+    6: (255, 0, 255),
+    7: (0, 0, 0),
+    8: (128, 128, 128),
+    9: (192, 192, 192),
+    250: (51, 51, 51),
+    251: (80, 80, 80),
+    252: (105, 105, 105),
+    253: (130, 130, 130),
+    254: (190, 190, 190),
+    255: (255, 255, 255),
+}
+_ACI_LEVELS = (255, 255, 204, 204, 153, 153, 127, 127, 76, 76)
+
+
+def aci_to_hex(index: int) -> str | None:
+    """Converte um índice ACI (1 a 255) em #RRGGBB.
+
+    Os índices 10 a 249 seguem a estrutura da paleta do AutoCAD: 24 matizes de
+    15° e, para cada matiz, 5 níveis de brilho, cada um em versão pura (par) e
+    com 50% de saturação (ímpar).
+    """
+    if index in _ACI_FIXED:
+        red, green, blue = _ACI_FIXED[index]
+        return f"#{red:02X}{green:02X}{blue:02X}"
+    if not 10 <= index <= 249:
+        return None
+
+    hue = ((index - 10) // 10) * 15
+    step = (index - 10) % 10
+    level = _ACI_LEVELS[step]
+    sector, offset = divmod(hue, 60)
+    rising = 255 * offset / 60
+    falling = 255 - rising
+    pure = (
+        (255, rising, 0),
+        (falling, 255, 0),
+        (0, 255, rising),
+        (0, falling, 255),
+        (rising, 0, 255),
+        (255, 0, falling),
+    )[sector]
+    channels = []
+    for channel in pure:
+        value = channel * level / 255
+        if step % 2:
+            value += (level - value) / 2
+        channels.append(int(value))
+    return "#" + "".join(f"{channel:02X}" for channel in channels)
+
+
+def layer_color(pairs: Sequence[tuple[int, str]], layer: str) -> str | None:
+    """Lê a cor de uma layer na tabela LAYER: true color (420) ou ACI (62)."""
+    in_tables = False
+    index = 0
+    while index < len(pairs):
+        code, value = pairs[index]
+        if code == 0 and value == "SECTION" and index + 1 < len(pairs):
+            in_tables = pairs[index + 1] == (2, "TABLES")
+            index += 2
+            continue
+        if code == 0 and value == "ENDSEC":
+            if in_tables:
+                return None
+            index += 1
+            continue
+        if not (in_tables and code == 0 and value == "LAYER"):
+            index += 1
+            continue
+
+        start = index + 1
+        index = start
+        while index < len(pairs) and pairs[index][0] != 0:
+            index += 1
+        record = pairs[start:index]
+        if next((v for c, v in record if c == 2), None) != layer:
+            continue
+
+        true_color = next((v for c, v in record if c == 420), None)
+        if true_color is not None:
+            rgb = int(true_color.strip()) & 0xFFFFFF
+            return f"#{rgb:06X}"
+        aci = next((v for c, v in record if c == 62), None)
+        # Um índice negativo apenas indica layer desligada; a cor é o módulo.
+        return aci_to_hex(abs(int(aci.strip()))) if aci is not None else None
+    return None
+
+
 def _entity_layer(entity: DxfEntity) -> str:
     return entity.first(8, "0") or "0"
 
@@ -357,8 +452,18 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
             f"{MAX_JSON_FEATURES}. Use the definitive exporter with NDJSON."
         )
 
+    color = layer_color(pairs, options.layer)
+    network: dict[str, object] = {
+        "externalId": options.network_external_id,
+        "name": options.network_name,
+        "type": options.network_type,
+    }
+    if color:
+        network["color"] = color
+
     document: dict[str, object] = {
-        "contractVersion": "0.1",
+        # A versão 0.2 só é necessária quando a cor da layer está disponível.
+        "contractVersion": "0.2" if color else "0.1",
         "sourceSystem": "Civil 3D DXF",
         "sourceCrs": options.source_crs,
         "units": options.units,
@@ -366,11 +471,7 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
             "externalId": options.project_external_id,
             "name": options.project_name,
         },
-        "network": {
-            "externalId": options.network_external_id,
-            "name": options.network_name,
-            "type": options.network_type,
-        },
+        "network": network,
         "exportedAt": options.exported_at,
         "features": features,
     }
@@ -382,6 +483,7 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
         "projectedFeatures": sum(
             bool(feature["properties"]["projectedTo2D"]) for feature in features  # type: ignore[index]
         ),
+        "networkColor": color,
         "inputSha256": sha256_file(options.input_path),
     }
     return document, summary

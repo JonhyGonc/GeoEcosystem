@@ -227,6 +227,12 @@ Um botão "Localizar projeto" fica ao lado do seletor de projeto, como pedido pe
 
 A API calcula sob demanda a extensão (`ST_Extent`) e um ponto de foco (o ponto da rede mais próximo do centro da extensão, pelo KNN do GiST). Quando o projeto inteiro cabe na tela com zoom de pelo menos 14, o mapa enquadra a extensão. Quando não cabe, o mapa vai até o ponto de foco no zoom 15. Enquadrar tudo abaixo do zoom 14 mostraria um mapa sem nenhuma rede, porque os tiles só existem a partir desse nível. Guardar a extensão durante a importação ficará reservado para o caso de a medição do LARGE indicar necessidade, porque exigiria mudar o esquema.
 
+## DEC-028 — Cor da layer do CAD e contrato v0.2
+
+Status: aprovada (Issue #52).
+
+O responsável definiu que cada camada deve aparecer "com a coloração correta", isto é, com a cor da layer no CAD, que a equipe já reconhece. O contrato ganha a versão 0.2 com `network.color` opcional (`#RRGGBB`), e a migration 002 adiciona `networks.color`, opcional e validada por CHECK. A 0.1 continua aceita, para não quebrar o exportador do GeoAutoEngine nem arquivos já gerados. Sem cor, o frontend mantém a paleta automática. Só a cor da layer (ByLayer) é considerada; cores por entidade, espessura e tipo de linha ficam fora do escopo.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

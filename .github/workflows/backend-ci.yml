@@ -115,6 +115,27 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < database/migrations/001_initial_spatial_model.up.sql
 
+      - name: Apply network color migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-migration.sql
+
+      - name: Verify network color migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.up.sql
+
       - name: Build initial GeoMap importer
         run: |
           dotnet restore tools/importer/GeoMap.Importer/GeoMap.Importer.csproj
@@ -136,6 +157,21 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-geoautoengine-export.sql
+
+      - name: Import and verify contract 0.2 network color
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.2/examples/valid-network-color.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-import.sql
 
       - name: Convert and verify synthetic DXF bridge
         shell: bash

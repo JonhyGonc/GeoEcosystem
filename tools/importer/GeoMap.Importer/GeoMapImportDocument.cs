@@ -49,7 +49,8 @@ public sealed record GeoMapImportDocument(
             new(
                 network.GetProperty("externalId").GetString()!,
                 network.GetProperty("name").GetString()!,
-                NormalizeNetworkType(network.GetProperty("type").GetString()!)),
+                NormalizeNetworkType(network.GetProperty("type").GetString()!),
+                NormalizeColor(OptionalString(network, "color"))),
             DateTimeOffset.Parse(
                 root.GetProperty("exportedAt").GetString()!,
                 CultureInfo.InvariantCulture,
@@ -93,7 +94,8 @@ public sealed record GeoMapImportDocument(
             new(
                 network.GetProperty("externalId").GetString()!,
                 network.GetProperty("name").GetString()!,
-                NormalizeNetworkType(network.GetProperty("type").GetString()!)),
+                NormalizeNetworkType(network.GetProperty("type").GetString()!),
+                NormalizeColor(OptionalString(network, "color"))),
             DateTimeOffset.Parse(
                 root.GetProperty("exportedAt").GetString()!,
                 CultureInfo.InvariantCulture,
@@ -120,6 +122,9 @@ public sealed record GeoMapImportDocument(
 
     private static string NormalizeNetworkType(string value) =>
         value.Trim().ToLowerInvariant();
+
+    private static string? NormalizeColor(string? value) =>
+        value?.ToUpperInvariant();
 }
 
 public sealed record GeoMapImportMetadata(
@@ -132,7 +137,11 @@ public sealed record GeoMapImportMetadata(
 
 public sealed record ImportProject(string ExternalId, string Name);
 
-public sealed record ImportNetwork(string ExternalId, string Name, string Type);
+public sealed record ImportNetwork(
+    string ExternalId,
+    string Name,
+    string Type,
+    string? Color = null);
 
 public sealed record GeoMapImportFeature(
     int Sequence,

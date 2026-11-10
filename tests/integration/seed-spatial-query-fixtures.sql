@@ -67,4 +67,9 @@ VALUES
         'TestLineString',
         '{"position":"other-network"}'::jsonb);
 
+-- Cor de layer do CAD (migration 002): uma rede com cor e outra sem.
+UPDATE networks
+SET color = '#3366CC'
+WHERE id = '61000000-0000-4000-8000-000000000002';
+
 COMMIT;

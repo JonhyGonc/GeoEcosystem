@@ -30,6 +30,8 @@ anotações da camada são apenas contabilizados como ignorados. Entidades dos
 layouts de impressão são contabilizadas e descartadas; somente o Model Space é
 convertido.
 
+A cor da layer é lida da tabela LAYER do DXF: o true color (código 420) tem prioridade sobre o índice ACI (código 62), e o ACI 7 vira preto sobre o mapa claro. Com cor, a saída usa o contrato `0.2` com `network.color`; sem a tabela ou sem cor, continua no `0.1`. O resumo informa `networkColor`.
+
 O limite provisório é 512 MiB por DXF e 10.000 feições por documento JSON. Dados
 reais devem permanecer em `private-data/` e resultados em `validation-output/`;
 DWG e DXF também são ignorados pelo Git. A ferramenta não envia arquivos pela
