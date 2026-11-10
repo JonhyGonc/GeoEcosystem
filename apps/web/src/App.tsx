@@ -17,6 +17,7 @@ import {
   type ProjectCatalogState,
 } from './api/projectCatalog'
 import { baseMapConfig, buildBaseMapStyle } from './map/baseMap'
+import { installDragCursor } from './map/dragCursor'
 import {
   buildNetworkCatalogConfig,
   createNetworkLayerViews,
@@ -95,6 +96,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
     const styleSubscription = map.on('style.load', () => {
       setStyleRevision((revision) => revision + 1)
     })
+    const removeDragCursor = installDragCursor(map)
 
     map.addControl(
       new maplibregl.NavigationControl({
@@ -111,6 +113,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
     return () => {
       styleSubscription.unsubscribe()
+      removeDragCursor()
       layerController.current?.cleanup()
       layerController.current = null
       mapInstance.current = null
