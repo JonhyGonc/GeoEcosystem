@@ -42,12 +42,11 @@ interface AppProps {
   readonly configuration?: NetworkConfiguration
 }
 
-type ProjectLocationState =
-  | { readonly kind: 'idle' }
-  | { readonly kind: 'loading' }
+type ProjectLocationState = { readonly projectId: string } & (
   | { readonly kind: 'ready'; readonly location: ProjectLocation }
   | { readonly kind: 'empty' }
   | { readonly kind: 'error'; readonly message: string }
+)
 
 const LOADING_LAYERS_STATUS: NetworkStatus = {
   kind: 'loading',
@@ -67,9 +66,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
     null,
   )
   const [startupProjectId, setStartupProjectId] = useState<string | null>(null)
-  const [projectLocation, setProjectLocation] = useState<ProjectLocationState>({
-    kind: 'idle',
-  })
+  const [projectLocation, setProjectLocation] =
+    useState<ProjectLocationState | null>(null)
   const [layers, setLayers] = useState<NetworkLayerView[]>([])
   const [networkStatus, setNetworkStatus] =
     useState<NetworkStatus>(LOADING_LAYERS_STATUS)
@@ -153,25 +151,26 @@ function App({ configuration = networkConfiguration }: AppProps) {
   useEffect(() => {
     if (configuration.kind !== 'ready' || !selectedProjectId) return
 
+    const projectId = selectedProjectId
     const abortController = new AbortController()
-    setProjectLocation({ kind: 'loading' })
     void fetchProjectLocation(
       configuration.value.apiBaseUrl,
-      selectedProjectId,
+      projectId,
       abortController.signal,
     )
       .then((location) => {
         if (abortController.signal.aborted) return
         if (!location) {
-          setProjectLocation({ kind: 'empty' })
+          setProjectLocation({ projectId, kind: 'empty' })
           return
         }
-        setProjectLocation({ kind: 'ready', location })
+        setProjectLocation({ projectId, kind: 'ready', location })
         if (locatorTarget.current) locateProject(locatorTarget.current, location)
       })
       .catch((error: unknown) => {
         if (abortController.signal.aborted) return
         setProjectLocation({
+          projectId,
           kind: 'error',
           message:
             error instanceof Error
@@ -281,9 +280,14 @@ function App({ configuration = networkConfiguration }: AppProps) {
     return () => abortController.abort()
   }, [catalogConfig, detailsRevision, selectedFeature])
 
+  // A localização guardada só vale para o projeto em que foi obtida; enquanto
+  // a do projeto atual não chega, o botão fica em estado de carregamento.
+  const currentLocation =
+    projectLocation?.projectId === selectedProjectId ? projectLocation : null
+
   const locateSelectedProject = () => {
-    if (projectLocation.kind !== 'ready' || !locatorTarget.current) return
-    locateProject(locatorTarget.current, projectLocation.location)
+    if (currentLocation?.kind !== 'ready' || !locatorTarget.current) return
+    locateProject(locatorTarget.current, currentLocation.location)
   }
 
   const changeProject = (projectId: string) => {
@@ -337,7 +341,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
             selectedProjectId={selectedProjectId}
             onProjectChange={changeProject}
             onLocate={locateSelectedProject}
-            locateDisabledReason={locateDisabledReason(projectLocation)}
+            locateDisabledReason={locateDisabledReason(currentLocation)}
           />
         )}
       </header>
@@ -376,8 +380,9 @@ function App({ configuration = networkConfiguration }: AppProps) {
 }
 
 function locateDisabledReason(
-  state: ProjectLocationState,
+  state: ProjectLocationState | null,
 ): string | undefined {
+  if (!state) return 'Carregando localização do projeto…'
   switch (state.kind) {
     case 'ready':
       return undefined
@@ -385,8 +390,6 @@ function locateDisabledReason(
       return 'Projeto sem feições para localizar'
     case 'error':
       return state.message
-    default:
-      return 'Carregando localização do projeto…'
   }
 }
 
