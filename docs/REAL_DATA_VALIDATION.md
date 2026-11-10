@@ -1,6 +1,6 @@
 # Validação da primeira rede CAD real
 
-Status: conversão privada concluída; pipeline reproduzível automatizada.
+Status: concluída. A primeira rede foi convertida em setembro de 2026 e uma segunda rede, com várias redes, foi importada e conferida visualmente no mapa em 10 de novembro de 2026 (Issue #17).
 
 ## Autorização e privacidade
 
@@ -74,5 +74,82 @@ importar seu contrato pelo importador .NET e verificar no PostGIS:
   `SPLINE`; o fluxo definitivo de `LWPOLYLINE` pertence ao exportador Civil 3D implementado pela Issue #18.
 - Os 15 objetos representam a geometria desenhada na camada, inclusive trechos
   paralelos; a ponte não tenta inferir ou reconstruir eixos.
-- A conferência visual interativa sobre o mapa base será repetida no ensaio final
-  do protótipo, usando os arquivos privados somente na máquina autorizada.
+- A conferência visual interativa sobre o mapa base foi feita em 10 de novembro de
+  2026 com a segunda rede, descrita abaixo.
+
+## Segunda rede: ensaio final do Protótipo 0.1
+
+### Autorização e privacidade
+
+Em 10 de novembro de 2026, o responsável pelo projeto confirmou a autorização
+para uso interno do desenho no desenvolvimento do GeoMap. Como na primeira rede,
+o DXF, os documentos GeoMap gerados, as coordenadas, os nomes de logradouros e a
+identificação do empreendimento ficam somente na máquina autorizada, em
+`private-data/` e `validation-output/`, ambos ignorados pelo Git. Este registro
+traz apenas números agregados.
+
+### Origem
+
+| Item | Valor registrado |
+|---|---|
+| Origem | desenho Autodesk Civil 3D exportado como DXF ASCII (`AC1032`, formato 2018) |
+| CRS | SIRGAS 2000 / UTM zona 22S (`EPSG:31982`) |
+| Unidade | metro (`$INSUNITS = 6`) |
+| Tipo CAD convertido | `LWPOLYLINE` no Model Space |
+| Camadas convertidas | 7 camadas de rede, cada uma importada como uma rede do mesmo projeto |
+
+O desenho não declara o datum nem o fuso. A magnitude das coordenadas indica UTM
+no hemisfério sul. A inversão aproximada da posição mediana colocou a rede em terra firme, no
+município esperado, somente com o fuso 22S; os fusos 23S e 24S levariam a rede
+para o oceano. A conferência visual confirmou o fuso escolhido.
+
+### Resultado
+
+| Rede | Feições | Vértices 2D | Comprimento projetado (m) | Polilinhas fechadas |
+|---|---:|---:|---:|---:|
+| Pluvial | 32 | 148 | 1.450,33 | 6 |
+| Pluvial (vídeo-inspeção) | 6 | 30 | 37,52 | 6 |
+| Esgoto | 11 | 23 | 291,99 | 0 |
+| Água | 2 | 4 | 9,06 | 0 |
+| Fibra óptica | 12 | 60 | 23,57 | 12 |
+| Elétrica | 11 | 55 | 23,33 | 11 |
+| Sem descrição de uso | 7 | 14 | 21,72 | 0 |
+| **Total** | **81** | **334** | **1.857,51** | **35** |
+
+| Verificação | Resultado |
+|---|---:|
+| Camadas rejeitadas pela ponte DXF | 0 |
+| Entidades com bulge, `POLYLINE`, `ARC` ou `SPLINE` | 0 |
+| Entidades de Paper Space convertidas | 0 |
+| Textos e blocos ignorados nas camadas convertidas | 109 |
+| Feições com elevação removida da geometria (`--project-to-2d`) | 80 |
+| Documentos GeoMap privados | 7 documentos, 63.233 bytes |
+
+### Conferência no mapa
+
+O ambiente local foi Docker Compose com PostGIS e API em .NET 10, frontend com
+`npm run dev` e importação pelo `GeoMap.Importer`. Na conferência:
+
+- o projeto apareceu no seletor (DEC-026), com as 7 redes listadas e visíveis;
+- as redes acompanham o eixo do logradouro desenhado no mapa base, e as
+  derivações aparecem nas transversais esperadas;
+- a seleção de feições e a consulta de atributos funcionaram;
+- nenhuma camada ficou em erro ou sem feições na área conferida.
+
+O responsável aprovou o resultado em 10 de novembro de 2026.
+
+### Limitações observadas
+
+- **Símbolos como linhas.** Todas as feições das camadas elétrica e de fibra
+  óptica, além de 6 feições pluviais e das 6 de vídeo-inspeção, são polilinhas
+  fechadas de poucos metros. Elas representam símbolos do CAD (caixas, postes,
+  marcadores), não trechos de rede. O contrato v0.1 só aceita linhas, então esses
+  símbolos aparecem no mapa como pequenos contornos. Tipos pontuais ou poligonais
+  exigiriam evoluir o contrato.
+- **Rótulos não associados.** Diâmetro, material e demais rótulos continuam como
+  textos soltos no CAD e não são associados aos trechos.
+- **Cores parecidas.** Com 7 redes no mesmo projeto, duas camadas receberam tons
+  semelhantes. A paleta automática pode precisar de mais contraste ou de cor por
+  tipo de rede.
+- **Vídeo-inspeção.** A camada de vídeo-inspeção foi importada apenas como
+  geometria. Inspeções, anomalias e fotos continuam fora do MVP (ver `MVP.md`).
