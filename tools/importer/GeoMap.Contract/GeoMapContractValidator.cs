@@ -186,7 +186,7 @@ public static partial class GeoMapContractValidator
         var units = RequiredString(root, "units", 32, "$", errors);
         if (units is not null && !SupportedUnits.Contains(units))
         {
-            Add(errors, ContractErrorCodes.UnitsUnsupported, "$.units", "Declared unit is not supported by version 0.1.");
+            Add(errors, ContractErrorCodes.UnitsUnsupported, "$.units", "Declared unit is not supported by the contract.");
         }
 
         var exportedAt = RequiredString(root, "exportedAt", 64, "$", errors);
