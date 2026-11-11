@@ -18,4 +18,4 @@ Detalhes em [`auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md`](../auditorias/
 | D-04 | Estratégia de identidade entre sistemas |
 | D-05 | Rastreabilidade e histórico mínimos (origem, esquema, versão de build) |
 | D-06 | Testes cruzados de contrato |
-| D-07 | Escopo da integração GAD ↔ GeoMap (requisito de negócio) |
+| D-07 | Escopo da integração GAD ↔ GeoMap — requisito definido em 11/11/2026: anomalias no mapa (ver M4 do roadmap) |

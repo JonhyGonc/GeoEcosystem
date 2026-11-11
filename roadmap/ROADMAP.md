@@ -62,6 +62,7 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 | M1.2 | GAE / Chat 02 | Mesclar `sync-section-names` na `main`. Ela traz a correção do travamento de 5 min (`559d8b1`) e o `GEOAUTO3VISYNC`; adicionar o comando ao `PackageContents.xml` | CI verde; usuário confirma no Civil 3D que revisar correções não trava mais |
 | M1.3 | GAE / Chat 02 | Mesclar `feature/atualizar-textos-anomalias` sobre a nova `main`, resolvendo os conflitos nos 5 arquivos | CI verde; 213+ testes; `GEOAUTO3VIUPDATETEXTS` e `GEOAUTO3VISYNC` funcionam juntos |
 | M1.4 | Usuário | Instalar a nova `main` primeiro na própria máquina (homologação) e, aprovada, nos demais desenhistas | `COMPATIBILIDADE.md` mostra a mesma build (com SHA) em todos |
+| M1.5 | GAD / Chat 03; GAE / Chat 02 | Arquivar `Testes-ChatGPT`, `ChatGPT` e `backup-main` como tags `arquivo/<nome>` e apagar as branches (autorizado em 11/11/2026) | Tags existem e apontam para os SHAs originais; branches removidas |
 
 **Alternativas para o GAD (D-01):**
 - (a) **mesclar a fix na `main`** — recomendado: a fix é o que está instalado, e o conflito é de 1 arquivo;
@@ -70,7 +71,7 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 
 **Ordem no GAE:** `sync-section-names` primeiro, porque carrega a correção do travamento (o risco mais alto) e é a mais antiga. A alternativa inversa deixaria o travamento ativo por mais tempo.
 
-**Branches residuais:** `Testes-ChatGPT` (GAD; 4 commits só de UI que não estão na fix), `ChatGPT` e `backup-main` (GAE; já contidas na `main`). Proposta: manter como estão até o usuário decidir. Apagar branch é ação destrutiva e só acontece com autorização.
+**Branches residuais:** `Testes-ChatGPT` (GAD; 4 commits só de UI que não estão na fix), `ChatGPT` e `backup-main` (GAE; já contidas na `main`). **Autorizado pelo usuário em 11/11/2026 (Q-C):** depois do M1, arquivá-las como tag (`arquivo/<nome>`) e apagar as branches. Passo **M1.5** (Chats 02/03), executado só depois que o M1.4 for confirmado.
 
 **Critério de aceitação:** `main` = build instalada em todos os desenhistas; nenhuma branch funcional fora da `main`.
 
@@ -102,25 +103,39 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 ### M3 — Caminho oficial DWG → GeoMap (D-03, D-04; resolve R-05, R-07)
 **Objetivo:** um único caminho reproduzível para levar a rede do DWG ao GeoMap.
 
-**Decisão D-03** — depende de requisito de negócio (pergunta Q-A na seção 7):
+**Decisão D-03.** O requisito de negócio foi respondido em 11/11/2026 (Q-A, seção 7): anomalias devem aparecer no mapa, na metragem do trecho. **Recomendação: opção (b)**, porque só o GAE conhece a associação trecho ↔ Polyline e a direção do trecho, necessárias para posicionar a metragem. A ponte DXF segue em uso até o exportador do GAE cobrir o que ela faz; depois é aposentada.
 
 | Opção | Vantagens | Desvantagens | Quando faz sentido |
 |---|---|---|---|
-| (a) Ponte DXF vira oficial (revisar a DEC-024) | Já funciona com dados reais e já gera 0.2/0.3; custo mínimo | Python fora do CAD; não tem acesso aos vínculos de inspeção (XData/NOD); repete regras que o GAE já conhece | Se o GeoMap só precisa mostrar a rede |
-| (b) Exportador do GAE ganha 0.2, 0.3 e curvas; ponte aposentada | Alinhado à regra 13; tem acesso a `SectionId` ↔ handle, base para levar inspeções ao mapa | Maior esforço (cor, blocos, ATTRIB, tesselação, seleção por layer) | Se inspeções/anomalias devem aparecer no GeoMap |
+| (a) Ponte DXF vira oficial (revisar a DEC-024) | Já funciona com dados reais e já gera 0.2/0.3; custo mínimo | Python fora do CAD; não tem acesso aos vínculos de inspeção (XData/NOD); repete regras que o GAE já conhece | Se o GeoMap só precisa mostrar a rede (descartada pelo requisito) |
+| (b) Exportador do GAE ganha 0.2, 0.3 e curvas; ponte aposentada | Alinhado à regra 13; tem acesso a `SectionId` ↔ handle, base para levar inspeções ao mapa | Maior esforço (cor, blocos, ATTRIB, tesselação, seleção por layer) | **Recomendada**: anomalias no mapa confirmadas |
 | (c) Coexistência com `sourceSystem` e identidade unificados | Transição gradual | Duas implementações das mesmas regras | Como transição de (a) para (b) |
 
 | Passo | Dono | Entrega | Verificação |
 |---|---|---|---|
 | M3.1 | Usuário + Chat 00 | Decisão D-03 e D-04 (`DEC-ECO-0002`) | Decisão registrada |
-| M3.2 | Chat 01 | Política única de `sourceSystem` e migração dos projetos já importados, sem duplicar (GM-05) | Teste de reimportação pelos dois caminhos gera o mesmo UUID |
-| M3.3 | Chat 01 ou 02 (conforme D-03) | Implementação do caminho escolhido + teste cruzado: o produtor gera, e o validador do GeoMap valida na CI | Fixture gerada pelo produtor e validada pelo consumidor na CI |
+| M3.2 | Chat 01 | Política única de `sourceSystem` (GM-05). Como o GeoMap ainda não é usado (Q-B), não há migração de dados de produção: os bancos de desenvolvimento podem ser recriados | Teste: reimportar a mesma rede gera o mesmo UUID |
+| M3.3 | Chat 02 | Exportador do GAE com 0.2 (cor), 0.3 (blocos/ATTRIB), LINE e curvas (tesselação), seleção por layer e atributos técnicos; em passos pequenos, um por capacidade | Para cada capacidade: fixture gerada pelo GAE validada pelo validador do GeoMap na CI; comparação com a saída da ponte DXF para o mesmo desenho |
 | M3.4 | Chat 01 | Destino do script privado da 3ª rede (GM-09): versionar ou descartar | Dado reproduzível ou descarte registrado |
 
 **Critério de aceitação:** reimportar a mesma rede pelo caminho oficial não cria projeto duplicado; o teste cruzado roda na CI.
 
-### M4 — Inspeções no GeoMap (D-07) — **não agendado**
-Só entra no roadmap se o usuário confirmar a necessidade (Q-A). Depende de M2 e de M3 com a opção (b) ou (c). O mecanismo será proposto com alternativas quando for a hora.
+### M4 — Anomalias no mapa do GeoMap (D-07) — **confirmado, último na fila**
+**Requisito do usuário (11/11/2026):**
+- cada anomalia aparece como uma marcação sobre a rede, na **metragem** registrada no GeoAutoDocs (ex.: "a 5 m, tubo deslocado" → marcação a 5 m do início do trecho);
+- ao clicar na marcação, o GeoMap mostra a **imagem da anomalia** capturada no GeoAutoDocs;
+- **sem prazo**: começa depois que M0–M3 estiverem prontos.
+
+**O que já existe e o que falta** (da auditoria):
+- O GAE sabe ligar trecho ↔ Polyline (`CadSectionAssociation`, com direção) e já posiciona metragens no desenho. É a base para calcular a coordenada da anomalia.
+- O GAD tem a metragem, a descrição e as capturas PNG das ocorrências (evidência `isPrimary`). As imagens ficam em pastas locais do GAD e não trafegam hoje para lugar nenhum.
+- O GeoMap só aceita geometria pelo contrato de importação e não tem armazenamento de imagens nem endpoint de escrita.
+
+**Ainda não decidido** (regra 12; será proposto com alternativas quando o M4 começar):
+- quem calcula a coordenada;
+- como a anomalia e a imagem chegam ao GeoMap (contrato novo ou versão nova do contrato atual);
+- onde as imagens ficam guardadas;
+- o identificador que liga anomalia, trecho e feição (D-04).
 
 ## 6. Melhorias internas autorizadas com o roadmap (autonomia, regra 5)
 Pequenas, seguras e restritas a cada projeto. Cada uma vira uma Issue no repositório do projeto. Não dependem dos marcos.
@@ -141,16 +156,17 @@ Pequenas, seguras e restritas a cada projeto. Cada uma vira uma Issue no reposit
 ```
 M0 (GAE ‖ GAD) ──► M1 (GAD ‖ GAE) ──► M2 (spec → GAE → GAD → instalação)
                                          │
-M3.1 decisão (pode correr em paralelo) ──┴──► M3.2–M3.4 (após M2 se o dono for o Chat 02)
+M3.1 decisão (pode correr em paralelo) ──┴──► M3.2 (Chat 01, em paralelo) / M3.3 (Chat 02, após M2) / M3.4
+                                                                        │
+                                                                        └──► M4 (anomalias no mapa; último)
 Melhorias internas: em paralelo, a qualquer momento
-M4: só com confirmação de negócio
 ```
 O GAE e o GAD avançam em paralelo dentro de M0 e M1. O M2 exige M1 concluído nos dois.
 
-**Perguntas ao usuário que destravam o roadmap:**
-- **Q-A:** inspeções e anomalias devem aparecer no mapa do GeoMap? Há prazo ligado a algum contrato? (define D-03 e M4)
-- **Q-B:** quem do GeoMap usa hoje, e onde? (GM-02; afeta prioridade de M3)
-- **Q-C:** as branches residuais (`Testes-ChatGPT`, `ChatGPT`, `backup-main`) podem ser arquivadas como tag e apagadas depois do M1?
+**Respostas do usuário (11/11/2026):**
+- **Q-A:** sim, as anomalias devem aparecer no mapa (marcação na metragem; clique mostra a imagem do GeoAutoDocs). Sem prazo; fazer por último. → D-03 (b), M4 confirmado.
+- **Q-B:** ninguém usa o GeoMap ainda; ele não está pronto. → M3 sem migração de dados de produção; R-07 cai para baixa.
+- **Q-C:** pode arquivar as branches residuais. → passo M1.5.
 
 ## 8. Riscos do próprio roadmap
 | Risco | Mitigação |
@@ -162,7 +178,7 @@ O GAE e o GAD avançam em paralelo dentro de M0 e M1. O M2 exige M1 concluído n
 
 ## 9. Como aprovar
 Responda ao Chat 00 com uma das opções:
-- **"Roadmap aprovado"** — aprova M0–M3, as recomendações (D-01 opção a; D-02 opção a com semântica de estado completo) e as melhorias internas da seção 6;
+- **"Roadmap aprovado"** — aprova M0–M4 nesta ordem, as recomendações (D-01 opção a; D-02 opção a com semântica de estado completo; D-03 opção b) e as melhorias internas da seção 6;
 - **"Aprovado com ajustes: …"**;
 - **"Não aprovado: …"**.
 
