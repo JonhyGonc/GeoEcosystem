@@ -82,20 +82,25 @@ docker compose exec database sh -ec \
 
 ### Aplicar o modelo espacial
 
-Bash:
+Em um banco novo, aplique todas as migrations em ordem (001 a 004). Bash:
 
 ~~~bash
-docker compose exec -T database sh -ec \
-  'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
-  < database/migrations/001_initial_spatial_model.up.sql
+for migration in database/migrations/[0-9][0-9][0-9]_*.up.sql; do
+  docker compose exec -T database sh -ec \
+    'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$migration"
+done
 ~~~
 
 PowerShell:
 
 ~~~powershell
-Get-Content -Raw database/migrations/001_initial_spatial_model.up.sql |
-  docker compose exec -T database sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+Get-ChildItem database/migrations/*.up.sql | Sort-Object Name | ForEach-Object {
+  Get-Content -Raw $_.FullName |
+    docker compose exec -T database sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+}
 ~~~
+
+Em um banco que já existe, consulte `schema_migrations` e aplique só as que faltam; veja [database/migrations/README.md](database/migrations/README.md).
 
 Consulte [database/migrations/README.md](database/migrations/README.md) antes de executar um rollback, pois a reversão remove as tabelas e seus dados.
 

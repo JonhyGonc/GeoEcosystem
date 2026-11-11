@@ -243,6 +243,12 @@ Cada layer de blocos é importada como uma rede própria, com a cor da layer, co
 
 Símbolos específicos por tipo de bloco, rótulos com o nome no mapa e blocos dinâmicos (que o DXF grava com nome anônimo `*U…`) ficam fora do escopo desta Issue. Para que eles não entrem com um nome sem significado, a ponte DXF descarta as inserções `*U…` e as conta no resumo como `INSERT anonymous block` (Issue #60). Por decisão do responsável, os pontos de levantamento topográfico ficam sempre de fora do GeoMap. A ponte DXF recusa as layers `_TG*` e, nas layers de rede, descarta o bloco `SIMB_PONTO`, que é o símbolo do ponto levantado. Assim, as conexões que estão misturadas com esses pontos nas layers RD_* podem ser importadas sem trazer o levantamento.
 
+## DEC-030 — Registro das migrations aplicadas no banco
+
+Status: aprovada (Issue #62; melhoria interna autorizada pelo roadmap do GeoEcosystem de 11/11/2026).
+
+Complementa a DEC-012 sem substituí-la: as migrations continuam sendo SQL up/down aplicados com psql. A migration 004 cria a tabela `schema_migrations`, confere que os objetos das 001 a 003 existem e as registra; a partir da 005, cada migration insere a sua linha no up e a remove no down, na mesma transação. Assim, um banco desatualizado é identificado por uma consulta, e não por um erro da API ou do importador. A verificação automática da versão do banco pela API ou pelo importador fica para uma decisão futura.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
