@@ -25,7 +25,7 @@ Três aplicações independentes, com integração pontual e local:
 Não há identificador comum além do handle CAD. Detalhes: [matriz de integração](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md#5-matriz-de-integração).
 
 ## 3. Princípios deste roadmap
-1. **Primeiro estabilizar o que já é usado, depois integrar mais.** Os marcos M1 e M2 não adicionam nenhuma integração nova.
+1. **Primeiro estabilizar o que já é usado, depois integrar mais.** Os marcos M1 a M3 não adicionam nenhuma integração nova.
 2. **Passos pequenos e reversíveis**, cada um com verificação objetiva.
 3. **Nenhum mecanismo de integração novo é escolhido sem alternativas** (regra 12): as decisões abaixo trazem opções e recomendação, e quem decide está indicado.
 4. **Compatibilidade retroativa** em todo contrato (regra 8).
@@ -68,16 +68,56 @@ O usuário prefere não ter um marco separado: basta uma versão oficial complet
 
 **Critério de aceitação:** a versão oficial (tag) é a instalada em todos os desenhistas; nenhuma branch funcional fora da `main`.
 
-### M2 — Contrato GADX estável (D-02, D-06; resolve R-03, R-08 parcial, R-09)
+### M2 — Repositório único (monorepo) no GeoEcosystem (D-08; resolve R-08 e a duplicação de contratos)
+**Decisão do usuário (11/11/2026):** juntar os três repositórios dentro do `GeoEcosystem` (opção c, entre manter três repositórios, juntar só GAE + GAD ou juntar os três). O código do GeoMap pode ficar público.
+
+**Por quê:**
+- um desenvolvedor, uma conta;
+- o contrato GADX duplicado (GAD-12b) e as fixtures copiadas à mão (GM-10) só existem por causa da separação;
+- M3, M4 e M5 atravessam projetos, e num repositório único cada um vira um único PR testado em conjunto.
+
+**Pré-condição:** M1 concluído. Nenhuma branch funcional pode ficar fora da `main` nos repositórios de origem.
+
+**Estrutura alvo:**
+```
+GeoEcosystem/
+├── apps/geomap/           # = JonhyGonc/Geomap (com histórico)
+├── apps/geoautoengine/    # = JonhyGonc/GeoAutoEngine (com histórico)
+├── apps/geoautodocs/      # = JonhyGonc/GeoAutoDocs (com histórico)
+├── libs/                  # código compartilhado (nasce no M3)
+├── contratos/ decisoes/ governanca/ roadmap/ status/ auditorias/   # como hoje
+└── .github/workflows/     # uma CI por aplicação, disparada só pela pasta dela
+```
+
+| Passo | Dono | Entrega | Verificação |
+|---|---|---|---|
+| M2.1 | Chat 00 | `DEC-ECO-0001` (monorepo) + emenda do protocolo: a regra 6 passa a valer **por pasta** (`apps/geomap` = Chat 01, `apps/geoautoengine` = Chat 02, `apps/geoautodocs` = Chat 03; o resto = Chat 00). Os `AGENTS.md` de cada aplicação continuam valendo na pasta dela | PR aprovado pelo usuário |
+| M2.2 | Chat 01 | Varredura do histórico do GeoMap antes de ele ficar público: credenciais, connection strings, dados reais (o Q7 da auditoria do GeoMap apontou só agregados em `docs/REAL_DATA_VALIDATION.md`) | Relatório "nada sensível" ou lista do que tratar antes |
+| M2.3 | Chat 00 | Importação dos três repositórios **com histórico** (`git subtree add`, sem squash) numa branch do GeoEcosystem. CIs movidas para `.github/workflows/` com filtro por pasta e caminhos ajustados. Nenhuma mudança de código além de caminhos | Árvore de cada `apps/*` idêntica à `main` de origem (diff vazio); histórico visível com `git log -- apps/<app>` |
+| M2.4 | Chats 01–03 | Cada especialista valida a sua pasta: CI verde; scripts que usam caminhos relativos (`scripts/test.ps1`, gerador de bundle do GAE, instalador do GAD, `docker-compose` do GeoMap) funcionando no novo local | CI das três aplicações verde no PR; o usuário gera o bundle do GAE e o instalador do GAD a partir do monorepo |
+| M2.5 | Usuário | Merge. Os repositórios antigos são **arquivados** (somente leitura, nunca apagados) com aviso no README apontando o monorepo. O `Geomap` antigo continua privado, com as suas Issues e PRs #1–#57 | Repositórios antigos arquivados; trabalho novo só no monorepo |
+
+**Congelamento:** do início do M2.3 até o M2.5, nenhum merge nos repositórios antigos.
+
+**Riscos e mitigação:**
+
+| Risco | Mitigação |
+|---|---|
+| Algo sensível no histórico do GeoMap fica público | M2.2 antes do M2.3. O histórico publicado não pode ser despublicado com segurança, então a varredura é obrigatória |
+| CI ou script quebra pela mudança de caminho | M2.4 com validação pelos especialistas e pelo usuário antes do merge |
+| Os agentes perdem a separação por repositório | A emenda da regra 6 (M2.1) + revisão do Chat 00 em PR que toque mais de uma pasta |
+| Links antigos (Issues e PRs do GeoMap) | Os repositórios antigos ficam arquivados, não apagados; o `status/STATUS.md` aponta para eles |
+
+### M3 — Contrato GADX estável (D-02, D-06; resolve R-03, R-08 parcial, R-09)
 **Objetivo:** a comunicação GAE ↔ GAD tem uma especificação única, compatível com versões antigas e testada nos dois lados.
 
-**Decisão D-02 — como versionar** (Chat 00 decide após aprovação; registrada como `DEC-ECO-0001`):
+**Decisão D-02 — como versionar** (Chat 00 decide após aprovação; registrada como `DEC-ECO-0002`):
 
 | Opção | Como funciona | Compatibilidade | Custo |
 |---|---|---|---|
-| **(a) Capacidades no `Hello`** — recomendada | O `Hello` ganha um campo opcional `capabilities` (ex.: `["corrections"]`). O GAE só envia 6/7 a quem declarou a capacidade. Clientes antigos, sem o campo, continuam funcionando sem correções. | Total, nos dois sentidos | Baixo: campo aditivo |
+| **(a) Capacidades no `Hello`** — recomendada, junto com (c) | O `Hello` ganha um campo opcional `capabilities` (ex.: `["corrections"]`). O GAE só envia 6/7 a quem declarou a capacidade. Clientes antigos, sem o campo, continuam funcionando sem correções. | Total, nos dois sentidos | Baixo: campo aditivo |
 | (b) Protocolo v2 | 6/7 passam a existir só na v2; o servidor aceita v1 e v2 | Boa, mas exige manter dois caminhos no servidor | Médio |
-| (c) Pacote compartilhado de contrato | Uma biblioteca única usada pelos dois repositórios | Elimina a duplicação, mas exige `netstandard2.0` para o Civil 3D 2024 e um processo de publicação | Alto |
+| **(c) Projeto de contrato compartilhado em `libs/`** — recomendada junto com (a), graças ao M2 | Um único projeto `netstandard2.0`, referenciado pelo GAE (inclusive net48 do Civil 3D 2024) e pelo GAD, sem publicar pacote | Elimina a duplicação; o GAE já usa `System.Text.Json` via pacote em `netstandard2.0` | Alto |
 
 **Semântica das correções (R-09):** registrar na especificação que o GAE envia o **estado completo** da ocorrência. Alternativas:
 - (i) o GAD aplica como estado completo — recomendado: alinha com o produtor real;
@@ -85,15 +125,15 @@ O usuário prefere não ter um marco separado: basta uma versão oficial complet
 
 | Passo | Dono | Entrega | Verificação |
 |---|---|---|---|
-| M2.1 | Chat 00 | Especificação **normativa** GADX v1.1 em `contratos/gadx-inspecao/SPEC.md` + `DEC-ECO-0001`, via Issue `mudanca-de-contrato` | PR aprovado pelo usuário |
-| M2.2 | Chat 00 | Fixtures de referência em `contratos/gadx-inspecao/fixtures/`: frames binários e JSON de cada mensagem, inclusive `Hello` com e sem capacidades | Fixtures validadas contra o código atual dos dois lados |
-| M2.3 | GAE / Chat 02 | Servidor aceita `Hello` com e sem `capabilities`; só envia 6/7 a quem declarou; testes leem as fixtures do GeoEcosystem (checkout na CI, repositório público) | CI verde com as fixtures |
-| M2.4 | GAD / Chat 03 | Cliente declara `capabilities`; aplica as correções como estado completo; testes com as mesmas fixtures | CI verde; roteiro manual: correção de metragem e descrição chega ao GAD sem apagar campos |
-| M2.5 | Usuário | Instalação coordenada (servidor primeiro: GAE novo funciona com GAD antigo) | Todas as combinações de `COMPATIBILIDADE.md` em ✅ |
+| M3.1 | Chat 00 | Especificação **normativa** GADX v1.1 em `contratos/gadx-inspecao/SPEC.md` + `DEC-ECO-0002`, via Issue `mudanca-de-contrato` | PR aprovado pelo usuário |
+| M3.2 | Chat 00 | Fixtures de referência em `contratos/gadx-inspecao/fixtures/`: frames binários e JSON de cada mensagem, inclusive `Hello` com e sem capacidades | Fixtures validadas contra o código atual dos dois lados |
+| M3.3 | GAE / Chat 02 + Chat 03 | Criar `libs/GeoEcosystem.Contracts.Inspection` (frame, mensagens, schema) a partir das duas cópias, com testes contra as fixtures; GAE e GAD passam a referenciá-lo e apagam a cópia local. Servidor aceita `Hello` com e sem `capabilities`; só envia 6/7 a quem declarou | CI verde com as fixtures |
+| M3.4 | GAD / Chat 03 | Cliente declara `capabilities`; aplica as correções como estado completo; testes com as mesmas fixtures | CI verde; roteiro manual: correção de metragem e descrição chega ao GAD sem apagar campos |
+| M3.5 | Usuário | Instalação coordenada (servidor primeiro: GAE novo funciona com GAD antigo) | Todas as combinações de `COMPATIBILIDADE.md` em ✅ |
 
 **Critério de aceitação:** as duas CIs testam contra as mesmas fixtures; nenhuma combinação de builds instaladas produz falha silenciosa.
 
-### M3 — Caminho oficial DWG → GeoMap (D-03, D-04; resolve R-05, R-07)
+### M4 — Caminho oficial DWG → GeoMap (D-03, D-04; resolve R-05, R-07)
 **Objetivo:** um único caminho reproduzível para levar a rede do DWG ao GeoMap.
 
 **Decisão D-03.** O requisito de negócio foi respondido em 11/11/2026 (Q-A, seção 7): anomalias devem aparecer no mapa, na metragem do trecho. **Recomendação: opção (b)**, porque só o GAE conhece a associação trecho ↔ Polyline e a direção do trecho, necessárias para posicionar a metragem. A ponte DXF segue em uso até o exportador do GAE cobrir o que ela faz; depois é aposentada.
@@ -106,25 +146,25 @@ O usuário prefere não ter um marco separado: basta uma versão oficial complet
 
 | Passo | Dono | Entrega | Verificação |
 |---|---|---|---|
-| M3.1 | Usuário + Chat 00 | Decisão D-03 e D-04 (`DEC-ECO-0002`) | Decisão registrada |
-| M3.2 | Chat 01 | Política única de `sourceSystem` (GM-05). Como o GeoMap ainda não é usado (Q-B), não há migração de dados de produção: os bancos de desenvolvimento podem ser recriados | Teste: reimportar a mesma rede gera o mesmo UUID |
-| M3.3 | Chat 02 | Exportador do GAE com 0.2 (cor), 0.3 (blocos/ATTRIB), LINE e curvas (tesselação), seleção por layer e atributos técnicos; em passos pequenos, um por capacidade | Para cada capacidade: fixture gerada pelo GAE validada pelo validador do GeoMap na CI; comparação com a saída da ponte DXF para o mesmo desenho |
-| M3.4 | Chat 01 | Destino do script privado da 3ª rede (GM-09): versionar ou descartar | Dado reproduzível ou descarte registrado |
+| M4.1 | Usuário + Chat 00 | Decisão D-03 e D-04 (`DEC-ECO-0003`) | Decisão registrada |
+| M4.2 | Chat 01 | Política única de `sourceSystem` (GM-05). Como o GeoMap ainda não é usado (Q-B), não há migração de dados de produção: os bancos de desenvolvimento podem ser recriados | Teste: reimportar a mesma rede gera o mesmo UUID |
+| M4.3 | Chat 02 | Exportador do GAE com 0.2 (cor), 0.3 (blocos/ATTRIB), LINE e curvas (tesselação), seleção por layer e atributos técnicos; em passos pequenos, um por capacidade | Para cada capacidade: fixture gerada pelo GAE validada pelo validador do GeoMap na CI; comparação com a saída da ponte DXF para o mesmo desenho |
+| M4.4 | Chat 01 | Destino do script privado da 3ª rede (GM-09): versionar ou descartar | Dado reproduzível ou descarte registrado |
 
 **Critério de aceitação:** reimportar a mesma rede pelo caminho oficial não cria projeto duplicado; o teste cruzado roda na CI.
 
-### M4 — Anomalias no mapa do GeoMap (D-07) — **confirmado, último na fila**
+### M5 — Anomalias no mapa do GeoMap (D-07) — **confirmado, último na fila**
 **Requisito do usuário (11/11/2026):**
 - cada anomalia aparece como uma marcação sobre a rede, na **metragem** registrada no GeoAutoDocs (ex.: "a 5 m, tubo deslocado" → marcação a 5 m do início do trecho);
 - ao clicar na marcação, o GeoMap mostra a **imagem da anomalia** capturada no GeoAutoDocs;
-- **sem prazo**: começa depois que M1–M3 estiverem prontos.
+- **sem prazo**: começa depois que M1–M4 estiverem prontos.
 
 **O que já existe e o que falta** (da auditoria):
 - O GAE sabe ligar trecho ↔ Polyline (`CadSectionAssociation`, com direção) e já posiciona metragens no desenho. É a base para calcular a coordenada da anomalia.
 - O GAD tem a metragem, a descrição e as capturas PNG das ocorrências (evidência `isPrimary`). As imagens ficam em pastas locais do GAD e não trafegam hoje para lugar nenhum.
 - O GeoMap só aceita geometria pelo contrato de importação e não tem armazenamento de imagens nem endpoint de escrita.
 
-**Ainda não decidido** (regra 12; será proposto com alternativas quando o M4 começar):
+**Ainda não decidido** (regra 12; será proposto com alternativas quando o M5 começar):
 - quem calcula a coordenada;
 - como a anomalia e a imagem chegam ao GeoMap (contrato novo ou versão nova do contrato atual);
 - onde as imagens ficam guardadas;
@@ -147,18 +187,18 @@ Pequenas, seguras e restritas a cada projeto. Cada uma vira uma Issue no reposit
 
 ## 7. Sequência e dependências
 ```
-M1 (GAD ‖ GAE) ──► M2 (spec → GAE → GAD → instalação)
+M1 (GAD ‖ GAE) ──► M2 (monorepo) ──► M3 (spec → lib compartilhada → GAE/GAD → instalação)
                                          │
-M3.1 decisão (pode correr em paralelo) ──┴──► M3.2 (Chat 01, em paralelo) / M3.3 (Chat 02, após M2) / M3.4
+M4.1 decisão (pode correr em paralelo) ──┴──► M4.2 (Chat 01, em paralelo) / M4.3 (Chat 02, após M3) / M4.4
                                                                         │
-                                                                        └──► M4 (anomalias no mapa; último)
+                                                                        └──► M5 (anomalias no mapa; último)
 Melhorias internas: em paralelo, a qualquer momento
 ```
-O GAE e o GAD avançam em paralelo dentro do M1. O M2 exige M1 concluído nos dois.
+O GAE e o GAD avançam em paralelo dentro do M1. O M2 exige M1 concluído nos três repositórios; o M3 exige o M2.
 
 **Respostas do usuário (11/11/2026):**
-- **Q-A:** sim, as anomalias devem aparecer no mapa (marcação na metragem; clique mostra a imagem do GeoAutoDocs). Sem prazo; fazer por último. → D-03 (b), M4 confirmado.
-- **Q-B:** ninguém usa o GeoMap ainda; ele não está pronto. → M3 sem migração de dados de produção; R-07 cai para baixa.
+- **Q-A:** sim, as anomalias devem aparecer no mapa (marcação na metragem; clique mostra a imagem do GeoAutoDocs). Sem prazo; fazer por último. → D-03 (b), M5 confirmado.
+- **Q-B:** ninguém usa o GeoMap ainda; ele não está pronto. → M4 sem migração de dados de produção; R-07 cai para baixa.
 - **Q-C:** pode arquivar as branches residuais. → passo M1.5.
 
 ## 8. Riscos do próprio roadmap
@@ -167,11 +207,11 @@ O GAE e o GAD avançam em paralelo dentro do M1. O M2 exige M1 concluído nos do
 | Os agentes não conseguem escrever nos repositórios (P-1) | Autorização explícita do usuário em cada chat; plano B: o agente entrega patch e o usuário aplica |
 | Teste manual no Civil 3D vira gargalo | Roteiros curtos (até 10 passos) por entrega; agrupar M1.2 + M1.3 numa única sessão de teste |
 | Mesclar a fix do GAD (319 commits) introduz regressão | CI (M1.0) antes do merge; o usuário já usa essa build, então o risco real é o conflito de 1 arquivo |
-| Instalação parcial na equipe recria combinações incompatíveis | M1.4 instala a mesma versão oficial em todos; M2 com capacidades torna seguras as combinações que sobrarem |
+| Instalação parcial na equipe recria combinações incompatíveis | M1.4 instala a mesma versão oficial em todos; M3 com capacidades torna seguras as combinações que sobrarem |
 
 ## 9. Como aprovar
 Responda ao Chat 00 com uma das opções:
-- **"Roadmap aprovado"** — aprova M1–M4 nesta ordem (M0 retirado), as recomendações (D-01 opção a; D-02 opção a com semântica de estado completo; D-03 opção b) e as melhorias internas da seção 6;
+- **"Roadmap aprovado"** — aprova M1–M5 nesta ordem (M0 retirado), o monorepo com a emenda da regra 6 do protocolo (M2), as recomendações (D-01 opção a; D-02 opções a + c, com semântica de estado completo; D-03 opção b) e as melhorias internas da seção 6;
 - **"Aprovado com ajustes: …"**;
 - **"Não aprovado: …"**.
 
