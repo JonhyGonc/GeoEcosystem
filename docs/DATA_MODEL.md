@@ -99,4 +99,6 @@ A fonte de verdade física está em database/migrations.
 - 001_initial_spatial_model.up.sql cria a extensão necessária, tabelas, restrições e índices.
 - 001_initial_spatial_model.down.sql reverte as tabelas em ordem segura.
 - O rollback não remove a extensão PostGIS.
+- 002_network_color adiciona `networks.color`; 003_point_features aceita pontos em `network_features`.
+- 004_schema_migrations cria `schema_migrations` (`version`, `name`, `applied_at`), o registro das migrations aplicadas no banco. As migrations seguintes inserem a sua linha no up e a removem no down (DEC-030).
 - Novas alterações devem criar nova migration, sem editar uma migration já aplicada em ambiente compartilhado.
