@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
 using Xunit;
@@ -77,6 +78,10 @@ public sealed class ImporterApplicationTests
             Assert.Equal(1, summary.RootElement.GetProperty("received").GetInt32());
             Assert.Equal(1, summary.RootElement.GetProperty("imported").GetInt32());
             Assert.Equal(1, summary.RootElement.GetProperty("replaced").GetInt32());
+            Assert.Equal(
+                Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(path))),
+                store.Document!.SourceFileSha256);
+            Assert.Equal(store.Document.SourceFileSha256, store.Document.Metadata.SourceFileSha256);
         }
         finally
         {
@@ -111,6 +116,9 @@ public sealed class ImporterApplicationTests
 
             Assert.Equal(0, exitCode);
             Assert.Equal(1, streamingStore.Received);
+            Assert.Equal(
+                Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(path))),
+                streamingStore.Metadata!.SourceFileSha256);
             Assert.Contains("\"event\":\"progress\"", progress.ToString(), StringComparison.Ordinal);
             using var summary = JsonDocument.Parse(output.ToString());
             Assert.Equal(1, summary.RootElement.GetProperty("imported").GetInt32());
@@ -173,6 +181,7 @@ public sealed class ImporterApplicationTests
     private sealed class RecordingStore : IGeoMapImportStore
     {
         public bool WasCalled { get; private set; }
+        public GeoMapImportDocument? Document { get; private set; }
         public GeoMapImportResult Result { get; init; } = new(Guid.Empty, Guid.Empty, 0, 0);
 
         public Task<GeoMapImportResult> ImportAsync(
@@ -181,6 +190,7 @@ public sealed class ImporterApplicationTests
             CancellationToken cancellationToken = default)
         {
             WasCalled = true;
+            Document = document;
             return Task.FromResult(Result);
         }
     }
@@ -188,6 +198,7 @@ public sealed class ImporterApplicationTests
     private sealed class RecordingStreamingStore : IGeoMapStreamingImportStore
     {
         public int Received { get; private set; }
+        public GeoMapImportMetadata? Metadata { get; private set; }
 
         public async Task<GeoMapImportResult> ImportAsync(
             string connectionString,
@@ -197,6 +208,7 @@ public sealed class ImporterApplicationTests
             Action<ImportProgress>? reportProgress = null,
             CancellationToken cancellationToken = default)
         {
+            Metadata = metadata;
             await foreach (var _ in features.WithCancellation(cancellationToken))
             {
                 Received++;

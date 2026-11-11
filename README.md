@@ -82,7 +82,7 @@ docker compose exec database sh -ec \
 
 ### Aplicar o modelo espacial
 
-Em um banco novo, aplique todas as migrations em ordem (001 a 004). Bash:
+Em um banco novo, aplique todas as migrations em ordem (001 a 005). Bash:
 
 ~~~bash
 for migration in database/migrations/[0-9][0-9][0-9]_*.up.sql; do

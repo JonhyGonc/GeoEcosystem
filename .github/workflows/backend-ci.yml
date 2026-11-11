@@ -197,6 +197,27 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-schema-migrations.sql
 
+      - name: Apply network imports migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-migration.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-migration.sql
+
       - name: Build initial GeoMap importer
         run: |
           dotnet restore tools/importer/GeoMap.Importer/GeoMap.Importer.csproj
@@ -340,6 +361,21 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-initial-import.sql
+
+      - name: Verify import provenance
+        shell: bash
+        run: |
+          tests/integration/verify-network-imports.sh "Águas pluviais" 0.1 "Civil 3D" 31982 metre \
+            contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json 1 1
+          tests/integration/verify-network-imports.sh "Rede com cor do CAD" 0.2 "Civil 3D DXF" 31982 metre \
+            contracts/geomap/0.2/examples/valid-network-color.geomap.json 1 1
+          tests/integration/verify-network-imports.sh "Conexões (blocos)" 0.3 "Civil 3D DXF" 31982 metre \
+            contracts/geomap/0.3/examples/valid-block-points.geomap.json 1 2
+          tests/integration/verify-network-imports.sh "DXF Fixture Network" 0.1 "Civil 3D DXF" 31982 metre \
+            /tmp/geomap-issue-17-dxf.geomap.json 1 2
+          # SMALL: importação e reimportação válidas; a importação inválida não deixa linha.
+          tests/integration/verify-network-imports.sh "Drenagem Issue 15 SMALL" 0.1 "GeoMap integration test" 31982 metre \
+            /tmp/geomap-issue-15-small.geomap.json 2 1000
 
       - name: Build dataset generator
         run: |
@@ -578,6 +614,10 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
             sh "$NETWORK_STATE_SQL")"
           test "$AFTER_REIMPORT" = "$AFTER_INVALID"
+          # Importação e reimportação; a falha depois de um lote em staging não deixa linha.
+          tests/integration/verify-network-imports.sh "Drenagem Streaming MEDIUM" 0.1 \
+            "GeoMap streaming integration test" 4326 degree \
+            /tmp/geomap-stream-medium.geomap.ndjson 2 100000
           cat /tmp/geomap-stream-medium.time
 
       - name: Import and verify streaming LARGE
@@ -607,6 +647,10 @@ jobs:
           docker compose exec -T database sh -ec \
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_profile=large -v expected_count=1000000' \
             < tests/integration/verify-streaming-import.sql
+
+          tests/integration/verify-network-imports.sh "Drenagem Streaming LARGE" 0.1 \
+            "GeoMap streaming integration test" 4326 degree \
+            /tmp/geomap-stream-large.geomap.ndjson 1 1000000
 
           cat /tmp/geomap-stream-large.time
 

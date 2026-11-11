@@ -66,6 +66,26 @@ erDiagram
 | properties | jsonb | objeto JSON obrigatório, padrão vazio |
 | created_at | timestamptz | obrigatório, padrão CURRENT_TIMESTAMP |
 
+### network_imports
+
+Origem de cada importação concluída (migration 005, DEC-031). Uma linha por importação, gravada na mesma transação que troca o snapshot; reimportar acrescenta uma linha.
+
+| Campo | Tipo | Regra |
+|---|---|---|
+| id | bigint | identidade gerada pelo banco; define a ordem das importações |
+| network_id | uuid | FK obrigatória para networks, removida junto com a rede |
+| imported_at | timestamptz | obrigatório, padrão now() |
+| contract_version | varchar(16) | `contractVersion` do arquivo |
+| source_system | varchar(100) | `sourceSystem` do arquivo |
+| source_srid | integer | código EPSG de `sourceCrs` |
+| units | varchar(32) | `units` do arquivo |
+| exported_at | timestamptz | `exportedAt` do arquivo |
+| imported_features | integer | feições gravadas, maior que zero |
+| replaced_features | integer | feições substituídas da importação anterior |
+| source_file_sha256 | char(64) | SHA-256 dos bytes do arquivo, hexadecimal minúsculo |
+
+O nome e o caminho do arquivo não são gravados. O `created_at` das feições continua sendo o da última importação, porque o snapshot é substituído; a data da primeira importação de uma rede é a menor `imported_at` dela.
+
 ## CRS e dimensionalidade
 
 O CRS canônico de armazenamento é **EPSG:4326 (WGS 84), em longitude/latitude**.
@@ -101,4 +121,5 @@ A fonte de verdade física está em database/migrations.
 - O rollback não remove a extensão PostGIS.
 - 002_network_color adiciona `networks.color`; 003_point_features aceita pontos em `network_features`.
 - 004_schema_migrations cria `schema_migrations` (`version`, `name`, `applied_at`), o registro das migrations aplicadas no banco. As migrations seguintes inserem a sua linha no up e a removem no down (DEC-030).
+- 005_network_imports cria `network_imports`, a origem de cada importação.
 - Novas alterações devem criar nova migration, sem editar uma migration já aplicada em ambiente compartilhado.

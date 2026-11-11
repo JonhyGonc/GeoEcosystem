@@ -249,6 +249,12 @@ Status: aprovada (Issue #62; melhoria interna autorizada pelo roadmap do GeoEcos
 
 Complementa a DEC-012 sem substituí-la: as migrations continuam sendo SQL up/down aplicados com psql. A migration 004 cria a tabela `schema_migrations`, confere que os objetos das 001 a 003 existem e as registra; a partir da 005, cada migration insere a sua linha no up e a remove no down, na mesma transação. Assim, um banco desatualizado é identificado por uma consulta, e não por um erro da API ou do importador. A verificação automática da versão do banco pela API ou pelo importador fica para uma decisão futura.
 
+## DEC-031 — Origem de cada importação
+
+Status: aprovada (Issue #64; melhoria interna autorizada pelo roadmap do GeoEcosystem de 11/11/2026).
+
+Cada importação concluída grava uma linha em `network_imports`, na mesma transação que troca o snapshot da rede: versão do contrato, sistema de origem, SRID, unidade, `exportedAt`, feições importadas e substituídas e o SHA-256 dos bytes do arquivo. A tabela só recebe inserções; uma reimportação acrescenta uma linha, e uma importação que falha não deixa nenhuma. O contrato não muda: os campos já eram obrigatórios e validados, mas não chegavam ao banco. O nome e o caminho do arquivo ficam de fora, porque podem conter nomes de cliente; o hash basta para confirmar se um arquivo é o que foi importado. No NDJSON, o hash custa uma leitura sequencial a mais do arquivo, sem mudar o pico de memória. Preservar o `created_at` das feições entre reimportações e expor a origem na API ficam para decisões futuras.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

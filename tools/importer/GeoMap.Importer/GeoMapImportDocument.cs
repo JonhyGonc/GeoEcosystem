@@ -12,13 +12,22 @@ public sealed record GeoMapImportDocument(
     DateTimeOffset ExportedAt,
     IReadOnlyList<GeoMapImportFeature> Features)
 {
+    public string ContractVersion { get; init; } = "0.1";
+
+    /// <summary>SHA-256 do arquivo lido, preenchido pelo importador.</summary>
+    public string? SourceFileSha256 { get; init; }
+
     public GeoMapImportMetadata Metadata => new(
         SourceSystem,
         SourceSrid,
         Units,
         Project,
         Network,
-        ExportedAt);
+        ExportedAt)
+    {
+        ContractVersion = ContractVersion,
+        SourceFileSha256 = SourceFileSha256
+    };
 
     public static GeoMapImportDocument Parse(ReadOnlyMemory<byte> utf8Json)
     {
@@ -55,7 +64,10 @@ public sealed record GeoMapImportDocument(
                 root.GetProperty("exportedAt").GetString()!,
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
-            features);
+            features)
+        {
+            ContractVersion = root.GetProperty("contractVersion").GetString()!
+        };
     }
 
     public static int CountReceivedFeatures(ReadOnlyMemory<byte> utf8Json)
@@ -139,6 +151,9 @@ public sealed record GeoMapImportMetadata(
     DateTimeOffset ExportedAt)
 {
     public string ContractVersion { get; init; } = "0.1";
+
+    /// <summary>SHA-256 do arquivo lido, preenchido pelo importador.</summary>
+    public string? SourceFileSha256 { get; init; }
 }
 
 public sealed record ImportProject(string ExternalId, string Name);
