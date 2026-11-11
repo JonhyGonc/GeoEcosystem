@@ -83,7 +83,10 @@ public sealed class ImporterApplication(
                     output, state.Received, stopwatch, validation.Errors);
             }
 
-            var document = GeoMapImportDocument.Parse(utf8Json);
+            var document = GeoMapImportDocument.Parse(utf8Json) with
+            {
+                SourceFileSha256 = SourceFileHash.Compute(utf8Json.AsSpan())
+            };
             var result = await store.ImportAsync(
                 options.ConnectionString, document, cancellationToken);
             return await WriteSuccessAsync(
@@ -152,8 +155,14 @@ public sealed class ImporterApplication(
             return await WriteValidationFailureAsync(
                 output, 0, stopwatch, metadataValidation.Errors);
         }
+        // O NDJSON é lido em blocos e nunca inteiro na memória; o hash é uma
+        // leitura sequencial separada do mesmo arquivo, antes da importação.
         var metadata = GeoMapImportDocument.ParseStreamingMetadata(
-            lines.Current.Utf8Json);
+            lines.Current.Utf8Json) with
+        {
+            SourceFileSha256 = await SourceFileHash.ComputeAsync(
+                options.FilePath, cancellationToken)
+        };
 
         async IAsyncEnumerable<GeoMapImportFeature> ReadFeaturesAsync(
             [EnumeratorCancellation] CancellationToken featureCancellationToken = default)

@@ -64,7 +64,7 @@ No baseline da CI da Issue #15, um documento de 265.218 bytes com 1.000 `LineStr
 
 ### PERF-013 — NDJSON com memória independente do total de feições
 
-O transporte `.geomap.ndjson` lê blocos de 64 KiB, limita cada registro a 16 MiB e mantém em memória somente o registro atual e o lote configurado. A tabela temporária recebe os lotes por `COPY`; o tamanho total do arquivo não é materializado no processo. A CI gera, importa e mede MEDIUM com 100.000 feições e LARGE com 1.000.000, verificando contagem, geometria, propriedades, reimportação e falha após um lote já confirmado no staging.
+O transporte `.geomap.ndjson` lê blocos de 64 KiB, limita cada registro a 16 MiB e mantém em memória somente o registro atual e o lote configurado. Desde a Issue #64, o arquivo é lido uma vez a mais, em sequência e sem materialização, para calcular o SHA-256 gravado em `network_imports`; isso acrescenta uma leitura do arquivo (cerca de 276 MB no LARGE) ao tempo total, sem mudar o pico de memória. A tabela temporária recebe os lotes por `COPY`; o tamanho total do arquivo não é materializado no processo. A CI gera, importa e mede MEDIUM com 100.000 feições e LARGE com 1.000.000, verificando contagem, geometria, propriedades, reimportação e falha após um lote já confirmado no staging.
 
 No baseline verde da CI da Issue #16:
 

@@ -66,6 +66,17 @@ Get-Content -Raw database/migrations/004_schema_migrations.up.sql |
 
 O rollback (`004_schema_migrations.down.sql`) remove apenas a tabela de registro. Para reverter migrations anteriores, reverta primeiro a 004: as reversões seguem a ordem decrescente.
 
+## Migration 005: origem das importações
+
+Cria `network_imports`, com uma linha por importação concluída: versão do contrato, sistema de origem, SRID, unidade, `exportedAt`, feições importadas e substituídas e o SHA-256 do arquivo (DEC-031). Exige a 004 e se registra em `schema_migrations`. A partir dela, o importador recusa um banco sem a tabela. Aplique-a depois da 004:
+
+~~~powershell
+Get-Content -Raw database/migrations/005_network_imports.up.sql |
+  docker compose exec -T database sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+~~~
+
+O rollback (`005_network_imports.down.sql`) apaga o histórico de importações e remove o registro da 005; projetos, redes e feições são preservados.
+
 ## Verificar o estado de um banco
 
 ~~~bash

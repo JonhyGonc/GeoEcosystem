@@ -17,7 +17,7 @@ Cada feição é uma `LineString` 2D em EPSG:4326 e possui diâmetro, material, 
 ## Pré-requisitos
 
 1. PostgreSQL/PostGIS iniciado.
-2. Migration `001_initial_spatial_model.up.sql` aplicada.
+2. Migrations 001 a 005 aplicadas (veja [database/migrations/README.md](../../database/migrations/README.md)).
 3. .NET 10 SDK instalado.
 
 ## Uso
@@ -93,7 +93,7 @@ A especificação do arquivo `.geomap.json`, seus limites, códigos de erro e ex
 
 ## Importador inicial
 
-O projeto `GeoMap.Importer` importa um arquivo v0.1 limitado. Com a migration 001 aplicada:
+O projeto `GeoMap.Importer` importa um arquivo dos contratos 0.1, 0.2 ou 0.3. O banco precisa das migrations 001 a 005 (veja [database/migrations/README.md](../../database/migrations/README.md)); sem a 005, o importador recusa a importação e informa a migration que falta:
 
 ~~~bash
 export GEOMAP_DB_CONNECTION_STRING='Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only'
@@ -105,6 +105,15 @@ dotnet run --project tools/importer/GeoMap.Importer -- \
 No PowerShell, defina a conexão com `$env:GEOMAP_DB_CONNECTION_STRING = '...'` e use o mesmo comando `dotnet run`, trocando `\` por crase para continuar a linha quando necessário.
 
 O resultado é JSON e contém sucesso, totais recebidos/importados/rejeitados/substituídos, IDs de projeto e rede, duração e erros. O arquivo inteiro é validado antes do banco; a gravação substitui atomicamente o snapshot da rede e transforma o EPSG declarado para 4326. Reimportar o mesmo arquivo mantém os IDs e não duplica feições.
+
+Cada importação concluída grava uma linha em `network_imports`, na mesma transação que troca o snapshot: versão do contrato, sistema de origem, SRID, unidade, `exportedAt`, feições importadas e substituídas e o SHA-256 dos bytes do arquivo. Uma importação que falha não grava nada, e uma reimportação acrescenta uma linha sem apagar as anteriores. O nome e o caminho do arquivo não são gravados, porque podem conter nomes de cliente; para saber se um arquivo é o que foi importado, compare o `sha256sum` dele com `source_file_sha256`:
+
+~~~sql
+SELECT imported_at, contract_version, source_system, imported_features, source_file_sha256
+FROM network_imports
+WHERE network_id = '<id da rede>'
+ORDER BY id;
+~~~
 
 Na CI da Issue #15, o contrato SMALL gerado possuía 1.000 linhas e 265.218 bytes. A validação, transformação EPSG:31982 → EPSG:4326 e persistência consumiram 3.616 ms no cronômetro interno. A execução fria completa por `dotnet run` consumiu 9,79 s e 127.556 KiB de memória residente máxima no runner Ubuntu.
 
@@ -120,7 +129,7 @@ dotnet run --project tools/importer/GeoMap.Importer -- \
 
 O lote padrão é 10.000 e aceita valores de 100 a 50.000. Eventos compactos `progress` são escritos em stderr após cada lote confirmado no staging; o resumo final formatado é escrito em stdout. O leitor mantém somente um registro e um lote em memória, aceita até 5.000.000 de feições e interrompe em registro acima de 16 MiB.
 
-Os lotes usam uma tabela temporária da sessão. Mesmo após vários lotes concluídos, a rede pública só é substituída na transação final. Arquivo inválido, duplicata, erro do PostGIS ou `Ctrl+C` fecham a sessão e preservam o snapshot anterior.
+Antes da importação, o arquivo NDJSON é lido uma vez, em sequência, só para calcular o SHA-256; essa leitura não guarda o conteúdo na memória. Os lotes usam uma tabela temporária da sessão. Mesmo após vários lotes concluídos, a rede pública só é substituída na transação final. Arquivo inválido, duplicata, erro do PostGIS ou `Ctrl+C` fecham a sessão e preservam o snapshot anterior.
 
 Baseline da CI da Issue #16:
 

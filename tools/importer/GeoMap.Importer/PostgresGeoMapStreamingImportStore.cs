@@ -94,6 +94,8 @@ public sealed class PostgresGeoMapStreamingImportStore : IGeoMapStreamingImportS
                         $"Imported {imported} features; expected {processed}.");
                 }
 
+                await PostgresGeoMapImportStore.RecordImportAsync(
+                    connection, transaction, networkId, metadata, imported, replaced, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return new(projectId, networkId, imported, replaced, batchNumber);
             }

@@ -52,6 +52,8 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
                     $"Imported {imported} features; expected {document.Features.Count}.");
             }
 
+            await RecordImportAsync(
+                connection, transaction, networkId, document.Metadata, imported, replaced, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(projectId, networkId, imported, replaced);
         }
@@ -73,7 +75,8 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
                 to_regclass('public.projects') IS NOT NULL
                 AND to_regclass('public.networks') IS NOT NULL
                 AND to_regclass('public.network_features') IS NOT NULL,
-                EXISTS (SELECT 1 FROM spatial_ref_sys WHERE srid = @source_srid);
+                EXISTS (SELECT 1 FROM spatial_ref_sys WHERE srid = @source_srid),
+                to_regclass('public.network_imports') IS NOT NULL;
             """;
 
         await using var command = new NpgsqlCommand(sql, connection, transaction);
@@ -87,6 +90,13 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
                 "$",
                 "The GeoMap spatial model is missing. Apply migration 001 first.");
         }
+        if (!reader.GetBoolean(2))
+        {
+            throw new GeoMapImportException(
+                ImportErrorCodes.PersistenceFailed,
+                "$",
+                "The import history table is missing. Apply the migrations up to 005_network_imports.");
+        }
         if (!reader.GetBoolean(1))
         {
             throw new GeoMapImportException(
@@ -94,6 +104,61 @@ public sealed class PostgresGeoMapImportStore : IGeoMapImportStore
                 "$.sourceCrs",
                 $"EPSG:{sourceSrid} is not available in this PostGIS installation.");
         }
+    }
+
+    /// <summary>
+    /// Grava a origem da importação na mesma transação que troca o snapshot;
+    /// se a transação falhar, nenhuma linha fica registrada.
+    /// </summary>
+    internal static async Task RecordImportAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        Guid networkId,
+        GeoMapImportMetadata metadata,
+        int imported,
+        int replaced,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(metadata.SourceFileSha256))
+        {
+            throw new InvalidOperationException(
+                "The source file SHA-256 is required to record the import.");
+        }
+
+        const string sql = """
+            INSERT INTO network_imports (
+                network_id,
+                contract_version,
+                source_system,
+                source_srid,
+                units,
+                exported_at,
+                imported_features,
+                replaced_features,
+                source_file_sha256)
+            VALUES (
+                @network_id,
+                @contract_version,
+                @source_system,
+                @source_srid,
+                @units,
+                @exported_at,
+                @imported_features,
+                @replaced_features,
+                @source_file_sha256);
+            """;
+
+        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        command.Parameters.AddWithValue("network_id", networkId);
+        command.Parameters.AddWithValue("contract_version", metadata.ContractVersion);
+        command.Parameters.AddWithValue("source_system", metadata.SourceSystem);
+        command.Parameters.AddWithValue("source_srid", metadata.SourceSrid);
+        command.Parameters.AddWithValue("units", metadata.Units);
+        command.Parameters.AddWithValue("exported_at", metadata.ExportedAt.ToUniversalTime());
+        command.Parameters.AddWithValue("imported_features", imported);
+        command.Parameters.AddWithValue("replaced_features", replaced);
+        command.Parameters.AddWithValue("source_file_sha256", metadata.SourceFileSha256);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static async Task AcquireNetworkLockAsync(

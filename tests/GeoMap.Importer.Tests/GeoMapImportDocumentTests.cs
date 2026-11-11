@@ -37,6 +37,20 @@ public sealed class GeoMapImportDocumentTests
     }
 
     [Fact]
+    public void Parse_keeps_the_declared_contract_version_in_the_metadata()
+    {
+        var json = Encoding.UTF8.GetString(ValidDocument())
+            .Replace("\"contractVersion\": \"0.1\"", "\"contractVersion\": \"0.2\"", StringComparison.Ordinal);
+
+        var document = GeoMapImportDocument.Parse(Encoding.UTF8.GetBytes(json));
+
+        Assert.Equal("0.2", document.ContractVersion);
+        Assert.Equal("0.2", document.Metadata.ContractVersion);
+        Assert.Equal("0.1", GeoMapImportDocument.Parse(ValidDocument()).ContractVersion);
+        Assert.Null(document.SourceFileSha256);
+    }
+
+    [Fact]
     public void Streaming_metadata_reads_the_optional_network_color()
     {
         var json = Encoding.UTF8.GetString(StreamingMetadata())
