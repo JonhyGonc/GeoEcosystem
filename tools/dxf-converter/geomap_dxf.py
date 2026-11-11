@@ -424,6 +424,9 @@ _RESERVED_BLOCK_PROPERTIES = {
 # nas layers de rede.
 SURVEY_LAYER_PREFIX = "_TG"
 SURVEY_BLOCK_NAMES = frozenset({"SIMB_PONTO"})
+# Blocos dinâmicos são gravados no DXF com nome anônimo (*U123), que não diz o
+# que o elemento é e muda entre exportações; ficam fora do GeoMap (DEC-029).
+ANONYMOUS_BLOCK_PREFIX = "*U"
 
 
 def is_survey_layer(layer: str) -> bool:
@@ -661,8 +664,12 @@ def convert(options: ConversionOptions) -> tuple[dict[str, object], dict[str, ob
             if entity.entity_type != "INSERT":
                 ignored[entity.entity_type] += 1
                 continue
-            if (entity.first(2) or "").strip().upper() in SURVEY_BLOCK_NAMES:
+            block_name = (entity.first(2) or "").strip().upper()
+            if block_name in SURVEY_BLOCK_NAMES:
                 ignored["INSERT survey point"] += 1
+                continue
+            if block_name.startswith(ANONYMOUS_BLOCK_PREFIX):
+                ignored["INSERT anonymous block"] += 1
                 continue
             feature = _convert_insert(entity, options, definitions)
             if (entity.first(66, "0") or "0").strip() == "1":

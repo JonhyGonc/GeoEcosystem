@@ -40,6 +40,8 @@ Alguns blocos são criados com o desenho já nas coordenadas reais e o ponto bas
 
 Pontos de levantamento topográfico ficam sempre fora do GeoMap (DEC-029). A ponte recusa as layers `_TG*` em qualquer modo e, com `--blocks`, descarta os blocos `SIMB_PONTO`, contabilizados no resumo como `INSERT survey point`.
 
+Blocos dinâmicos também ficam de fora. O DXF grava cada instância deles com um nome anônimo (`*U123`), que não diz o que o elemento é e pode mudar a cada exportação. Com `--blocks`, a ponte descarta as inserções de blocos cujo nome começa com `*U`, junto com os seus atributos, e as conta no resumo como `INSERT anonymous block`. Se esse número for alto, a layer usa blocos dinâmicos e precisa de outro caminho de exportação.
+
 Blocos dinâmicos aparecem com o nome anônimo que o DXF grava (`*U…`), e não com o nome do bloco original; essa limitação está registrada na DEC-029.
 
 O limite provisório é 512 MiB por DXF e 10.000 feições por documento JSON. Dados
