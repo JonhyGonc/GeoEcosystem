@@ -25,7 +25,7 @@ Três aplicações independentes, com integração pontual e local:
 Não há identificador comum além do handle CAD. Detalhes: [matriz de integração](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md#5-matriz-de-integração).
 
 ## 3. Princípios deste roadmap
-1. **Primeiro estabilizar o que já é usado, depois integrar mais.** Os marcos M0–M2 não adicionam nenhuma integração nova.
+1. **Primeiro estabilizar o que já é usado, depois integrar mais.** Os marcos M1 e M2 não adicionam nenhuma integração nova.
 2. **Passos pequenos e reversíveis**, cada um com verificação objetiva.
 3. **Nenhum mecanismo de integração novo é escolhido sem alternativas** (regra 12): as decisões abaixo trazem opções e recomendação, e quem decide está indicado.
 4. **Compatibilidade retroativa** em todo contrato (regra 8).
@@ -40,28 +40,21 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 
 ## 5. Marcos
 
-### M0 — Rastreabilidade de builds (resolve R-04)
-**Objetivo:** toda build instalada diz de qual commit veio.
+### ~~M0 — Rastreabilidade de builds~~ — retirado pelo usuário em 11/11/2026
+O usuário prefere não ter um marco separado: basta uma versão oficial completa, instalada em todos (M1). Dois itens do M0 foram absorvidos pelo M1, porque o M1 depende deles:
+- **CI do GAD** → M1.0: sem ela, nenhum agente consegue compilar e testar o GAD antes do merge;
+- **número de versão novo** → M1.4: GAE `3.2.0` e GAD `1.1.0`, só trocando o número. É o que permite saber, no futuro, se alguém ficou com uma versão antiga.
+
+### M1 — Versão oficial completa (D-01; resolve R-04 e parte de R-03)
+**Objetivo:** juntar todo o trabalho de cada projeto numa versão oficial completa, que todos os desenhistas usam.
 
 | Passo | Projeto / dono | Entrega | Verificação |
 |---|---|---|---|
-| M0.1 | GAE / Chat 02 | Versão informativa = `3.1.x+<sha7>` gravada no build (`InformationalVersion`), mostrada no log de inicialização e num comando `GEOAUTO3VERSAO`; o gerador de bundle registra o commit | Teste unitário do formato; usuário roda o comando no Civil 3D |
-| M0.2 | GAD / Chat 03 | Mesma versão informativa no título/"Sobre" e no campo `applicationVersion` do `Hello` (já existe no protocolo, sem mudar o contrato) | Teste unitário; usuário confere na tela |
-| M0.3 | GAD / Chat 03 | CI permanente no GitHub (`windows-latest`, `dotnet build` + `dotnet test`); hoje não há nenhuma | CI verde no PR |
-| M0.4 | Usuário | Preencher [`status/COMPATIBILIDADE.md`](../status/COMPATIBILIDADE.md) para cada desenhista, com o guia atual | Tabela completa |
-
-**Critério de aceitação:** as builds novas de GAE e GAD exibem o SHA; a tabela de máquinas está completa.
-**Risco:** baixo (aditivo; não muda contrato nem dados).
-
-### M1 — Linha de base única (D-01; resolve parte de R-03)
-**Objetivo:** a `main` de cada projeto passa a ser o que a equipe usa.
-
-| Passo | Projeto / dono | Entrega | Verificação |
-|---|---|---|---|
-| M1.1 | GAD / Chat 03 | Mesclar `fix/section-edit-save-stability` na `main` (PR #1 do GAD), resolvendo o conflito em `MainWindow.xaml.cs` para manter a renumeração de `073191a` | CI (M0.3) verde; 240+ testes; roteiro manual executado pelo usuário |
+| M1.0 | GAD / Chat 03 | CI permanente no GitHub (`windows-latest`, `dotnet build` + `dotnet test`); hoje não há nenhuma | CI verde no PR |
+| M1.1 | GAD / Chat 03 | Mesclar `fix/section-edit-save-stability` na `main` (PR #1 do GAD), resolvendo o conflito em `MainWindow.xaml.cs` para manter a renumeração de `073191a` | CI (M1.0) verde; 240+ testes; roteiro manual executado pelo usuário |
 | M1.2 | GAE / Chat 02 | Mesclar `sync-section-names` na `main`. Ela traz a correção do travamento de 5 min (`559d8b1`) e o `GEOAUTO3VISYNC`; adicionar o comando ao `PackageContents.xml` | CI verde; usuário confirma no Civil 3D que revisar correções não trava mais |
 | M1.3 | GAE / Chat 02 | Mesclar `feature/atualizar-textos-anomalias` sobre a nova `main`, resolvendo os conflitos nos 5 arquivos | CI verde; 213+ testes; `GEOAUTO3VIUPDATETEXTS` e `GEOAUTO3VISYNC` funcionam juntos |
-| M1.4 | Usuário | Instalar a nova `main` primeiro na própria máquina (homologação) e, aprovada, nos demais desenhistas | `COMPATIBILIDADE.md` mostra a mesma build (com SHA) em todos |
+| M1.4 | GAE / Chat 02; GAD / Chat 03; usuário | Versão oficial: GAE `3.2.0` e GAD `1.1.0` (só o número muda), tag `v3.2.0` / `v1.1.0` no commit da `main`. O usuário instala primeiro na própria máquina (homologação) e, aprovada, em todos os desenhistas | O usuário confirma em cada máquina os comandos `GEOAUTO3VISYNC` e `GEOAUTO3VIUPDATETEXTS` e a janela de revisão do GAD; `status/COMPATIBILIDADE.md` com a mesma versão para todos |
 | M1.5 | GAD / Chat 03; GAE / Chat 02 | Arquivar `Testes-ChatGPT`, `ChatGPT` e `backup-main` como tags `arquivo/<nome>` e apagar as branches (autorizado em 11/11/2026) | Tags existem e apontam para os SHAs originais; branches removidas |
 
 **Alternativas para o GAD (D-01):**
@@ -73,7 +66,7 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 
 **Branches residuais:** `Testes-ChatGPT` (GAD; 4 commits só de UI que não estão na fix), `ChatGPT` e `backup-main` (GAE; já contidas na `main`). **Autorizado pelo usuário em 11/11/2026 (Q-C):** depois do M1, arquivá-las como tag (`arquivo/<nome>`) e apagar as branches. Passo **M1.5** (Chats 02/03), executado só depois que o M1.4 for confirmado.
 
-**Critério de aceitação:** `main` = build instalada em todos os desenhistas; nenhuma branch funcional fora da `main`.
+**Critério de aceitação:** a versão oficial (tag) é a instalada em todos os desenhistas; nenhuma branch funcional fora da `main`.
 
 ### M2 — Contrato GADX estável (D-02, D-06; resolve R-03, R-08 parcial, R-09)
 **Objetivo:** a comunicação GAE ↔ GAD tem uma especificação única, compatível com versões antigas e testada nos dois lados.
@@ -124,7 +117,7 @@ Não há identificador comum além do handle CAD. Detalhes: [matriz de integraç
 **Requisito do usuário (11/11/2026):**
 - cada anomalia aparece como uma marcação sobre a rede, na **metragem** registrada no GeoAutoDocs (ex.: "a 5 m, tubo deslocado" → marcação a 5 m do início do trecho);
 - ao clicar na marcação, o GeoMap mostra a **imagem da anomalia** capturada no GeoAutoDocs;
-- **sem prazo**: começa depois que M0–M3 estiverem prontos.
+- **sem prazo**: começa depois que M1–M3 estiverem prontos.
 
 **O que já existe e o que falta** (da auditoria):
 - O GAE sabe ligar trecho ↔ Polyline (`CadSectionAssociation`, com direção) e já posiciona metragens no desenho. É a base para calcular a coordenada da anomalia.
@@ -154,14 +147,14 @@ Pequenas, seguras e restritas a cada projeto. Cada uma vira uma Issue no reposit
 
 ## 7. Sequência e dependências
 ```
-M0 (GAE ‖ GAD) ──► M1 (GAD ‖ GAE) ──► M2 (spec → GAE → GAD → instalação)
+M1 (GAD ‖ GAE) ──► M2 (spec → GAE → GAD → instalação)
                                          │
 M3.1 decisão (pode correr em paralelo) ──┴──► M3.2 (Chat 01, em paralelo) / M3.3 (Chat 02, após M2) / M3.4
                                                                         │
                                                                         └──► M4 (anomalias no mapa; último)
 Melhorias internas: em paralelo, a qualquer momento
 ```
-O GAE e o GAD avançam em paralelo dentro de M0 e M1. O M2 exige M1 concluído nos dois.
+O GAE e o GAD avançam em paralelo dentro do M1. O M2 exige M1 concluído nos dois.
 
 **Respostas do usuário (11/11/2026):**
 - **Q-A:** sim, as anomalias devem aparecer no mapa (marcação na metragem; clique mostra a imagem do GeoAutoDocs). Sem prazo; fazer por último. → D-03 (b), M4 confirmado.
@@ -173,12 +166,12 @@ O GAE e o GAD avançam em paralelo dentro de M0 e M1. O M2 exige M1 concluído n
 |---|---|
 | Os agentes não conseguem escrever nos repositórios (P-1) | Autorização explícita do usuário em cada chat; plano B: o agente entrega patch e o usuário aplica |
 | Teste manual no Civil 3D vira gargalo | Roteiros curtos (até 10 passos) por entrega; agrupar M1.2 + M1.3 numa única sessão de teste |
-| Mesclar a fix do GAD (319 commits) introduz regressão | CI (M0.3) antes do merge; o usuário já usa essa build, então o risco real é o conflito de 1 arquivo |
-| Instalação parcial na equipe recria combinações incompatíveis | M2 com capacidades torna todas as combinações seguras; M0 torna as combinações visíveis |
+| Mesclar a fix do GAD (319 commits) introduz regressão | CI (M1.0) antes do merge; o usuário já usa essa build, então o risco real é o conflito de 1 arquivo |
+| Instalação parcial na equipe recria combinações incompatíveis | M1.4 instala a mesma versão oficial em todos; M2 com capacidades torna seguras as combinações que sobrarem |
 
 ## 9. Como aprovar
 Responda ao Chat 00 com uma das opções:
-- **"Roadmap aprovado"** — aprova M0–M4 nesta ordem, as recomendações (D-01 opção a; D-02 opção a com semântica de estado completo; D-03 opção b) e as melhorias internas da seção 6;
+- **"Roadmap aprovado"** — aprova M1–M4 nesta ordem (M0 retirado), as recomendações (D-01 opção a; D-02 opção a com semântica de estado completo; D-03 opção b) e as melhorias internas da seção 6;
 - **"Aprovado com ajustes: …"**;
 - **"Não aprovado: …"**.
 
