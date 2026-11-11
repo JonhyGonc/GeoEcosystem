@@ -54,11 +54,11 @@ No cenário reproduzível LARGE em zoom 15, o tile deve permanecer abaixo de 512
 
 ### PERF-011 — Limites do contrato inicial
 
-Um documento `.geomap.json` v0.1 aceita no máximo 50 MiB e 10.000 feições. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; MEDIUM e LARGE usam `.geomap.ndjson` sequencial.
+Um documento `.geomap.json` aceita no máximo 50 MiB e 10.000 feições, nas versões 0.1, 0.2 e 0.3. Cada feição aceita até 100.000 vértices e 64 KiB de `properties`. Esses limites protegem o importador inicial; MEDIUM e LARGE usam `.geomap.ndjson` sequencial.
 
 ### PERF-012 — Importação inicial limitada e transacional
 
-O importador de JSON carrega somente um documento v0.1 já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica.
+O importador de JSON carrega somente um documento já limitado por PERF-011. A persistência usa `COPY` binário para uma tabela temporária e uma transformação/inserção SQL em conjunto, sem comando individual por feição. O teste de integração mede a importação SMALL de 1.000 feições e confirma a reimportação atômica.
 
 No baseline da CI da Issue #15, um documento de 265.218 bytes com 1.000 `LineString` em EPSG:31982 foi validado, transformado para EPSG:4326 e persistido em 3.616 ms medidos pelo importador. O processo iniciado a frio por `dotnet run` levou 9,79 s e atingiu 127.556 KiB de memória residente máxima no runner Ubuntu hospedado. Esses valores registram a primeira referência reproduzível do protótipo e não constituem SLA.
 
@@ -112,6 +112,10 @@ A Issue #4 deve definir geração reproduzível e sementes fixas. As Issues #6 e
 - limitações encontradas.
 
 As medições das Issues #6 e #7 formam o primeiro baseline. A guarda quantitativa inicial de MVT foi definida em PERF-010; ela deve ser revista quando houver frontend e rede CAD real, sempre com nova medição registrada.
+
+## Nota sobre os baselines registrados
+
+Os baselines das Issues #5 a #7 e de PERF-012/PERF-013 foram medidos com .NET 8, antes da migração para o .NET 10 (DEC-003, Issue #38), e não foram medidos de novo depois dela. As guardas automáticas (payload e p95 do MVT, p95 da extensão, contagens do LARGE) continuam rodando a cada execução da Backend CI já em .NET 10; os números das tabelas abaixo são registro histórico.
 
 ## Baseline de carga LARGE — Issue #5
 

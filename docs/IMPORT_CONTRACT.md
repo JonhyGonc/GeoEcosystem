@@ -12,7 +12,7 @@ Separar a origem Autodesk do restante do sistema. Qualquer exportador deve produ
 
 | Campo | Obrigatório | Descrição |
 |---|---:|---|
-| `contractVersion` | sim | valor exato `0.1` |
+| `contractVersion` | sim | `0.1`, `0.2` ou `0.3`; o valor exato seleciona o validador |
 | `sourceSystem` | sim | sistema de origem, até 100 caracteres |
 | `sourceCrs` | sim | identificador no formato `EPSG:<código>` |
 | `project` | sim | objeto com `externalId` e `name` |
@@ -84,11 +84,11 @@ A versão `0.3` mantém tudo da `0.2`, inclusive `network.color` opcional, e pas
 
 O nome do bloco vai em `properties.bloco`, porque ele já descreve o que é o elemento. No NDJSON, a versão declarada na linha 1 vale para todas as feições do arquivo. Exemplo executável: `contracts/geomap/0.3/examples/valid-block-points.geomap.json`.
 
-O exemplo `valid-geoautoengine-polyline.geomap.json` é produzido pelo mesmo serializador usado no comando `GEOAUTO3GEOMAPEXPORT` do GeoAutoEngine. A CI o valida e o importa para confirmar a compatibilidade entre os dois repositórios.
+O exemplo `valid-geoautoengine-polyline.geomap.json` é uma cópia manual, feita em 9 de setembro de 2026, da amostra `samples/geomap/polyline-export.geomap.json` do GeoAutoEngine, gerada pelo serializador do comando `GEOAUTO3GEOMAPEXPORT`. A CI do GeoMap valida e importa essa cópia. Ela não regenera a amostra nem a compara com a versão atual do GeoAutoEngine, então uma mudança posterior no produtor só é detectada se a amostra for copiada de novo ou se um arquivo real falhar na importação.
 
 ## Formatos físicos
 
-O formato inicial é um único documento JSON UTF-8 com extensão `.geomap.json` e media type `application/vnd.geomap.v0.1+json`. O objeto raiz contém exatamente os metadados e o array `features` descritos neste documento. Não é GeoJSON `FeatureCollection` e não contém classes, assemblies ou nomes de namespace da Autodesk.
+O formato inicial é um único documento JSON UTF-8 com extensão `.geomap.json` e media type `application/vnd.geomap.v0.1+json`. Os media types foram definidos na v0.1 e não são verificados pelo importador, que identifica o transporte pela extensão e a versão pelo campo `contractVersion`; as versões 0.2 e 0.3 usam os mesmos dois transportes. O objeto raiz contém exatamente os metadados e o array `features` descritos neste documento. Não é GeoJSON `FeatureCollection` e não contém classes, assemblies ou nomes de namespace da Autodesk.
 
 Para grandes volumes, a mesma versão lógica usa NDJSON UTF-8 com extensão `.geomap.ndjson` e media type `application/vnd.geomap.v0.1+ndjson`:
 
@@ -139,7 +139,7 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 | Código | Significado |
 |---|---|
 | `GMC_DOCUMENT_INVALID` | arquivo não é um documento JSON UTF-8 válido |
-| `GMC_VERSION_UNSUPPORTED` | versão diferente de `0.1` |
+| `GMC_VERSION_UNSUPPORTED` | versão diferente de `0.1`, `0.2` e `0.3` |
 | `GMC_REQUIRED_FIELD` | campo obrigatório ausente |
 | `GMC_FIELD_INVALID` | tipo, valor ou campo estrutural inválido |
 | `GMC_LIMIT_EXCEEDED` | um dos limites do contrato foi excedido |
@@ -155,7 +155,7 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 ## Compatibilidade
 
 - O consumidor seleciona o validador pelo valor exato de `contractVersion`.
-- A versão `0.1` é estrita: campos estruturais desconhecidos são rejeitados para detectar erros de digitação.
+- As versões `0.1`, `0.2` e `0.3` são estritas: campos estruturais desconhecidos são rejeitados para detectar erros de digitação. `network.color` só é aceito a partir da `0.2`, e `Point`/`MultiPoint` só na `0.3`.
 - Somente o conteúdo interno de `properties` é extensível sem nova versão, respeitando os limites.
 - Uma versão futura exige especificação e validador próprios; não existe downgrade silencioso.
 - Exportadores devem continuar capazes de emitir uma versão explicitamente suportada pelo importador de destino.
