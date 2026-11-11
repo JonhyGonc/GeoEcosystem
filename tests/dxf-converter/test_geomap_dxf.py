@@ -284,6 +284,26 @@ class GeoMapDxfTests(unittest.TestCase):
                 with self.assertRaisesRegex(geomap_dxf.DxfConversionError, "survey"):
                     geomap_dxf.convert(survey)
 
+    def test_anonymous_dynamic_blocks_are_excluded_with_their_attributes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entities = (
+                insert("B1", "TEST-NETWORK", "TE")
+                + insert("B2", "TEST-NETWORK", "*U12", {"PV": "PV-7"})
+                + insert("B3", "TEST-NETWORK", "*u13")
+            )
+            root.joinpath("input.dxf").write_text(dxf(entities), encoding="utf-8")
+            document, summary = geomap_dxf.convert(self.block_options(root))
+            self.assertEqual(["B1"], [f["sourceId"] for f in document["features"]])
+            self.assertNotIn("PV", document["features"][0]["properties"])
+            self.assertEqual({"INSERT anonymous block": 2}, summary["ignoredEntities"])
+
+            root.joinpath("input.dxf").write_text(
+                dxf(insert("B4", "TEST-NETWORK", "*U14")), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(geomap_dxf.DxfConversionError, "no block references"):
+                geomap_dxf.convert(self.block_options(root))
+
     def test_blocks_mode_requires_at_least_one_block(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
