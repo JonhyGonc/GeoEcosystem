@@ -1,6 +1,14 @@
-# Roadmap — proposta da Etapa 4
+# Roadmap
 
-> **Estado: PROPOSTA, aguardando aprovação explícita do usuário** (regra 3). Nenhuma implementação começa antes dessa aprovação. Depois de aprovado, cada marco gera Issues nos repositórios e um arquivo em `marcos/` quando começar.
+> **Estado: APROVADO pelo usuário em 11/11/2026 08:34** (resposta explícita "Roadmap aprovado", após o merge do PR #2). Aprovação inclui M1–M5, o monorepo com a regra 6 por pasta (M2), D-01 (a), D-02 (a + c), D-03 (b) e as melhorias internas da seção 6. Cada marco ganha um arquivo em [`marcos/`](marcos/) e uma Issue de acompanhamento quando começa.
+>
+> | Marco | Estado |
+> |---|---|
+> | M1 — Versão oficial completa | 🔄 em execução ([marcos/M1](marcos/M1-versao-oficial.md)) |
+> | M2 — Monorepo | ⏳ (o M2.2, varredura do GeoMap, pode começar já, pois é só leitura) |
+> | M3 — Contrato GADX | ⏳ |
+> | M4 — Exportador GAE → GeoMap | ⏳ |
+> | M5 — Anomalias no mapa | ⏳ |
 
 - **Autor:** Chat 00
 - **Data:** 11/11/2026

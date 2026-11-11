@@ -1,6 +1,6 @@
 # Status dos projetos
 
-**Atualizado em:** 11/11/2026, pelo Chat 00 (Etapa 4); repositórios revalidados sem mudanças. Revalidar no GitHub antes de usar (regra 18).
+**Atualizado em:** 11/11/2026, pelo Chat 00 (início da Etapa 5); repositórios revalidados sem mudanças. Revalidar no GitHub antes de usar (regra 18).
 
 | Projeto | Repositório | Visibilidade | `main` (referência) | Branches fora da `main` | CI | Versão declarada |
 |---|---|---|---|---|---|---|
@@ -16,5 +16,5 @@
 | 1 — Auditoria | ✅ concluída ([relatórios](../auditorias/2026-11-etapa1/)) |
 | 2 — Consolidação | ✅ concluída ([consolidação](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md)) |
 | 3 — GeoEcosystem | ✅ concluída (PR #1 mesclado em 11/11/2026) |
-| 4 — Roadmap | 🔄 proposta em revisão ([ROADMAP](../roadmap/ROADMAP.md)); **nenhuma implementação antes da aprovação** |
-| 5 — Execução | ⏳ |
+| 4 — Roadmap | ✅ aprovado pelo usuário em 11/11/2026 ([ROADMAP](../roadmap/ROADMAP.md)) |
+| 5 — Execução | 🔄 M1 iniciado em 11/11/2026 |
