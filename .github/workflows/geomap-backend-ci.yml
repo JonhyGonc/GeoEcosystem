@@ -43,7 +43,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
           cache: true
-          cache-dependency-path: "**/*.csproj"
+          cache-dependency-path: "apps/geomap/**/*.csproj"
 
       - name: Restore
         run: dotnet restore GeoMap.sln
@@ -68,7 +68,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
           cache: true
-          cache-dependency-path: "**/*.csproj"
+          cache-dependency-path: "apps/geomap/**/*.csproj"
 
       - name: Prepare local-only environment
         run: cp .env.example .env
