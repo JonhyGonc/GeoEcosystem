@@ -1,0 +1,6 @@
+# Dados externos de referência do GeoAutoEngine (CSVs de obras reais, sistema legado).
+# Nunca versionar neste repositório público (decisão do PR #16 do GeoAutoEngine; M2.4).
+/reference/
+/GeoAutoEngine.Legacy/
+/apps/reference/
+/apps/GeoAutoEngine.Legacy/
