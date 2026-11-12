@@ -1,0 +1,400 @@
+<UserControl x:Class="GeoAutoEngine.Plugin.SurveyPaletteView"
+             x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource UiFont}" Foreground="#E8F0FE"
+             Background="#080E1A" MinWidth="300" MinHeight="420"
+             SizeChanged="PaletteSizeChanged">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Theme/GeoAutoTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="MetricCard" TargetType="Border" BasedOn="{StaticResource Card}">
+                <Setter Property="Margin" Value="3" />
+                <Setter Property="Padding" Value="12,10" />
+                <Setter Property="MinHeight" Value="88" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="38" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer x:Name="SummaryView" Grid.Row="0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Grid Margin="12,12,12,10">
+                    <TextBlock Text="LEVANTAMENTOS" Style="{StaticResource AccentSectionLabel}"
+                               FontSize="12" FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                    <Border HorizontalAlignment="Right" Background="{StaticResource SurfaceHoverBrush}"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="999" Padding="9,2">
+                        <TextBlock Text="{Binding FileCount}" Style="{StaticResource MonoText}"
+                                   FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" />
+                    </Border>
+                </Grid>
+
+                <Border x:Name="DropZone" Margin="12,0,12,12" MinHeight="68"
+                        Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderEmphasisBrush}"
+                        BorderThickness="0" CornerRadius="9" Cursor="Hand"
+                        AllowDrop="True" DragEnter="CsvDragEnter" DragLeave="CsvDragLeave"
+                        Drop="CsvDrop" MouseEnter="DropZoneMouseEnter" MouseLeave="DropZoneMouseLeave"
+                        MouseLeftButtonUp="AddCsvFromDropZone">
+                    <Grid>
+                        <Rectangle RadiusX="9" RadiusY="9" Stroke="{Binding BorderBrush, ElementName=DropZone}"
+                                   StrokeThickness="1" StrokeDashArray="4,3" IsHitTestVisible="False" />
+                        <Grid Margin="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="35" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="34" Height="34" Background="{StaticResource SurfaceHoverBrush}"
+                                    BorderBrush="{StaticResource BorderEmphasisBrush}" BorderThickness="1"
+                                    CornerRadius="7">
+                                <TextBlock Text="+" FontSize="18" FontWeight="Light"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Adicionar CSV" Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                           FontSize="13" FontWeight="Medium" />
+                                <TextBlock Text="Arraste arquivos aqui ou clique para selecionar"
+                                           Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <StackPanel Margin="12,0,12,12" Visibility="{Binding LoadedFilesVisibility}">
+                    <ItemsControl ItemsSource="{Binding Files}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="24" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding FileName}" Style="{StaticResource MonoText}"
+                                                       FontSize="13" FontWeight="Medium"
+                                                       Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding PointText}" FontSize="12"
+                                                       Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                                    Margin="8,0">
+                                            <TextBlock Text="{Binding StatusGlyph}" Foreground="{Binding StatusBackground}"
+                                                       FontSize="12" FontWeight="Bold" Margin="0,0,5,0" />
+                                            <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusBackground}"
+                                                       FontSize="12" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource GhostButton}"
+                                                Click="RemoveFileButton" Tag="{Binding}" ToolTip="Remover arquivo"
+                                                HorizontalContentAlignment="Center" Content="×" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid>
+                        <Button Style="{StaticResource GhostButton}" Click="AddCsvFiles"
+                                HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}"
+                                Content="+ Adicionar mais" />
+                        <Button Style="{StaticResource GhostButton}" Click="ClearAllFiles"
+                                HorizontalAlignment="Right" Content="Limpar todos" />
+                    </Grid>
+                </StackPanel>
+
+                <Border Height="1" Background="{StaticResource DividerBrush}" />
+
+                <StackPanel Margin="12,12,12,0">
+                    <TextBlock Text="MODO DE PROCESSAMENTO" Style="{StaticResource AccentSectionLabel}"
+                               FontSize="12" />
+                    <TextBlock Text="Escolha quais elementos serão aplicados ao desenho"
+                               Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,3,0,10" />
+                    <ComboBox ItemsSource="{Binding ProcessingModeOptions}"
+                              SelectedValuePath="Value"
+                              SelectedValue="{Binding SelectedProcessingMode, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Margin="12,12,12,12">
+                    <Button Style="{StaticResource PrimaryButton}" Height="47" Click="ProcessSurveys"
+                            IsEnabled="{Binding CanProcess}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="▶" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                       FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ProcessButtonText}"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                       FontSize="13" FontWeight="Bold" />
+                        </StackPanel>
+                    </Button>
+                    <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="16" Height="16" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <Grid Width="16" Height="16">
+                                    <Ellipse Stroke="{Binding StatusAccent}" StrokeThickness="1.5" Margin="1" />
+                                    <Path Data="M 8,4 L 8,8 L 11,10" Stroke="{Binding StatusAccent}"
+                                          StrokeThickness="1.5" StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round" />
+                                </Grid>
+                            </Viewbox>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding StatusTitle}" Foreground="{StaticResource MutedBrush}"
+                                           FontSize="13" FontWeight="Medium" />
+                                <TextBlock Text="{Binding StatusDetail}" Foreground="{StaticResource VeryMutedBrush}"
+                                           FontSize="12" Margin="0,1,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <Border Height="1" Background="{StaticResource DividerBrush}" />
+
+                <StackPanel Margin="9,12,9,12">
+                    <Grid Margin="3,0,3,6">
+                        <TextBlock Text="DIAGNÓSTICO RÁPIDO" Style="{StaticResource AccentSectionLabel}"
+                                   FontSize="12" />
+                        <Button HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
+                                Click="ShowDiagnostic" FontSize="12" Content="Ver detalhes  ▼" />
+                    </Grid>
+                    <ItemsControl x:Name="DiagnosticCardsControl" ItemsSource="{Binding DiagnosticCards}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid x:Name="DiagnosticPanel" Columns="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource MetricCard}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Glyph}" Foreground="{Binding Accent}"
+                                                       FontSize="14" Margin="0,0,7,0" />
+                                            <TextBlock Text="{Binding ValueText}" Style="{StaticResource MonoText}"
+                                                       FontSize="18" FontWeight="Bold" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                                            <TextBlock Text="{Binding Label}" Foreground="{StaticResource MutedBrush}"
+                                                       FontSize="12" />
+                                            <TextBlock Text="{Binding PercentageText}" Foreground="{Binding Accent}"
+                                                       Style="{StaticResource MonoText}" FontSize="10" Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Border Height="1" Background="{StaticResource DividerBrush}" />
+
+                <StackPanel Margin="12,12,12,18">
+                    <TextBlock Text="DISTRIBUIÇÃO POR REDE" Style="{StaticResource AccentSectionLabel}"
+                               FontSize="12" />
+                    <ItemsControl ItemsSource="{Binding Networks}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding CountText}" Style="{StaticResource MonoText}"
+                                                       Foreground="{Binding Color}" FontSize="12" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding PercentageText}"
+                                                   Style="{StaticResource MonoText}" Foreground="{Binding Color}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding EmptyDiagnosticText}" Foreground="{StaticResource VeryMutedBrush}"
+                               FontSize="13" FontStyle="Italic" TextAlignment="Center" Margin="12,18" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid x:Name="DiagnosticView" Grid.Row="0" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="12,10">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="DIAGNÓSTICO" Style="{StaticResource AccentSectionLabel}" />
+                        <TextBlock Text="{Binding DetailedDiagnosticSummary}" Foreground="{StaticResource MutedBrush}"
+                                   FontSize="11" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
+                            Click="ShowSummary" Content="Voltar ao resumo" />
+                </Grid>
+            </Border>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="12">
+                    <Border Style="{StaticResource Card}" Visibility="{Binding DetailedDiagnosticEmptyVisibility}"
+                            Padding="12,30">
+                        <TextBlock Text="Nenhum diagnóstico disponível." Foreground="{StaticResource VeryMutedBrush}"
+                                   TextAlignment="Center" />
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding DetailedDiagnostics}"
+                                  Visibility="{Binding DetailedDiagnosticListVisibility}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Glyph}" Foreground="{Binding Accent}" FontSize="14" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Message}" FontSize="12" />
+                                            <TextBlock Text="{Binding Source}" Foreground="{StaticResource MutedBrush}"
+                                                       FontSize="10" Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <Grid x:Name="SettingsView" Grid.Row="0" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="12,10">
+                <Grid>
+                    <TextBlock Text="CONFIGURAÇÕES" Style="{StaticResource AccentSectionLabel}"
+                               VerticalAlignment="Center" />
+                    <Button HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
+                            Click="ShowSummary" Content="Voltar ao resumo" />
+                </Grid>
+            </Border>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="12">
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="APRESENTAÇÃO DO DESENHO" Style="{StaticResource SectionLabel}" />
+                            <TextBlock Text="Escala da planta" Foreground="{StaticResource MutedBrush}" Margin="0,12,0,5" />
+                            <ComboBox ItemsSource="{Binding PlantScaleOptions}"
+                                      SelectedValuePath="Value" SelectedValue="{Binding PlantScaleDenominator, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding CalculatedTextHeight}" Style="{StaticResource MonoText}"
+                                       Foreground="{StaticResource AccentBrush}" Margin="0,6,0,0" />
+                            <TextBlock Text="Escala dos blocos" Foreground="{StaticResource MutedBrush}" Margin="0,14,0,5" />
+                            <ComboBox ItemsSource="{Binding BlockScaleOptions}"
+                                      SelectedValuePath="Value" SelectedValue="{Binding SelectedBlockScaleMode, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <CheckBox IsChecked="{Binding ShowRevisionMarks, Mode=TwoWay}" Margin="0,14,0,0"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Content="Exibir marcas de revisão" />
+                            <CheckBox IsChecked="{Binding AddStandardSheet, Mode=TwoWay}" Margin="0,8,0,0"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Content="Adicionar folha padrão" />
+                            <CheckBox IsChecked="{Binding OpenPaletteOnStartup, Mode=TwoWay}" Margin="0,8,0,0"
+                                      Foreground="{StaticResource ForegroundSecondaryBrush}"
+                                      Content="Abrir ao iniciar o Civil 3D" />
+                            <Button Style="{StaticResource SecondaryButton}" Click="RestoreDrawingPresentationDefaults"
+                                    Margin="0,16,0,0" Content="Restaurar padrões" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,10,0,0">
+                        <StackPanel>
+                            <TextBlock Text="VÍDEO INSPEÇÃO" Style="{StaticResource SectionLabel}" />
+                            <TextBlock Text="Escala do estaqueamento das anomalias"
+                                       Foreground="{StaticResource MutedBrush}" Margin="0,12,0,5" />
+                            <ComboBox ItemsSource="{Binding VideoInspectionScaleOptions}"
+                                      SelectedValuePath="Value"
+                                      SelectedValue="{Binding VideoInspectionScaleDenominator, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding VideoInspectionScaleSummary}" Style="{StaticResource MonoText}"
+                                       Foreground="{StaticResource AccentBrush}" Margin="0,6,0,0" />
+                            <TextBlock Text="A escala define a altura dos textos e o comprimento base das linhas de chamado."
+                                       Foreground="{StaticResource VeryMutedBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="0,8,0,0" />
+                            <Button Style="{StaticResource SecondaryButton}" Click="ApplyVideoInspectionScale"
+                                    Margin="0,14,0,0" Content="Aplicar ao desenho atual" />
+
+                            <TextBlock Text="Cobertura da inspeção"
+                                       Foreground="{StaticResource MutedBrush}" Margin="0,18,0,5" />
+                            <Button x:Name="CoverageLinesToggleButton"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="ToggleVideoInspectionCoverageLines"
+                                    Margin="0,4,0,0"
+                                    Content="Linhas de cobertura: ATIVADAS" />
+                            <Button x:Name="CoverageBreakToggleButton"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="ToggleVideoInspectionBreak"
+                                    Margin="0,8,0,0"
+                                    Content="BREAK no fim da inspeção: ATIVADO" />
+                            <TextBlock Text="Os controles são independentes. Desativar o BREAK impede novas divisões e não une automaticamente redes já quebradas."
+                                       Foreground="{StaticResource VeryMutedBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <Border Grid.Row="1" Background="{StaticResource HeaderBrush}"
+                BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Button x:Name="SummaryTabButton" Style="{StaticResource NavigationTabButton}"
+                        Click="ShowSummary" Foreground="{StaticResource ForegroundBrush}"
+                        FontWeight="SemiBold" Content="▥  Resumo" />
+                <Border x:Name="SummaryIndicator" Height="2" Background="{StaticResource AccentBrush}"
+                        VerticalAlignment="Top" />
+                <Button x:Name="DiagnosticTabButton" Grid.Column="1" Style="{StaticResource NavigationTabButton}"
+                        Click="ShowDiagnostic" Foreground="{StaticResource MutedBrush}" Content="☷  Diagnóstico" />
+                <Border x:Name="DiagnosticIndicator" Grid.Column="1" Height="2"
+                        Background="{StaticResource AccentBrush}" VerticalAlignment="Top" Visibility="Collapsed" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
