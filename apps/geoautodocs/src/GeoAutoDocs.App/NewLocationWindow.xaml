@@ -1,0 +1,36 @@
+<Window x:Class="GeoAutoDocs.App.NewLocationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Novo local" Width="560" Height="360" MinWidth="500" MinHeight="320"
+        ResizeMode="CanResize" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Grid Margin="26,22" MaxWidth="760" HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Novo local" Style="{StaticResource PageTitleTextStyle}" FontSize="23"/>
+            <TextBlock Text="Informe um nome para organizar os trechos da inspeção."
+                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,24,0,18" VerticalAlignment="Top">
+            <TextBlock Style="{StaticResource FieldLabelTextStyle}">
+                <Run Text="Nome do local "/>
+                <Run Text="*" Foreground="{StaticResource DangerBrush}"/>
+            </TextBlock>
+            <TextBox x:Name="NameBox" MaxLength="180"/>
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancelar" IsCancel="True" Width="100" Height="40"/>
+                <Button Content="Adicionar local" IsDefault="True" Width="140" Height="40"
+                        Style="{StaticResource PrimaryButtonStyle}" Click="Create_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Assets\GeoAutoDocs.ico</ApplicationIcon>
+    <Version>1.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GeoAutoDocs.Core\GeoAutoDocs.Core.csproj" />
+    <ProjectReference Include="..\GeoAutoDocs.Infrastructure\GeoAutoDocs.Infrastructure.csproj" />
+    <PackageReference Include="LibVLCSharp.WPF" Version="3.10.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\MODELO DE RELATORIO.docx" Link="Templates\MODELO DE RELATORIO.docx" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets\GeoAutoDocs.ico" />
+  </ItemGroup>
+  <Target Name="RemoveUnusedLibVlcArchitectures" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <RemoveDir Directories="$(PublishDir)libvlc\win-x86;$(PublishDir)libvlc\win-arm64" />
+  </Target>
+</Project>
