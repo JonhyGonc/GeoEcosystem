@@ -1,13 +1,25 @@
-name: Backend CI
+# Movido de apps/geomap/.github/workflows/backend-ci.yml no M2.3 (monorepo, DEC-ECO-0001).
+# Roda só quando apps/geomap/** ou este arquivo mudam; os comandos rodam dentro de apps/geomap.
+name: GeoMap — Backend CI
 
 on:
   pull_request:
+    paths:
+      - "apps/geomap/**"
+      - ".github/workflows/geomap-backend-ci.yml"
   push:
     branches:
       - main
+    paths:
+      - "apps/geomap/**"
+      - ".github/workflows/geomap-backend-ci.yml"
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: apps/geomap
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"

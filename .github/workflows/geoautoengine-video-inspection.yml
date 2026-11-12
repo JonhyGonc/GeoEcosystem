@@ -1,0 +1,44 @@
+# Movido de apps/geoautoengine/.github/workflows/video-inspection.yml no M2.3 (monorepo, DEC-ECO-0001).
+# Roda só quando apps/geoautoengine/** ou este arquivo mudam; os comandos rodam dentro de apps/geoautoengine.
+name: GeoAutoEngine — Video inspection
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/geoautoengine-video-inspection.yml"
+      - "apps/geoautoengine/src/GeoAutoEngine.Application/VideoInspection/**"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/VideoInspectionTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/InspectionCorrectionTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/MTextContentMergerTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/SectionLabelSyncPlannerTests.cs"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/geoautoengine-video-inspection.yml"
+      - "apps/geoautoengine/src/GeoAutoEngine.Application/VideoInspection/**"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/VideoInspectionTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/InspectionCorrectionTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/MTextContentMergerTests.cs"
+      - "apps/geoautoengine/tests/GeoAutoEngine.Tests/SectionLabelSyncPlannerTests.cs"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/geoautoengine
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Run video inspection tests
+        run: >-
+          dotnet test tests/GeoAutoEngine.Tests/GeoAutoEngine.Tests.csproj
+          --configuration Release
+          --filter "FullyQualifiedName~GeoAutoEngine.Tests.VideoInspectionContractTests|FullyQualifiedName~GeoAutoEngine.Tests.LinearReferenceEngineTests|FullyQualifiedName~GeoAutoEngine.Tests.InspectionAnnotationPlannerTests|FullyQualifiedName~GeoAutoEngine.Tests.InspectionCalloutLayoutEngineTests|FullyQualifiedName~GeoAutoEngine.Tests.InspectionPipeProtocolTests|FullyQualifiedName~GeoAutoEngine.Tests.InspectionCorrectionTests|FullyQualifiedName~GeoAutoEngine.Tests.MTextContentMergerTests|FullyQualifiedName~GeoAutoEngine.Tests.SectionLabelSyncPlannerTests"

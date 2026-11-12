@@ -1,10 +1,18 @@
-name: Frontend CI
+# Movido de apps/geomap/.github/workflows/frontend-ci.yml no M2.3 (monorepo, DEC-ECO-0001).
+# Roda só quando apps/geomap/** ou este arquivo mudam; os comandos rodam dentro de apps/geomap.
+name: GeoMap — Frontend CI
 
 on:
   pull_request:
+    paths:
+      - "apps/geomap/**"
+      - ".github/workflows/geomap-frontend-ci.yml"
   push:
     branches:
       - main
+    paths:
+      - "apps/geomap/**"
+      - ".github/workflows/geomap-frontend-ci.yml"
 
 permissions:
   contents: read
@@ -16,7 +24,7 @@ jobs:
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: apps/web
+        working-directory: apps/geomap/apps/web
 
     steps:
       - name: Checkout
@@ -27,7 +35,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: apps/geomap/apps/web/package-lock.json
 
       - name: Install dependencies
         run: npm ci

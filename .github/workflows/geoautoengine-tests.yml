@@ -1,12 +1,24 @@
-name: Full test suite
+# Movido de apps/geoautoengine/.github/workflows/tests.yml no M2.3 (monorepo, DEC-ECO-0001).
+# Roda só quando apps/geoautoengine/** ou este arquivo mudam; os comandos rodam dentro de apps/geoautoengine.
+name: GeoAutoEngine — Full test suite
 
 on:
   pull_request:
+    paths:
+      - "apps/geoautoengine/**"
+      - ".github/workflows/geoautoengine-tests.yml"
   push:
     branches: [main]
+    paths:
+      - "apps/geoautoengine/**"
+      - ".github/workflows/geoautoengine-tests.yml"
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: apps/geoautoengine
 
 jobs:
   all-tests:
