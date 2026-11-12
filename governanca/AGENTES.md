@@ -8,6 +8,8 @@
 | **Chat 03** — GeoAutoDocs | `JonhyGonc/GeoAutoDocs` | `GeoAutoDocs` | Idem |
 | **Usuário** | Requisitos de negócio, aprovação do roadmap, merges, operações em produção | Todos | — |
 
+> **A partir do M2.3 (monorepo):** cada especialista escreve só em `apps/<sua aplicação>/` do `GeoEcosystem` ([Emenda 1](PROTOCOLO.md#emendas)). Os repositórios antigos ficam arquivados.
+
 ## Regras de comunicação
 - Os chats não se comunicam automaticamente: o usuário encaminha mensagens, e Issues, PRs e arquivos deste repositório são a trilha oficial.
 - Toda entrega usa o relatório padrão de 10 itens ([`PROTOCOLO.md`](PROTOCOLO.md#relatório-padrão-obrigatório-para-entregas-e-auditorias)).
