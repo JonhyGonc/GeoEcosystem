@@ -15,7 +15,7 @@ Repositório documental central pretendido: `GeoEcosystem` (verifique proprietá
 3. Auditoria inicial precede implementação. O Chat 00 consolida os diagnósticos e apresenta roadmap para aprovação humana. **Nenhuma implementação antes da aprovação explícita desse roadmap.** Preparar documentação/proposta não equivale a implementar código.
 4. Planejamento centralizado, execução independente. Chat 00 define prioridades, dependências, critérios e distribuição. Especialistas atuam em seus projetos, propondo mudanças interprojetos ao Chat 00 antes de executá-las.
 5. Autonomia controlada após roadmap aprovado: pequenas correções e melhorias internas seguras são permitidas; novas funcionalidades relevantes, mudanças de escopo, contratos, integrações e arquitetura exigem aprovação do Chat 00. Alterações substanciais do roadmap ou requisitos de negócio sem definição exigem aprovação do usuário.
-6. Cada especialista tem propriedade de escrita apenas sobre seu repositório. Intervenção cruzada requer autorização explícita do Chat 00, escopo e rastreabilidade. O Chat 00 administra a documentação central, mas não implementa funcionalidades nos três aplicativos.
+6. Cada especialista tem propriedade de escrita apenas sobre seu repositório. Intervenção cruzada requer autorização explícita do Chat 00, escopo e rastreabilidade. O Chat 00 administra a documentação central, mas não implementa funcionalidades nos três aplicativos. *(Ver Emenda 1: a partir do M2, "repositório" lê-se "pasta da aplicação no monorepo".)*
 7. GitHub: agentes podem criar branches, commits, testes, PRs e merges de mudanças autorizadas e não críticas, quando ferramentas, permissões e proteções permitirem. Não contornar branch protections. PRs do `GeoEcosystem` exigem análise e aprovação do Chat 00 antes do merge. Mudanças em contratos compartilhados nunca são mescladas sem essa aprovação.
 8. Cada projeto mantém seu versionamento e lançamentos independentes. Preservar compatibilidade retroativa sempre que possível. Versionar contratos, prever migrações, compatibilidade entre versões, testes e rollback. Nunca introduzir ruptura silenciosa.
 9. Evolução incremental: preservar funcionalidades validadas; refatorar ou reconstruir apenas com justificativa e aprovação pertinente. Testes e revisão proporcionais ao risco, com validação rigorosa para dados, integrações e alterações críticas.
@@ -57,3 +57,21 @@ Repositório documental central pretendido: `GeoEcosystem` (verifique proprietá
 
 ## Protocolo de coordenação
 Não presumir comunicação automática entre chats. Produzir resumos transferíveis e usar Issues/PRs/arquivos reais como trilha de auditoria. Se um agente não puder acessar um repositório, pedir ao usuário URL, conexão ou relatório, sem inventar conteúdo. Propostas de contrato devem incluir consumidor, produtor, schema/versão, compatibilidade, migração, testes e rollback. Antes de qualquer merge, verificar aprovações exigidas e status das verificações. Não criar branches nem commits durante a auditoria inicial.
+
+## Emendas
+
+### Emenda 1 — regra 6 por pasta (DEC-ECO-0001, aprovada pelo usuário em 11/11/2026)
+A partir da conclusão do M2.3 (importação para o monorepo), a regra 6 passa a valer por pasta do repositório `JonhyGonc/GeoEcosystem`:
+
+| Pasta | Dono da escrita |
+|---|---|
+| `apps/geomap/` | Chat 01 |
+| `apps/geoautoengine/` | Chat 02 |
+| `apps/geoautodocs/` | Chat 03 |
+| `libs/`, `contratos/`, `decisoes/`, `governanca/`, `roadmap/`, `status/`, `auditorias/`, `.github/` | Chat 00 |
+
+- Um PR que toque mais de uma pasta exige parecer do Chat 00, mesmo que todas as partes sejam de um mesmo especialista.
+- Mudanças em `libs/` (código compartilhado, a partir do M3) podem ser escritas por um especialista, com autorização prévia do Chat 00 e parecer dos especialistas consumidores.
+- O workflow de CI de cada aplicação (`.github/workflows/<app>-*.yml`) pode ser alterado pelo especialista dono da aplicação, com parecer do Chat 00.
+- Continua valendo: o merge na `main` é feito pelo usuário ([`PROCESSO_PR.md`](PROCESSO_PR.md)), exceto as melhorias internas autorizadas, que o especialista mescla após CI verde quando a pasta é só dele.
+
