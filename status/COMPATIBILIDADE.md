@@ -32,6 +32,11 @@
 
 Com as versões oficiais, a forma de identificar a build é a versão do arquivo (GAE: `FileVersion` da `GeoAutoEngine.Plugin.dll` = `3.2.0.0`; GAD: versão exibida pelo instalador/programa = `1.1.0`).
 
+## Decisão de instalação (usuário, 12/11/2026)
+- **GeoAutoDocs 1.1.0:** instalar em todas as máquinas, pelo instalador da Release `v1.1.0`.
+- **GeoAutoEngine 3.2.0:** só em máquinas com **Civil 3D 2026** (o único host homologado). Os desenhistas que usam 2024 ou 2025 passarão para o Civil 3D 2026 e recebem o 3.2.0 depois disso. Até lá, continuam com o GeoAutoEngine que já têm.
+- Os hosts 2024 e 2025 continuam no código, mas **não são compilados nem testados** para a 3.2.0.
+
 ## Máquinas registradas
 | Máquina / desenhista | Data da verificação | Civil 3D | Build GAE | Build GAD | Evidência |
 |---|---|---|---|---|---|

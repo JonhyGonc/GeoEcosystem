@@ -1,6 +1,6 @@
 # M1 — Versão oficial completa
 
-- **Estado:** em execução desde 11/11/2026. **Homologação conjunta aprovada em 12/11/2026** (GAE `d762359` + GAD `64081d5`); falta instalar nos demais desenhistas (M1.4) e arquivar as branches (M1.5).
+- **Estado:** ✅ **concluído em 12/11/2026.** Homologação conjunta aprovada (GAE `v3.2.0` → `d762359`, GAD `v1.1.0` → `64081d5`), tags e Releases criadas, branches residuais arquivadas como tags `arquivo/*`. A instalação na equipe virou tarefa operacional do usuário, sem bloquear o M2: GAD em todos; GAE 3.2.0 à medida que as máquinas passam para o Civil 3D 2026 (decisão do usuário em 12/11/2026; ver `status/COMPATIBILIDADE.md`).
 - **Aprovação:** roadmap aprovado pelo usuário em 11/11/2026 ([ROADMAP](../ROADMAP.md))
 - **Objetivo:** juntar todo o trabalho de cada aplicação numa versão oficial (GAE `3.2.0`, GAD `1.1.0`), instalada em todos os desenhistas.
 - **Pré-condição para o M2 (monorepo):** M1 concluído, sem branch funcional fora da `main`.
