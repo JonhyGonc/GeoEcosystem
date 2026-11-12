@@ -1,0 +1,59 @@
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test-and-build:
+    name: Lint, test and build React app
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test render
+        run: npm run test
+
+      - name: Build production bundle
+        env:
+          VITE_GEOMAP_PROJECT_ID: 60000000-0000-4000-8000-000000000001
+          VITE_GEOMAP_NETWORK_ID: 61000000-0000-4000-8000-000000000001
+        run: npm run build
+
+      - name: Verify MapLibre worker in production bundle
+        shell: bash
+        run: |
+          worker="$(find dist/assets -name 'maplibre-gl-worker-*.mjs' -print -quit)"
+          if [ -z "$worker" ]; then
+            echo "MapLibre worker is missing from dist/assets"
+            exit 1
+          fi
+          if ! grep -rqF "$(basename "$worker")" dist/assets --include='*.js'; then
+            echo "Production bundle does not reference $(basename "$worker")"
+            exit 1
+          fi
+          echo "MapLibre worker bundled as $worker"

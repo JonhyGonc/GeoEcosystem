@@ -1,0 +1,679 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  build-and-test:
+    name: Build and test .NET
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test provisional DXF bridge
+        run: python3 -m unittest discover -s tests/dxf-converter -p 'test_*.py' -v
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore
+        run: dotnet restore GeoMap.sln
+
+      - name: Build
+        run: dotnet build GeoMap.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test GeoMap.sln --configuration Release --no-build --verbosity normal
+
+  verify-local-stack:
+    name: Verify Docker Compose, API and PostGIS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10 for dataset loading
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Prepare local-only environment
+        run: cp .env.example .env
+
+      - name: Validate Compose
+        run: docker compose config --quiet
+
+      - name: Build and start local stack
+        run: docker compose up --detach --build
+
+      - name: Wait for PostGIS and verify extension
+        shell: bash
+        run: |
+          for attempt in {1..45}; do
+            if docker compose exec -T database sh -ec \
+              'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'; then
+              sleep 2
+
+              if docker compose exec -T database sh -ec \
+                'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT PostGIS_Version();"'; then
+                exit 0
+              fi
+            fi
+
+            sleep 2
+          done
+
+          docker compose logs database
+          exit 1
+
+      - name: Apply initial spatial migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.up.sql
+
+      - name: Verify spatial model
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-model.sql
+
+      - name: Verify migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.down.sql
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-model-rollback.sql
+
+      - name: Reapply initial spatial migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/001_initial_spatial_model.up.sql
+
+      - name: Apply network color migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-migration.sql
+
+      - name: Verify network color migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/002_network_color.up.sql
+
+      - name: Apply point features migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-point-features-migration.sql
+
+      - name: Verify point features migration rollback
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-point-features-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.up.sql
+
+      - name: Apply schema migrations registry
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/004_schema_migrations.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-schema-migrations.sql
+
+      - name: Verify schema migrations registry rollback and prerequisites
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/004_schema_migrations.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-schema-migrations-rollback.sql
+          # Sem a 003, a 004 deve falhar sem criar o registro.
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.down.sql
+          if docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/004_schema_migrations.up.sql; then
+            echo "Migration 004 was applied without migration 003."
+            exit 1
+          fi
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-schema-migrations-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/003_point_features.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/004_schema_migrations.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-schema-migrations.sql
+
+      - name: Apply network imports migration
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-migration.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.down.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-rollback.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < database/migrations/005_network_imports.up.sql
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-imports-migration.sql
+
+      - name: Build initial GeoMap importer
+        run: |
+          dotnet restore tools/importer/GeoMap.Importer/GeoMap.Importer.csproj
+          dotnet build tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-restore
+
+      - name: Import and verify GeoAutoEngine reference export
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-geoautoengine-export.sql
+
+      - name: Import and verify contract 0.2 network color
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.2/examples/valid-network-color.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-network-color-import.sql
+
+      - name: Import and verify contract 0.3 block points
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file contracts/geomap/0.3/examples/valid-block-points.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-block-points-import.sql
+
+      - name: Convert and verify synthetic DXF bridge
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tools/dxf-converter/geomap_dxf.py \
+            --input tests/fixtures/dxf/synthetic-network.dxf \
+            --output /tmp/geomap-issue-17-dxf.geomap.json \
+            --layer TEST-NETWORK \
+            --source-crs EPSG:31982 \
+            --units metre \
+            --project-external-id dxf-fixture-project \
+            --project-name "DXF Fixture Project" \
+            --network-external-id dxf-fixture-network \
+            --network-name "DXF Fixture Network" \
+            --network-type stormwater \
+            --exported-at 2026-09-09T09:00:00Z \
+            --project-to-2d
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-17-dxf.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-dxf-import.sql
+
+      - name: Import and verify GeoMap SMALL contract
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-small-import.py \
+            /tmp/geomap-issue-15-small.geomap.json \
+            /tmp/geomap-issue-15-invalid.geomap.json
+
+          /usr/bin/time --verbose \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-issue-15-small.geomap.json
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-initial-import.sql
+
+      - name: Verify atomic and idempotent reimport
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          NETWORK_STATE_SQL="SELECT count(*)::text || '|' || md5(string_agg(id::text, ',' ORDER BY id)) FROM network_features WHERE network_id = (SELECT id FROM networks WHERE name = 'Drenagem Issue 15 SMALL');"
+          BEFORE_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-15-small.geomap.json
+
+          AFTER_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$BEFORE_REIMPORT" = "$AFTER_REIMPORT"
+
+          if dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-issue-15-invalid.geomap.json; then
+            echo "Invalid import unexpectedly succeeded"
+            exit 1
+          fi
+
+          AFTER_INVALID="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$AFTER_REIMPORT" = "$AFTER_INVALID"
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-initial-import.sql
+
+      - name: Verify import provenance
+        shell: bash
+        run: |
+          tests/integration/verify-network-imports.sh "Águas pluviais" 0.1 "Civil 3D" 31982 metre \
+            contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json 1 1
+          tests/integration/verify-network-imports.sh "Rede com cor do CAD" 0.2 "Civil 3D DXF" 31982 metre \
+            contracts/geomap/0.2/examples/valid-network-color.geomap.json 1 1
+          tests/integration/verify-network-imports.sh "Conexões (blocos)" 0.3 "Civil 3D DXF" 31982 metre \
+            contracts/geomap/0.3/examples/valid-block-points.geomap.json 1 2
+          tests/integration/verify-network-imports.sh "DXF Fixture Network" 0.1 "Civil 3D DXF" 31982 metre \
+            /tmp/geomap-issue-17-dxf.geomap.json 1 2
+          # SMALL: importação e reimportação válidas; a importação inválida não deixa linha.
+          tests/integration/verify-network-imports.sh "Drenagem Issue 15 SMALL" 0.1 "GeoMap integration test" 31982 metre \
+            /tmp/geomap-issue-15-small.geomap.json 2 1000
+
+      - name: Build dataset generator
+        run: |
+          dotnet restore tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj
+          dotnet build tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-restore
+
+      - name: Load and verify SMALL dataset
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --size small \
+            --seed 42 \
+            --batch-size 250
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=small -v expected_seed=42 -v expected_count=1000' \
+            < tests/integration/verify-dataset.sql
+
+      - name: Load and verify MEDIUM dataset
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          dotnet run \
+            --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --size medium \
+            --seed 4242 \
+            --batch-size 5000
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=medium -v expected_seed=4242 -v expected_count=100000' \
+            < tests/integration/verify-dataset.sql
+
+      - name: Load, analyze and verify LARGE dataset
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          /usr/bin/time --verbose \
+            dotnet run \
+              --project tools/importer/GeoMap.DatasetGenerator/GeoMap.DatasetGenerator.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --size large \
+              --seed 424242 \
+              --batch-size 10000
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ANALYZE network_features;"'
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_dataset=large -v expected_seed=424242 -v expected_count=1000000' \
+            < tests/integration/verify-dataset.sql
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-large-dataset-database.sql
+
+      - name: Verify API health
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:8080/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker compose logs api
+          exit 1
+
+      - name: Verify GeoAutoEngine export through the web pipeline
+        run: tests/integration/verify-geoautoengine-export-api.sh http://localhost:8080
+
+      - name: Seed and verify spatial query API
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/seed-spatial-query-fixtures.sql
+
+          tests/integration/verify-spatial-api.sh http://localhost:8080
+
+      - name: Verify vector tile API and MVT payload
+        run: tests/integration/verify-vector-tile-api.sh http://localhost:8080
+
+      - name: Verify project catalog API
+        run: tests/integration/verify-project-catalog-api.sh http://localhost:8080
+
+      - name: Verify project extent API
+        run: tests/integration/verify-project-extent-api.sh http://localhost:8080
+
+      - name: Verify project network catalog API
+        run: tests/integration/verify-network-catalog-api.sh http://localhost:8080
+
+      - name: Verify selected feature details API
+        run: tests/integration/verify-feature-details-api.sh http://localhost:8080
+
+      - name: Verify selected feature details with LARGE
+        run: tests/integration/verify-feature-details-large.sh http://localhost:8080
+
+      - name: Verify spatial query plans
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-spatial-query-plans.sql
+
+      - name: Verify LARGE vector tile plan
+        run: |
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < tests/integration/verify-vector-tile-plan.sql
+
+      - name: Benchmark spatial API and vector tiles with SMALL, MEDIUM and LARGE
+        shell: bash
+        run: |
+          SMALL_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=small -v expected_seed=42' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r SMALL_PROJECT_ID SMALL_NETWORK_ID <<< "$SMALL_IDS"
+
+          MEDIUM_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=medium -v expected_seed=4242' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r MEDIUM_PROJECT_ID MEDIUM_NETWORK_ID <<< "$MEDIUM_IDS"
+
+          LARGE_IDS="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -v expected_dataset=large -v expected_seed=424242' \
+            < tests/integration/get-dataset-ids.sql)"
+          IFS='|' read -r LARGE_PROJECT_ID LARGE_NETWORK_ID <<< "$LARGE_IDS"
+
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID" "$SMALL_NETWORK_ID"
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
+          tests/integration/benchmark-spatial-api.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
+
+          tests/integration/benchmark-vector-tile.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID" "$SMALL_NETWORK_ID"
+          tests/integration/benchmark-vector-tile.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID" "$MEDIUM_NETWORK_ID"
+          tests/integration/benchmark-vector-tile.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID" "$LARGE_NETWORK_ID"
+
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 small "$SMALL_PROJECT_ID"
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 medium "$MEDIUM_PROJECT_ID"
+          tests/integration/benchmark-project-extent.sh \
+            http://localhost:8080 large "$LARGE_PROJECT_ID"
+
+      - name: Import and verify streaming MEDIUM
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-medium.geomap.ndjson medium 100000
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-medium-invalid.geomap.ndjson medium 15001 15000
+
+          /usr/bin/time --verbose --output=/tmp/geomap-stream-medium.time \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-stream-medium.geomap.ndjson \
+              --batch-size 10000 \
+              > /tmp/geomap-stream-medium-summary.json \
+              2> /tmp/geomap-stream-medium-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-medium-summary.json \
+            /tmp/geomap-stream-medium-progress.ndjson \
+            100000 10 0
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_profile=medium -v expected_count=100000' \
+            < tests/integration/verify-streaming-import.sql
+
+          NETWORK_STATE_SQL="SELECT count(*)::text || '|' || md5(string_agg(id::text, ',' ORDER BY id)) FROM network_features WHERE network_id = (SELECT id FROM networks WHERE name = 'Drenagem Streaming MEDIUM');"
+          BEFORE_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+
+          dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-stream-medium.geomap.ndjson \
+            --batch-size 5000 \
+            > /tmp/geomap-stream-medium-reimport-summary.json \
+            2> /tmp/geomap-stream-medium-reimport-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-medium-reimport-summary.json \
+            /tmp/geomap-stream-medium-reimport-progress.ndjson \
+            100000 20 100000
+
+          AFTER_REIMPORT="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$BEFORE_REIMPORT" = "$AFTER_REIMPORT"
+
+          if dotnet run \
+            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --file /tmp/geomap-stream-medium-invalid.geomap.ndjson \
+            --batch-size 10000 \
+            > /tmp/geomap-stream-medium-invalid-summary.json \
+            2> /tmp/geomap-stream-medium-invalid-progress.ndjson; then
+            echo "Invalid streaming import unexpectedly succeeded"
+            exit 1
+          fi
+
+          python3 tests/integration/verify-streaming-failure.py \
+            /tmp/geomap-stream-medium-invalid-summary.json \
+            /tmp/geomap-stream-medium-invalid-progress.ndjson \
+            15001 10000
+
+          AFTER_INVALID="$(docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' \
+            sh "$NETWORK_STATE_SQL")"
+          test "$AFTER_REIMPORT" = "$AFTER_INVALID"
+          # Importação e reimportação; a falha depois de um lote em staging não deixa linha.
+          tests/integration/verify-network-imports.sh "Drenagem Streaming MEDIUM" 0.1 \
+            "GeoMap streaming integration test" 4326 degree \
+            /tmp/geomap-stream-medium.geomap.ndjson 2 100000
+          cat /tmp/geomap-stream-medium.time
+
+      - name: Import and verify streaming LARGE
+        shell: bash
+        env:
+          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
+        run: |
+          python3 tests/integration/generate-streaming-import.py \
+            /tmp/geomap-stream-large.geomap.ndjson large 1000000
+
+          /usr/bin/time --verbose --output=/tmp/geomap-stream-large.time \
+            dotnet run \
+              --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
+              --configuration Release \
+              --no-build \
+              -- \
+              --file /tmp/geomap-stream-large.geomap.ndjson \
+              --batch-size 25000 \
+              > /tmp/geomap-stream-large-summary.json \
+              2> /tmp/geomap-stream-large-progress.ndjson
+
+          python3 tests/integration/verify-streaming-output.py \
+            /tmp/geomap-stream-large-summary.json \
+            /tmp/geomap-stream-large-progress.ndjson \
+            1000000 40 0
+
+          docker compose exec -T database sh -ec \
+            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v expected_profile=large -v expected_count=1000000' \
+            < tests/integration/verify-streaming-import.sql
+
+          tests/integration/verify-network-imports.sh "Drenagem Streaming LARGE" 0.1 \
+            "GeoMap streaming integration test" 4326 degree \
+            /tmp/geomap-stream-large.geomap.ndjson 1 1000000
+
+          cat /tmp/geomap-stream-large.time
+
+      - name: Show streaming import diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          for summary in /tmp/geomap-stream-*-summary.json; do
+            [ -f "$summary" ] || continue
+            echo "::group::$summary"
+            cat "$summary"
+            echo "::endgroup::"
+          done
+          for progress in /tmp/geomap-stream-*-progress.ndjson; do
+            [ -f "$progress" ] || continue
+            echo "::group::$progress (últimas 20 linhas)"
+            tail -n 20 "$progress"
+            echo "::endgroup::"
+          done
+          echo "::group::database logs"
+          docker compose logs --tail 100 database || true
+          echo "::endgroup::"
+
+      - name: Clean up
+        if: always()
+        run: docker compose down --volumes

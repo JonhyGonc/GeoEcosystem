@@ -1,0 +1,35 @@
+{
+  "contractVersion": "0.1",
+  "sourceSystem": "Civil 3D",
+  "sourceCrs": "EPSG:31982",
+  "units": "metre",
+  "project": {
+    "externalId": "project-joinville-001",
+    "name": "Projeto Joinville"
+  },
+  "network": {
+    "externalId": "drainage-main",
+    "name": "Drenagem principal",
+    "type": "stormwater"
+  },
+  "exportedAt": "2026-09-08T14:00:00Z",
+  "features": [
+    {
+      "sourceId": "2A7F",
+      "sourceType": "Polyline",
+      "sourceLayer": "REDE-DRENAGEM",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [688100.25, 7086400.75],
+          [688112.50, 7086411.00]
+        ]
+      },
+      "properties": {
+        "diameter": 300,
+        "material": "PVC",
+        "active": true
+      }
+    }
+  ]
+}

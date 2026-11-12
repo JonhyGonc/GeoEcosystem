@@ -1,0 +1,47 @@
+{
+  "contractVersion": "0.3",
+  "sourceSystem": "Civil 3D DXF",
+  "sourceCrs": "EPSG:31982",
+  "units": "metre",
+  "project": {
+    "externalId": "project-block-example",
+    "name": "Projeto exemplo de blocos"
+  },
+  "network": {
+    "externalId": "network-block-example",
+    "name": "Conexões (blocos)",
+    "type": "water",
+    "color": "#00A0FF"
+  },
+  "exportedAt": "2026-11-10T12:00:00Z",
+  "features": [
+    {
+      "sourceId": "B10C1",
+      "sourceType": "BlockReference",
+      "sourceLayer": "CONEXOES",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [688100.25, 7086400.75]
+      },
+      "properties": {
+        "bloco": "TE",
+        "rotacao": 90
+      }
+    },
+    {
+      "sourceId": "B10C2",
+      "sourceType": "BlockReference",
+      "sourceLayer": "CONEXOES",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [688112.50, 7086411.00],
+          [688120.00, 7086415.50]
+        ]
+      },
+      "properties": {
+        "bloco": "REGISTRO"
+      }
+    }
+  ]
+}
