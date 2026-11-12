@@ -24,8 +24,17 @@
 | GAE `main` ou `feature/atualizar-textos-anomalias` | ⚠️ Inspeção OK; correções recusadas ("não conectado") ou corrida → falha falsa + espera de 5 min | ✅ Correções funcionam; ⚠️ Civil 3D espera de forma síncrona (até 5 min) enquanto o usuário revisa (hipótese alta) |
 | GAE `sync-section-names` | ⚠️ Igual à célula acima, sem bloquear a UI | ✅ Correções sem bloquear a UI |
 
+## Versões oficiais
+| Aplicação | Versão | Commit | Tag |
+|---|---|---|---|
+| GeoAutoEngine | 3.2.0 | `d762359` | `v3.2.0` (a criar pelo Chat 02) |
+| GeoAutoDocs | 1.1.0 | `64081d5` | `v1.1.0` (a criar pelo Chat 03) |
+
+Com as versões oficiais, a forma de identificar a build é a versão do arquivo (GAE: `FileVersion` da `GeoAutoEngine.Plugin.dll` = `3.2.0.0`; GAD: versão exibida pelo instalador/programa = `1.1.0`).
+
 ## Máquinas registradas
 | Máquina / desenhista | Data da verificação | Civil 3D | Build GAE | Build GAD | Evidência |
 |---|---|---|---|---|---|
-| Usuário (`JonhyGonc`) | 10/11/2026 | 2026 | `main@3acab63` + `feature/atualizar-textos-anomalias@1724528` | derivada da `fix/section-edit-save-stability` | `GEOAUTO3VIUPDATETEXTS` ✅, `GEOAUTO3VISYNC` ❌; pasta `Contents\2026` de 22/10/2026 09:07 (commit `1724528` de 09:01); janela de revisão presente |
+| Usuário (`JonhyGonc`) | 12/11/2026 | 2026 | **3.2.0** (`main@d762359`, homologada) | **1.1.0** (`main@64081d5`, homologada) | Homologação conjunta aprovada pelo usuário em 12/11/2026 09:46: roteiro `GAE_3.2.0_ROTEIRO.md`, passos 9–17 OK |
+| Usuário (`JonhyGonc`) — antes | 10/11/2026 | 2026 | `main@3acab63` + `feature/atualizar-textos-anomalias@1724528` | derivada da `fix/section-edit-save-stability` | situação anterior ao M1 |
 | Demais desenhistas | — | — | **desconhecida** (instalações em épocas diferentes) | **desconhecida** | — |
