@@ -1,0 +1,70 @@
+# Movido de apps/geoautodocs/.github/workflows/ci.yml no M2.3 (monorepo, DEC-ECO-0001).
+# Roda só quando apps/geoautodocs/** ou este arquivo mudam; os comandos rodam dentro de apps/geoautodocs.
+name: GeoAutoDocs — CI
+
+# CI permanente do GeoAutoDocs (M1.0 do roadmap GeoEcosystem).
+# Compila a solução e executa todos os testes em Release no Windows,
+# porque o aplicativo é WPF (net8.0-windows).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/geoautodocs/**"
+      - ".github/workflows/geoautodocs-ci.yml"
+  pull_request:
+    paths:
+      - "apps/geoautodocs/**"
+      - ".github/workflows/geoautodocs-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/geoautodocs
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build e testes (windows-latest, Release)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore GeoAutoDocs.sln
+
+      - name: Build
+        run: dotnet build GeoAutoDocs.sln --configuration Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test GeoAutoDocs.sln
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --logger "console;verbosity=normal"
+          --results-directory TestResults
+
+      - name: Publicar resultados dos testes
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-results
+          path: apps/geoautodocs/TestResults
+          if-no-files-found: warn

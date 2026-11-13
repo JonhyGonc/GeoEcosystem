@@ -2,17 +2,18 @@
 
 Repositório central de documentação e coordenação do ecossistema de engenharia e geoprocessamento:
 
-| Aplicação | Repositório | Papel |
-|---|---|---|
-| GeoMap | [`JonhyGonc/Geomap`](https://github.com/JonhyGonc/Geomap) | Visualização e gestão de redes geográficas (PostGIS, API, MVT, MapLibre) |
-| GeoAutoEngine | [`JonhyGonc/GeoAutoEngine`](https://github.com/JonhyGonc/GeoAutoEngine) | Plugin AutoCAD/Civil 3D: automação de desenho, estaqueamento, vídeo-inspeção no DWG, exportação GeoMap |
-| GeoAutoDocs | [`JonhyGonc/GeoAutoDocs`](https://github.com/JonhyGonc/GeoAutoDocs) | Desktop WPF: vídeo-inspeções, anomalias e relatórios técnicos |
+| Aplicação | Pasta | Papel | Repositório de origem (arquivado após o M2) |
+|---|---|---|---|
+| GeoMap | [`apps/geomap/`](apps/geomap/) | Visualização e gestão de redes geográficas (PostGIS, API, MVT, MapLibre) | `JonhyGonc/Geomap` |
+| GeoAutoEngine | [`apps/geoautoengine/`](apps/geoautoengine/) | Plugin AutoCAD/Civil 3D: automação de desenho, estaqueamento, vídeo-inspeção no DWG, exportação GeoMap | `JonhyGonc/GeoAutoEngine` |
+| GeoAutoDocs | [`apps/geoautodocs/`](apps/geoautodocs/) | Desktop WPF: vídeo-inspeções, anomalias e relatórios técnicos | `JonhyGonc/GeoAutoDocs` |
 
-Este repositório **não contém código das aplicações**. Ele é a única fonte da documentação **compartilhada** entre os três projetos: decisões entre projetos, registro de contratos, roadmap, status e auditorias. A documentação específica de cada aplicação continua no repositório dela.
+Desde o M2 ([DEC-ECO-0001](decisoes/DEC-ECO-0001-monorepo.md)) este é o **repositório único** do ecossistema: o código de cada aplicação fica em `apps/<aplicação>/` (com o histórico completo do repositório de origem) e a documentação **compartilhada** fica na raiz. A documentação específica de cada aplicação continua dentro da pasta dela. A CI de cada aplicação está em [`.github/workflows/`](.github/workflows/) e roda só quando a pasta dela muda.
 
 ## Mapa
 | Pasta | Conteúdo |
 |---|---|
+| [`apps/`](apps/) | Código das três aplicações |
 | [`governanca/`](governanca/) | Protocolo dos agentes, papéis e processo de PR |
 | [`decisoes/`](decisoes/) | Decisões entre projetos (`DEC-ECO-NNNN`) |
 | [`contratos/`](contratos/) | Registro de todos os contratos entre projetos e specs que não têm outro dono |

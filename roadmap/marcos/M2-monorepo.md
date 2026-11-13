@@ -14,9 +14,9 @@
 ## Passos
 | Passo | Dono | Entrega | Verificação | Estado |
 |---|---|---|---|---|
-| M2.1 | Chat 00 | DEC-ECO-0001 + Emenda 1 do protocolo + este plano | PR aprovado pelo usuário | 🔄 |
+| M2.1 | Chat 00 | DEC-ECO-0001 + Emenda 1 do protocolo + este plano | PR aprovado pelo usuário (GeoEcosystem#6) | ✅ |
 | M2.2 | Chat 01 | Varredura do histórico do GeoMap | Feita em `83259c2`: nenhuma credencial; itens de privacidade aceitos (12/11/2026). **Revarrer o delta** se a `main` do GeoMap mudar antes do M2.3 | ✅ |
-| M2.3 | Chat 00 | Congelamento anunciado → importação com histórico (`git subtree add --prefix=apps/<app>`, sem squash) numa branch → workflows movidos para `.github/workflows/<app>-*.yml` com `paths: apps/<app>/**` e `working-directory` → nenhuma mudança de código além de caminhos | `git diff <origem> HEAD:apps/<app>` vazio para cada app (exceto `.github/`); `git log -- apps/<app>` mostra o histórico | ⏳ |
+| M2.3 | Chat 00 | Congelamento anunciado → importação com histórico (`git subtree add --prefix=apps/<app>`, sem squash) numa branch → workflows movidos para `.github/workflows/<app>-*.yml` com `paths: apps/<app>/**` e `working-directory` → nenhuma mudança de código além de caminhos | `git diff <origem> HEAD:apps/<app>` vazio para cada app (exceto `.github/`); `git log -- apps/<app>` mostra o histórico | 🔄 congelamento confirmado pelos 3 chats em 12/11/2026; importado `Geomap@83259c2`, `GeoAutoEngine@71588ab`, `GeoAutoDocs@64081d5` — árvores idênticas às origens |
 | M2.4 | Chats 01–03 | Cada especialista valida a sua pasta: CI verde; scripts com caminho relativo funcionando | CI das três aplicações verde no PR; o usuário gera o bundle do GAE e o instalador do GAD a partir do monorepo | ⏳ |
 | M2.5 | Usuário | Merge; arquivar os 3 repositórios antigos (Settings → Archive) com aviso no README; tags novas com prefixo (`geoautoengine/v3.2.0`, `geoautodocs/v1.1.0`) | Repositórios antigos somente leitura; trabalho novo só no monorepo | ⏳ |
 

@@ -1,0 +1,35 @@
+{
+  "contractVersion": "0.2",
+  "sourceSystem": "Civil 3D DXF",
+  "sourceCrs": "EPSG:31982",
+  "units": "metre",
+  "project": {
+    "externalId": "project-color-example",
+    "name": "Projeto exemplo de cor"
+  },
+  "network": {
+    "externalId": "network-color-example",
+    "name": "Rede com cor do CAD",
+    "type": "water",
+    "color": "#ff7f00"
+  },
+  "exportedAt": "2026-11-10T12:00:00Z",
+  "features": [
+    {
+      "sourceId": "C0L0R",
+      "sourceType": "Polyline",
+      "sourceLayer": "RD_50_PVC",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [688100.25, 7086400.75],
+          [688112.50, 7086411.00]
+        ]
+      },
+      "properties": {
+        "diametroMm": 50,
+        "material": "PVC"
+      }
+    }
+  ]
+}
