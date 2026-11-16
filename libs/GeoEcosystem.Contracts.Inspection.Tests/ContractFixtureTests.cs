@@ -6,7 +6,7 @@ namespace GeoEcosystem.Contracts.Inspection.Tests;
 // de contratos/gadx-inspecao/fixtures (M3.2), inclusive as variantes 1.1.
 public sealed class ContractFixtureTests
 {
-    private static readonly string FixturesRoot = FindFixturesRoot();
+    private static readonly string FixturesRoot = FixtureFiles.Root;
 
     public static TheoryData<string, int, int> Fixtures()
     {
@@ -128,25 +128,7 @@ public sealed class ContractFixtureTests
         JsonAssert.Equivalent(Payload("inspection-push"), InspectionPipeProtocol.SerializePayload(document));
     }
 
-    private static byte[] Payload(string name) => File.ReadAllBytes(Path.Combine(FixturesRoot, "json", $"{name}.json"));
+    private static byte[] Payload(string name) => FixtureFiles.Payload(name);
 
-    private static string FramePath(string name) => Path.Combine(FixturesRoot, "frames", $"{name}.bin");
-
-    private static string FindFixturesRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            var candidate = Path.Combine(directory.FullName, "contratos", "gadx-inspecao", "fixtures");
-            if (File.Exists(Path.Combine(candidate, "manifest.json")))
-            {
-                return candidate;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new InvalidOperationException(
-            "Fixtures do GADX não encontradas: rode os testes a partir de um clone do monorepo GeoEcosystem.");
-    }
+    private static string FramePath(string name) => FixtureFiles.FramePath(name);
 }

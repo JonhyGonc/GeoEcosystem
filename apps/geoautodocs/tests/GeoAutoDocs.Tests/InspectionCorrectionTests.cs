@@ -69,12 +69,12 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         await _store.SaveAsync(project);
 
         var service = new InspectionCorrectionService();
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
@@ -117,12 +117,12 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         var original = occurrence.EffectiveDescription;
 
         var service = new InspectionCorrectionService();
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
@@ -163,12 +163,12 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         var editedText = "Texto técnico revisado pelo operador.";
 
         var service = new InspectionCorrectionService();
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
@@ -209,7 +209,7 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         }
         """;
 
-        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPackage>(
+        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPush>(
             Encoding.UTF8.GetBytes(json));
         var correction = Assert.Single(package.Corrections);
         Assert.True(correction.HasMeterage);
@@ -260,12 +260,12 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         ];
 
         var service = new InspectionCorrectionService();
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = occurrence.InspectionSectionId,
                     OccurrenceId = occurrence.Id,
@@ -302,12 +302,12 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         var (project, report, section, occurrence) = NewProject(OccurrenceLocationMode.Point);
         var service = new InspectionCorrectionService();
 
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
@@ -334,18 +334,18 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         var missingId = Guid.NewGuid();
         var service = new InspectionCorrectionService();
 
-        var plan = service.Prepare(project, new InspectionCorrectionPackage
+        var plan = service.Prepare(project, new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
                     Description = "TEXTO CORRIGIDO"
                 },
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = missingId,
@@ -381,7 +381,7 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
         }
         """;
 
-        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPackage>(
+        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPush>(
             Encoding.UTF8.GetBytes(json));
         var correction = Assert.Single(package.Corrections);
 
@@ -396,18 +396,18 @@ public sealed class InspectionCorrectionTests : IAsyncLifetime
     public void DuplicateOccurrenceCorrectionsAreRejected()
     {
         var (project, report, section, occurrence) = NewProject();
-        var package = new InspectionCorrectionPackage
+        var package = new InspectionCorrectionPush
         {
             ReportId = report.Id,
             Corrections =
             [
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,
                     Meterage = 2m
                 },
-                new InspectionCorrection
+                new InspectionOccurrenceCorrection
                 {
                     SectionId = section.Id,
                     OccurrenceId = occurrence.Id,

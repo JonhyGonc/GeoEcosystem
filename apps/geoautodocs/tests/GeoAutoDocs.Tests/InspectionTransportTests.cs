@@ -216,12 +216,12 @@ public sealed class InspectionTransportTests : IDisposable
                     Message = "Inspeção recebida."
                 }));
 
-            var correction = new InspectionCorrectionPackage
+            var correction = new InspectionCorrectionPush
             {
                 ReportId = NewDocument().Report.ReportId,
                 Corrections =
                 [
-                    new InspectionCorrection
+                    new InspectionOccurrenceCorrection
                     {
                         SectionId = NewDocument().Sections[0].SectionId,
                         OccurrenceId = NewDocument().Sections[0].Occurrences[0].OccurrenceId,

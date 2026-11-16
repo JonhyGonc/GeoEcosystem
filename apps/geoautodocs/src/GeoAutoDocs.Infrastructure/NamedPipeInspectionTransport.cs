@@ -15,7 +15,7 @@ public sealed class NamedPipeInspectionTransport : IInspectionTransport, IInspec
     private readonly SemaphoreSlim _sendGate = new(1, 1);
     private readonly SemaphoreSlim _correctionSessionGate = new(1, 1);
     private readonly CancellationTokenSource _correctionLifetime = new();
-    private Func<InspectionCorrectionPackage, CancellationToken, Task<InspectionCorrectionAcknowledgement>>? _correctionHandler;
+    private Func<InspectionCorrectionPush, CancellationToken, Task<InspectionCorrectionAcknowledgement>>? _correctionHandler;
     private CorrectionSession? _correctionSession;
     private Task? _correctionReconnectTask;
     private bool _stopped;
@@ -158,7 +158,7 @@ public sealed class NamedPipeInspectionTransport : IInspectionTransport, IInspec
     }
 
     public void SetCorrectionHandler(
-        Func<InspectionCorrectionPackage, CancellationToken, Task<InspectionCorrectionAcknowledgement>> handler)
+        Func<InspectionCorrectionPush, CancellationToken, Task<InspectionCorrectionAcknowledgement>> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
         if (_stopped) throw new ObjectDisposedException(nameof(NamedPipeInspectionTransport));
@@ -405,7 +405,7 @@ public sealed class NamedPipeInspectionTransport : IInspectionTransport, IInspec
                 InspectionCorrectionAcknowledgement acknowledgement;
                 try
                 {
-                    var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPackage>(frame.Payload);
+                    var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPush>(frame.Payload);
                     var handler = _correctionHandler;
                     acknowledgement = handler is null
                         ? FailureAcknowledgement(package.Corrections?.Count ?? 0,

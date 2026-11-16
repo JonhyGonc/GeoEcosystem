@@ -8,40 +8,6 @@ public sealed record InspectionOccurrenceEdit(
     IReadOnlyList<decimal> MeteragePoints,
     string Description);
 
-public sealed class InspectionCorrectionPush
-{
-    public Guid ReportId { get; set; }
-    public DateTime GeneratedAtUtc { get; set; }
-    public IReadOnlyList<InspectionOccurrenceCorrection> Corrections { get; set; } = [];
-}
-
-public sealed class InspectionOccurrenceCorrection
-{
-    public Guid SectionId { get; set; }
-    public Guid OccurrenceId { get; set; }
-    public string LocationMode { get; set; } = string.Empty;
-    public decimal? Meterage { get; set; }
-    public decimal? EndMeterage { get; set; }
-    public IReadOnlyList<decimal> MeteragePoints { get; set; } = [];
-    public string Description { get; set; } = string.Empty;
-}
-
-public sealed class InspectionCorrectionAcknowledgement
-{
-    public bool Accepted { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public int RequestedCount { get; set; }
-    public int AppliedCount { get; set; }
-    public int RejectedCount { get; set; }
-    public IReadOnlyList<InspectionCorrectionItemAcknowledgement> Results { get; set; } = [];
-}
-
-public sealed class InspectionCorrectionItemAcknowledgement
-{
-    public Guid SectionId { get; set; }
-    public Guid OccurrenceId { get; set; }
-    public bool Applied { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-}
+// Os payloads das mensagens 6/7 (InspectionCorrectionPush, InspectionOccurrenceCorrection,
+// InspectionCorrectionAcknowledgement) ficam na biblioteca compartilhada do contrato
+// libs/GeoEcosystem.Contracts.Inspection (DEC-ECO-0002, M3.3b).

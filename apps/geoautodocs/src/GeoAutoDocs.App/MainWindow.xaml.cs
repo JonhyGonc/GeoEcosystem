@@ -2251,7 +2251,7 @@ public partial class MainWindow : Window
     private bool IsReadOnly => _sharedSession?.IsReadOnly == true;
 
     private Task<InspectionCorrectionAcknowledgement> ReceiveCorrectionsAsync(
-        InspectionCorrectionPackage package, CancellationToken cancellationToken)
+        InspectionCorrectionPush package, CancellationToken cancellationToken)
     {
         if (Dispatcher.CheckAccess())
             return ReviewAndApplyCorrectionsAsync(package, cancellationToken);
@@ -2262,7 +2262,7 @@ public partial class MainWindow : Window
     }
 
     private async Task<InspectionCorrectionAcknowledgement> ReviewAndApplyCorrectionsAsync(
-        InspectionCorrectionPackage package, CancellationToken cancellationToken)
+        InspectionCorrectionPush package, CancellationToken cancellationToken)
     {
         await _correctionReviewGate.WaitAsync(cancellationToken);
         try
@@ -2384,7 +2384,7 @@ public partial class MainWindow : Window
     }
 
     private static InspectionCorrectionAcknowledgement CorrectionFailure(
-        InspectionCorrectionPackage package, string message) => new()
+        InspectionCorrectionPush package, string message) => new()
     {
         Accepted = false,
         Status = "Failure",
