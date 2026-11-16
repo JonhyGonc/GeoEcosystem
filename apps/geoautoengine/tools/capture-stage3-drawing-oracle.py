@@ -12,9 +12,21 @@ import sys
 from pathlib import Path
 
 
-WORKSPACE = Path(__file__).resolve().parents[2]
-LEGACY = WORKSPACE / "GeoAutoEngine.Legacy"
-REFERENCE = WORKSPACE / "reference"
+def _find_external(name: str) -> Path:
+    """Find a folder kept outside the repository (never versioned).
+
+    It used to sit next to the clone; in the GeoEcosystem monorepo it can be in
+    apps/, in the monorepo root or next to the clone, so search upward.
+    """
+    application_root = Path(__file__).resolve().parents[1]
+    for directory in application_root.parents:
+        candidate = directory / name
+        if candidate.is_dir():
+            return candidate
+    raise SystemExit(f"External folder '{name}' not found in any parent folder of {application_root}.")
+
+LEGACY = _find_external("GeoAutoEngine.Legacy")
+REFERENCE = _find_external("reference")
 sys.path.insert(0, str(LEGACY))
 
 from app.config.cad_text_config import (  # noqa: E402

@@ -2,6 +2,13 @@
 
 Estas regras valem para qualquer IA ou pessoa que altere este repositório.
 
+## Monorepo
+
+- O GeoMap está na pasta `apps/geomap` do repositório `JonhyGonc/GeoEcosystem`. As regras deste arquivo valem dentro dessa pasta; as regras do ecossistema ficam em `governanca/PROTOCOLO.md`, na raiz.
+- Rode build, testes, `docker compose` e as ferramentas a partir de `apps/geomap`. O frontend fica em `apps/geomap/apps/web`.
+- A CI fica na raiz: `.github/workflows/geomap-backend-ci.yml` e `.github/workflows/geomap-frontend-ci.yml`.
+- "Issue atual" é uma Issue do GeoEcosystem. Números `#NN` citados nos documentos antigos são do repositório `JonhyGonc/Geomap`, arquivado.
+
 ## Antes de alterar código
 
 1. Leia docs/PRODUCT.md.

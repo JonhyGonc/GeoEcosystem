@@ -16,14 +16,19 @@ Quem só vai instalar o GeoAutoDocs não precisa de nenhum desses itens: a publi
 
 ## 1. Obter o código da versão
 
+O GeoAutoDocs fica na pasta `apps/geoautodocs` do monorepo [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem). Todos os comandos deste guia rodam **a partir dessa pasta**:
+
 ```powershell
-git clone https://github.com/JonhyGonc/GeoAutoDocs.git
-cd GeoAutoDocs
+git clone https://github.com/JonhyGonc/GeoEcosystem.git
+cd GeoEcosystem
 git checkout main
 git pull
+cd apps\geoautodocs
 ```
 
-Para gerar uma versão já marcada, troque `main` pela tag, por exemplo `git checkout v1.1.0`.
+Se já tiver o clone, basta `git checkout main` e `git pull` na raiz e depois `cd apps\geoautodocs`.
+
+Para gerar uma versão já marcada, troque `main` pela tag com o prefixo da aplicação, por exemplo `git checkout geoautodocs/v1.1.0`. As tags `vX.Y.Z` sem prefixo são do repositório antigo `JonhyGonc/GeoAutoDocs`, arquivado.
 
 ## 2. Conferir build e testes (recomendado)
 
@@ -39,7 +44,7 @@ Todos os testes devem passar. A CI do GitHub executa o mesmo comando em cada pul
 dotnet publish src/GeoAutoDocs.App/GeoAutoDocs.App.csproj -p:PublishProfile=Windows-x64
 ```
 
-A pasta final será `artifacts/GeoAutoDocs-win-x64`. Ela pode ser distribuída inteira e executada por `GeoAutoDocs.App.exe`, sem instalador.
+A pasta final será `apps/geoautodocs/artifacts/GeoAutoDocs-win-x64`. Ela pode ser distribuída inteira e executada por `GeoAutoDocs.App.exe`, sem instalador.
 
 ## 4. Gerar o instalador
 
@@ -53,7 +58,7 @@ Execute o comando que corresponder ao local onde o Inno Setup foi instalado:
 & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\GeoAutoDocs.iss
 ```
 
-O instalador será criado em `artifacts/installer/GeoAutoDocs-Setup-<versão>-x64.exe`.
+O instalador será criado em `apps/geoautodocs/artifacts/installer/GeoAutoDocs-Setup-<versão>-x64.exe`.
 
 ## 5. Instalar ou atualizar
 
@@ -68,4 +73,4 @@ O instalador será criado em `artifacts/installer/GeoAutoDocs-Setup-<versão>-x6
 1. PR alterando a versão nos dois arquivos acima.
 2. Merge com CI verde.
 3. Geração do instalador (passos 1–4) e homologação.
-4. Só depois da homologação, criar a tag `vX.Y.Z` no commit homologado.
+4. Só depois da homologação, criar a tag `geoautodocs/vX.Y.Z` no commit homologado (o prefixo separa as tags das três aplicações do monorepo).

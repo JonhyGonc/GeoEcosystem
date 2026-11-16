@@ -2,7 +2,7 @@
 
 O GeoAutoDocs e o GeoAutoEngine (plugin do Civil 3D) **não** compartilham banco de dados. Eles se integram por dois canais locais e pelos GUIDs do GeoAutoDocs.
 
-> O contrato está definido em código nos **dois** repositórios: `InspectionPipeProtocol.cs` e `InspectionExchange.cs` aqui, e `src/GeoAutoEngine.Application/VideoInspection/*` lá. Qualquer mudança precisa ser coordenada no [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem). A versão e a negociação de capacidades do contrato são tratadas no marco M3.
+> O contrato está definido em código nas **duas** aplicações do monorepo: `InspectionPipeProtocol.cs` e `InspectionExchange.cs` em `apps/geoautodocs`, e `src/GeoAutoEngine.Application/VideoInspection/*` em `apps/geoautoengine`. Qualquer mudança precisa ser coordenada no GeoEcosystem (`contratos/gadx-inspecao/`). A versão e a negociação de capacidades do contrato são tratadas no marco M3.
 
 ## 1. Named Pipe `GeoAutoEngine.Inspection`
 

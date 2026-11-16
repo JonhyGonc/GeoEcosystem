@@ -8,7 +8,6 @@ param(
 )
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$workspaceRoot = Split-Path -Parent $repositoryRoot
 $dotnet = Join-Path $repositoryRoot ".dotnet\dotnet.exe"
 $testProject = Join-Path $repositoryRoot "tests\GeoAutoEngine.Tests\GeoAutoEngine.Tests.csproj"
 $solution = Join-Path $repositoryRoot "GeoAutoEngine.sln"
@@ -51,12 +50,34 @@ function Invoke-DotNetRegression {
     }
 }
 
+# The legacy system lives outside the repository (never versioned). It used to sit
+# next to the clone; in the GeoEcosystem monorepo it can be in apps\, in the
+# monorepo root or next to the clone, so search upward from the parent folder.
+function Find-ExternalDirectory {
+    param([string]$Name)
+    $directory = Split-Path -Parent $repositoryRoot
+    while ($directory) {
+        $candidate = Join-Path $directory $Name
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            return $candidate
+        }
+        $directory = Split-Path -Parent $directory
+    }
+    throw "External folder '$Name' not found in any parent folder of $repositoryRoot."
+}
+
+function Invoke-LegacySuite {
+    param([string]$LegacySuite)
+    $legacyRoot = Find-ExternalDirectory "GeoAutoEngine.Legacy"
+    Invoke-Checked { & (Join-Path $legacyRoot "scripts\test_suites.ps1") -Suite $LegacySuite }
+}
+
 function Invoke-Legacy {
-    Invoke-Checked { & (Join-Path $workspaceRoot "GeoAutoEngine.Legacy\scripts\test_suites.ps1") -Suite legacy }
+    Invoke-LegacySuite "legacy"
 }
 
 function Invoke-LegacyFull {
-    Invoke-Checked { & (Join-Path $workspaceRoot "GeoAutoEngine.Legacy\scripts\test_suites.ps1") -Suite full }
+    Invoke-LegacySuite "full"
 }
 
 function Invoke-Cad {

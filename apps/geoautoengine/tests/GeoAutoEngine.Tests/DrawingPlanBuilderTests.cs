@@ -325,14 +325,15 @@ public sealed class DrawingPlanBuilderTests
     }
 
     [Fact]
-    [Trait("Category", "EXTERNAL")]
     [Trait("Category", "FAST")]
     public async Task Stage4CadSmokeFixture_ProducesFourFixedAndThreeGeometryPendingItems()
     {
+        // The fixture is versioned in samples/; it no longer depends on the external reference folder.
+        var repository = FindRepositoryRoot();
         var batch = await new ImportBatchService(new CsvSourceImporter(), new SpatialDuplicateDetector())
             .ImportAsync(CsvImportSources.FromFiles([
-                ReferenceFile("..", "GeoAutoEngine3", "samples", "stage4_cad_smoke_day1.csv"),
-                ReferenceFile("..", "GeoAutoEngine3", "samples", "stage4_cad_smoke_day2.csv"),
+                Path.Combine(repository, "samples", "stage4_cad_smoke_day1.csv"),
+                Path.Combine(repository, "samples", "stage4_cad_smoke_day2.csv"),
             ]));
 
         var plan = new DrawingPlanBuilder().Build(batch);
@@ -525,6 +526,18 @@ public sealed class DrawingPlanBuilderTests
                 originalCode: spec.Code,
                 normalizedCode: spec.Code))).ToArray();
         return ImportBatch.Create(BatchId.New(), [source], records, [], [], []);
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "GeoAutoEngine.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName
+            ?? throw new InvalidOperationException("Could not locate the GeoAutoEngine repository root.");
     }
 
     private static string ReferenceFile(params string[] parts)

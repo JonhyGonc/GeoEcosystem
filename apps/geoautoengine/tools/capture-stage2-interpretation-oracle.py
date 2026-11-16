@@ -8,9 +8,21 @@ from pathlib import Path
 from typing import Any
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-LEGACY_ROOT = REPOSITORY_ROOT / "GeoAutoEngine.Legacy"
-REFERENCE_ROOT = REPOSITORY_ROOT / "reference"
+def _find_external(name: str) -> Path:
+    """Find a folder kept outside the repository (never versioned).
+
+    It used to sit next to the clone; in the GeoEcosystem monorepo it can be in
+    apps/, in the monorepo root or next to the clone, so search upward.
+    """
+    application_root = Path(__file__).resolve().parents[1]
+    for directory in application_root.parents:
+        candidate = directory / name
+        if candidate.is_dir():
+            return candidate
+    raise SystemExit(f"External folder '{name}' not found in any parent folder of {application_root}.")
+
+LEGACY_ROOT = _find_external("GeoAutoEngine.Legacy")
+REFERENCE_ROOT = _find_external("reference")
 sys.path.insert(0, str(LEGACY_ROOT))
 
 from app.services.pipeline_service import ProcessingPipeline  # noqa: E402

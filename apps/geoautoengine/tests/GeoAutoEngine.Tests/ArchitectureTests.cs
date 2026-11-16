@@ -218,8 +218,7 @@ public sealed class ArchitectureTests
         var ribbon = File.ReadAllText(Path.Combine(pluginRoot, "GeoAutoEngineUi.cs"));
         var pluginLogo = File.ReadAllBytes(Path.Combine(pluginRoot, "Assets", "logo_icone.png"));
         var legacyLogo = File.ReadAllBytes(Path.Combine(
-            Directory.GetParent(RepositoryRoot)!.FullName,
-            "GeoAutoEngine.Legacy",
+            FindExternalDirectory("GeoAutoEngine.Legacy"),
             "assets",
             "branding",
             "logo_icone.png"));
@@ -490,5 +489,22 @@ public sealed class ArchitectureTests
 
         return directory?.FullName
             ?? throw new InvalidOperationException("Could not locate the GeoAutoEngine repository root.");
+    }
+
+    // Folders kept outside the repository (never versioned) used to sit next to the clone.
+    // In the GeoEcosystem monorepo they can be in apps/, in the monorepo root or next to
+    // the clone, so search upward from the parent of the application folder.
+    private static string FindExternalDirectory(string name)
+    {
+        var directory = Directory.GetParent(RepositoryRoot);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, name)))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory is not null
+            ? Path.Combine(directory.FullName, name)
+            : throw new DirectoryNotFoundException(
+                $"External folder '{name}' not found in any parent folder of {RepositoryRoot}.");
     }
 }

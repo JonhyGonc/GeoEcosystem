@@ -1,11 +1,13 @@
 # Estado atual
 
-**Atualizado em:** 16/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
+**Atualizado em:** 16/11/2026 (sessão da manhã), pelo agente (Claude). Atualize ao fim de cada sessão.
 
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
 - **M2 — Monorepo:** quase concluído. As três aplicações estão em `apps/` com histórico (PR #7, mesclado em 13/11/2026), com CI 6/6 verde.
 - **Governança:** um único agente (Emenda 2, 16/11/2026).
+- **Próximo passo:** CI + roteiro + merge do PR #10 → M2.5 (usuário) → M3.1 (spec GADX v1.1 + `DEC-ECO-0002`).
+- **Sessão de 16/11/2026:** ajustes pós-monorepo das três aplicações no [PR #10](https://github.com/JonhyGonc/GeoEcosystem/pull/10), aguardando CI, roteiro manual e merge do usuário.
 
 ## Pendências do usuário
 1. Criar as tags no monorepo (o agente não consegue enviar tags):
@@ -19,12 +21,15 @@
 2. Arquivar `JonhyGonc/Geomap`, `JonhyGonc/GeoAutoEngine` e `JonhyGonc/GeoAutoDocs` (Settings → General → Danger Zone → Archive).
 3. Instalar na equipe (sem pressa): GeoAutoDocs 1.1.0 em todos; GeoAutoEngine 3.2.0 só em quem tem Civil 3D 2026.
 
-## Ajustes pós-monorepo (pequenos, só documentação e scripts locais)
-| App | O que fazer | Origem |
-|---|---|---|
-| GeoMap | README/AGENTS.md: comandos rodam a partir de `apps/geomap`; workflows agora na raiz; nota de que `#NN` antigos são do repositório `Geomap` arquivado; restos de "v0.1"; link de Issues em `docs/BACKLOG.md` | Validação M2.4 (Chat 01) |
-| GeoAutoEngine | Testes `EXTERNAL`, `scripts/test.ps1 -Suite legacy/full`, `update-reference-manifest.ps1` e `capture-*.py`: procurar `reference/` e `GeoAutoEngine.Legacy/` subindo pastas; README do app; `Stage4CadSmokeFixture` (Issue #19 do repositório antigo) | Validação M2.4 (Chat 02) |
-| GeoAutoDocs | README (#L5, #L44, "Como contribuir"), `DISTRIBUICAO.md` (#L20–26: clone/cd/tag), `docs/INTEGRACAO_GEOAUTOENGINE.md` (#L5) | Validação M2.4 (Chat 03) |
+## Ajustes pós-monorepo → PR #10
+Feitos no [PR #10](https://github.com/JonhyGonc/GeoEcosystem/pull/10) (aberto; não mesclado):
+- **GeoMap:** README/AGENTS.md (comandos em `apps/geomap`, CI na raiz, `#NN` antigos), contrato v0.1–v0.3 no README, links em `docs/BACKLOG.md` e `docs/CIVIL3D_EXPORTER.md`.
+- **GeoAutoDocs:** README, `DISTRIBUICAO.md` (clone do monorepo, `cd apps\geoautodocs`, tags `geoautodocs/vX.Y.Z`), `docs/INTEGRACAO_GEOAUTOENGINE.md`.
+- **GeoAutoEngine:** `scripts/test.ps1`, `tools/update-reference-manifest.ps1`, `tools/capture-*.py` e o teste do logo legado procuram `reference/` e `GeoAutoEngine.Legacy/` subindo pastas; `Stage4CadSmokeFixture` lê `samples/` e passou a rodar na CI; README e `docs/INSTALACAO_EQUIPE.md`.
+
+Falta: CI verde do PR #10, o usuário rodar o roteiro manual do PR e fazer o merge.
+
+Para depois (fora do PR #10): `governanca/PROCESSO_PR.md` e `.github/PULL_REQUEST_TEMPLATE.md` ainda falam em `APROVADO-CHAT-00` (anterior à Emenda 2).
 
 ## Próximo marco: M3 — Contrato GADX estável
 Ver `roadmap/ROADMAP.md`, seção M3:

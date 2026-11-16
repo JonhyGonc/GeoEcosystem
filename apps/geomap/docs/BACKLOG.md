@@ -29,7 +29,7 @@ Objetivo: uma rede originalmente proveniente do Civil 3D pode ser armazenada no 
 | 17 | Teste com rede real | #10, #16 | posicionamento real validado |
 | 18 | Exportador Civil 3D — Polyline | #14, #17 | Polyline gera contrato GeoMap |
 
-Esta tabela é o plano original do Protótipo 0.1 e cobre só as Issues #1 a #18. As Issues seguintes e o estado atual ficam nas [Issues do repositório](https://github.com/JonhyGonc/Geomap/issues); as prioridades entre os projetos do ecossistema ficam no [roadmap do GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem/blob/main/roadmap/ROADMAP.md).
+Esta tabela é o plano original do Protótipo 0.1 e cobre só as Issues #1 a #18. As Issues seguintes até a #57 ficam no [repositório antigo `Geomap`](https://github.com/JonhyGonc/Geomap/issues), arquivado (somente leitura). Desde a mudança para o monorepo, Issues novas e o estado atual ficam nas [Issues do GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem/issues); as prioridades entre os projetos do ecossistema ficam no [roadmap do GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem/blob/main/roadmap/ROADMAP.md).
 
 ## Fases
 
