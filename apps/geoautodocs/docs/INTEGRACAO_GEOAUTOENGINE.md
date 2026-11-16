@@ -28,11 +28,13 @@ O GeoAutoDocs e o GeoAutoEngine (plugin do Civil 3D) **não** compartilham banco
 | 7 | `CorrectionAck` (aplicadas/rejeitadas) | GeoAutoDocs → GeoAutoEngine |
 
 - **Fluxo:**
-  1. O GeoAutoDocs conecta (timeout de 1,5 s) e faz o handshake `Hello`/`HelloAck`.
+  1. O GeoAutoDocs conecta (timeout de 1,5 s) e faz o handshake `Hello`/`HelloAck`. No `Hello`, ele envia a versão do produto e `capabilities: ["corrections"]` (GADX 1.1, desde o M3.4).
   2. Envia a inspeção e espera o `InspectionAck` (5 s).
   3. Mantém a conexão aberta para receber correções e reconecta automaticamente se ela cair.
   4. Cada `CorrectionPush` abre a janela **"Revisar correções do GeoAutoEngine"**. O usuário aplica ou cancela, e o GeoAutoDocs responde com `CorrectionAck`.
-- **Atenção:** uma mensagem de tipo desconhecido gera erro de leitura, e o handshake não negocia capacidades. Builds antigas do GeoAutoDocs (1.0.4 da `main` antiga) não conhecem os tipos 6 e 7.
+- **Capacidades (GADX 1.1):** o GeoAutoEngine com a regra nova (M3.3c) só envia correções a quem declarou `corrections`, ou a um GeoAutoDocs antigo que não declara nada (transição). Regras completas: [`contratos/gadx-inspecao/SPEC.md`](../../../contratos/gadx-inspecao/SPEC.md), §7.
+- **Atenção:** uma mensagem de tipo desconhecido gera erro de leitura. Builds antigas do GeoAutoDocs (1.0.4 da `main` antiga) não conhecem os tipos 6 e 7.
+- **`locationMode`:** sai sempre com um dos seis nomes canônicos (`OccurrenceLocationModeWire.ToWireName`), nunca com os aliases do enum (`SpecificMeterage`, `Interval`).
 
 ## 2. Arquivo `*.geoadocs.json`
 

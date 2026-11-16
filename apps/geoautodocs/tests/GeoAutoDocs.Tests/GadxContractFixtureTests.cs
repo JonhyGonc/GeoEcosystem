@@ -60,7 +60,38 @@ public sealed class GadxContractFixtureTests
     }
 
     [Fact]
-    public void Hello_LegacyFixtureIsExactlyWhatTheClientProducesToday()
+    public void Hello_ClientProducesTheV11FixtureDeclaringCorrections()
+    {
+        // Regra C1 da SPEC §7: o cliente que aceita correções declara "corrections".
+        var hello = NamedPipeInspectionTransport.CreateHello("1.2.0");
+
+        AssertJsonEquivalent(Payload("hello-1.1"), InspectionPipeProtocol.SerializePayload(hello));
+    }
+
+    [Fact]
+    public void LocationMode_EveryValueIsWrittenWithTheCanonicalName()
+    {
+        // SPEC §8: o GAE compara o nome exato; os aliases do enum não podem vazar para o fio.
+        string[] canonical = ["Point", "Range", "EntireSection", "NotApplicable", "MultiPoint", "From"];
+
+        Assert.All(Enum.GetValues<OccurrenceLocationMode>(), mode => Assert.Contains(mode.ToWireName(), canonical));
+        Assert.Equal("Point", OccurrenceLocationMode.SpecificMeterage.ToWireName());
+        Assert.Equal("Range", OccurrenceLocationMode.Interval.ToWireName());
+        Assert.Equal(canonical, canonical.Select(name => Enum.Parse<OccurrenceLocationMode>(name).ToWireName()));
+    }
+
+    [Fact]
+    public void ClientVersion_IsTheProductVersionWithoutBuildMetadata()
+    {
+        var version = InspectionClientVersion.Of(typeof(InspectionClientVersion).Assembly);
+
+        Assert.False(string.IsNullOrWhiteSpace(version));
+        Assert.DoesNotContain("+", version);
+        Assert.Equal("1.2.0", new NamedPipeInspectionTransport(_serializer, applicationVersion: "1.2.0").ApplicationVersion);
+    }
+
+    [Fact]
+    public void Hello_LegacyFixtureRoundTrips()
     {
         var hello = InspectionPipeProtocol.DeserializePayload<InspectionHello>(Payload("hello-1.0"));
 

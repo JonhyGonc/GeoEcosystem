@@ -47,6 +47,7 @@ public sealed class InspectionTransportTests : IDisposable
             Assert.Equal(InspectionPipeMessageType.Hello, hello.MessageType);
             var helloData = InspectionPipeProtocol.DeserializePayload<InspectionHello>(hello.Payload);
             Assert.Equal(InspectionExchangeSchema.CurrentVersion, helloData.InspectionSchemaVersion);
+            Assert.True(InspectionCapabilities.Declares(helloData.Capabilities, InspectionCapabilities.Corrections));
             await WriteHelloAckAsync(server, hello.RequestId);
             var push = await InspectionPipeProtocol.ReadFrameAsync(server);
             Assert.Equal(InspectionPipeMessageType.InspectionPush, push.MessageType);

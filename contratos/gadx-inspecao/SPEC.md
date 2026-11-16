@@ -1,6 +1,6 @@
 # GADX 1.1 + GeoAutoDocs.Inspection v1 — especificação **normativa**
 
-> **Estado:** normativa, em vigor desde 16/11/2026 (PR #13, [`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Implementação da seção 7 (`capabilities`): **servidor** (GAE) desde o M3.3c, por `InspectionCapabilities.ClientAcceptsCorrections`/`ServerCapabilitiesFor` da biblioteca `libs/GeoEcosystem.Contracts.Inspection`; **cliente** (GAD) no M3.4. O resto descreve o que o código já fazia em `main@85be834`. Fixtures de referência: [`fixtures/`](fixtures/README.md) (M3.2).
+> **Estado:** normativa, em vigor desde 16/11/2026 (PR #13, [`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Implementação da seção 7 (`capabilities`): **servidor** (GAE) desde o M3.3c, por `InspectionCapabilities.ClientAcceptsCorrections`/`ServerCapabilitiesFor` da biblioteca `libs/GeoEcosystem.Contracts.Inspection`; **cliente** (GAD) desde o M3.4 (`NamedPipeInspectionTransport.CreateHello`). O resto descreve o que o código já fazia em `main@85be834`. Fixtures de referência: [`fixtures/`](fixtures/README.md) (M3.2).
 >
 > As palavras **DEVE**, **NÃO DEVE** e **PODE** são obrigatórias no sentido usual de especificação. Onde o texto diz "hoje", é uma observação sobre o código, não uma regra.
 
@@ -82,7 +82,7 @@ A primeira mensagem de toda conexão **DEVE** ser um `Hello`. Qualquer outra rec
 | Campo | Tipo | Obrigatório | Regra |
 |---|---|---|---|
 | `application` | texto | sim | `"GeoAutoDocs"` |
-| `applicationVersion` | texto | sim | versão do cliente. Hoje é a versão do assembly `GeoAutoDocs.Infrastructure` (`1.0.0.0`), não a do produto; o M3.4 deve trocar pela do produto |
+| `applicationVersion` | texto | sim | versão do produto cliente (desde o M3.4; antes ia a versão do assembly `GeoAutoDocs.Infrastructure`, `1.0.0.0`) |
 | `protocolVersion` | inteiro | sim | `1` |
 | `inspectionSchemaVersion` | inteiro | sim | `1` |
 | `capabilities` | lista de texto | **não** (novo na 1.1) | capacidades que o cliente aceita (§7). Ausente = cliente 1.0 |
@@ -163,7 +163,7 @@ O GAE faz verificações adicionais de integridade de trecho e de ocorrência (`
 - o GAE compara o texto exato (`VideoInspectionSession.ParseLocationMode`), e qualquer outro valor vira `Unknown`, que não é desenhado;
 - na correção, o GAD aceita qualquer nome do seu enum sem diferenciar maiúsculas.
 
-O enum do GAD tem os aliases `SpecificMeterage` (= `Point`) e `Interval` (= `Range`). O M3.3 **DEVE** garantir, por teste, que a serialização produz os nomes canônicos.
+O enum do GAD tem os aliases `SpecificMeterage` (= `Point`) e `Interval` (= `Range`). Desde o M3.4, o GAD escreve o nome por um mapeamento explícito (`OccurrenceLocationModeWire.ToWireName`), coberto por teste.
 
 Os IDs são GUIDs gerados pelo GAD. O documento **não** tem coordenadas, CRS nem handle CAD.
 
@@ -252,7 +252,6 @@ Nenhuma combinação muda o comportamento atual. Instalação recomendada (M3.5)
 ## 12. Lacunas que continuam (fora do M3)
 - Pipe sem ACL explícita: qualquer processo do mesmo usuário pode se conectar.
 - No GAE, as correções pendentes ficam só em memória.
-- `applicationVersion` do GAD não é a versão do produto (corrigir no M3.4, §5.1).
 
 ## 13. Conformidade
 - **M3.2:** fixtures de referência em [`fixtures/`](fixtures/README.md), geradas por `ferramentas/gerar_fixtures.py`. Frames binários e JSON de cada mensagem, inclusive `Hello` com e sem `capabilities`, `HelloAck` com e sem `capabilities`, `CorrectionPush` com os modos `Point`, `Range` e `MultiPoint`, e um `CorrectionAck` `Partial`. Lidas pelos testes `GadxContractFixtureTests` das duas aplicações.
