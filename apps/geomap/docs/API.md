@@ -1,5 +1,25 @@
 # API GeoMap
 
+## Importação de arquivo (M4.5, DEC-033)
+
+~~~http
+POST /api/imports
+Content-Type: application/json
+
+<conteúdo do arquivo .geomap.json>
+~~~
+
+O corpo da requisição é o próprio `.geomap.json` (v0.1, v0.2 ou v0.3), com até 50 MiB. A rota usa o mesmo caminho do importador do terminal e responde com o mesmo resumo JSON: `success`, `received`, `imported`, `rejected`, `replaced`, `projectId`, `networkId`, `elapsedMilliseconds` e `errors` (`code`, `path`, `message`).
+
+| Situação | HTTP |
+|---|---|
+| Importado; reimportar a mesma rede substitui o conteúdo, sem duplicar | 200 |
+| Arquivo inválido: contrato (`GMC_*`), CRS desconhecido no PostGIS (`GMI_CRS_UNAVAILABLE`) ou corpo vazio (`GMI_FILE_INVALID`) | 400 |
+| Mais de 50 MiB (`GMC_LIMIT_EXCEEDED`) | 413 |
+| Falha no banco (`GMI_PERSISTENCE_FAILED`) | 500 |
+
+A rota não tem autenticação. Ela serve ao uso local e não pode ir para um servidor público sem login (DEC-033). O NDJSON continua só pelo importador do terminal.
+
 ## Catálogo de projetos
 
 ~~~http

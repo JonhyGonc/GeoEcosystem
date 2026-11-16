@@ -1,9 +1,11 @@
 using GeoMap.Api;
 using GeoMap.Api.FeatureDetails;
+using GeoMap.Api.Imports;
 using GeoMap.Api.Networks;
 using GeoMap.Api.Projects;
 using GeoMap.Api.SpatialQueries;
 using GeoMap.Api.VectorTiles;
+using GeoMap.Importer;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -31,6 +33,7 @@ builder.Services.AddScoped<ProjectCatalogQuery>();
 builder.Services.AddScoped<ProjectExtentQuery>();
 builder.Services.AddScoped<NetworkCatalogQuery>();
 builder.Services.AddScoped<FeatureDetailsQuery>();
+builder.Services.AddSingleton<IGeoMapImportStore, PostgresGeoMapImportStore>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -47,6 +50,7 @@ app.MapVectorTileEndpoints();
 app.MapProjectCatalogEndpoints();
 app.MapNetworkCatalogEndpoints();
 app.MapFeatureDetailsEndpoints();
+app.MapImportEndpoints();
 
 app.Run();
 

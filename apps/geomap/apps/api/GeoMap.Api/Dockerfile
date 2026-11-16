@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["apps/api/GeoMap.Api/GeoMap.Api.csproj", "apps/api/GeoMap.Api/"]
+COPY ["tools/importer/GeoMap.Importer/GeoMap.Importer.csproj", "tools/importer/GeoMap.Importer/"]
+COPY ["tools/importer/GeoMap.Contract/GeoMap.Contract.csproj", "tools/importer/GeoMap.Contract/"]
 RUN dotnet restore "apps/api/GeoMap.Api/GeoMap.Api.csproj"
 
 COPY . .

@@ -109,6 +109,60 @@
   cursor: default;
 }
 
+/* Importação pelo site (M4.5) */
+.import-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.import-panel__button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #cadde4;
+  border-radius: 7px;
+  color: #12364a;
+  background: #f6fafb;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.import-panel__button:hover:not(:disabled) {
+  border-color: #8fb6c4;
+  background: #edf6f8;
+}
+
+.import-panel__button:focus-visible {
+  outline: 3px solid rgb(45 122 151 / 28%);
+  outline-offset: 2px;
+}
+
+.import-panel__button:disabled {
+  color: #63808d;
+  cursor: progress;
+}
+
+.import-panel__results {
+  display: grid;
+  gap: 4px;
+  max-height: 160px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.import-panel__result--imported {
+  color: #1d6b45;
+}
+
+.import-panel__result--rejected {
+  color: #a3352a;
+}
+
 .project-selector select {
   width: 100%;
   min-height: 36px;

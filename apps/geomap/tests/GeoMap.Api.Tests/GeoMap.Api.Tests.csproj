@@ -23,4 +23,10 @@
     <ProjectReference Include="../../apps/api/GeoMap.Api/GeoMap.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="../../contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json;../../contracts/geomap/0.1/examples/invalid-crs.geomap.json"
+             Link="examples/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
