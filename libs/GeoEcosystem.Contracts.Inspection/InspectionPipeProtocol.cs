@@ -156,6 +156,28 @@ public static class InspectionCapabilities
     public static bool Declares(IEnumerable<string>? capabilities, string capability) =>
         capabilities is not null &&
         capabilities.Any(item => string.Equals(item, capability, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Regras S1 e S2 da SPEC §7: o servidor pode enviar <c>CorrectionPush</c> a um cliente que declarou
+    /// <see cref="Corrections"/> ou a um cliente 1.0, que não manda <c>capabilities</c> (transição
+    /// decidida pelo usuário em 16/11/2026: o GeoAutoDocs 1.1.0 aceita correções sem declará-las).
+    /// </summary>
+    public static bool ClientAcceptsCorrections(InspectionHello hello)
+    {
+        ArgumentNullException.ThrowIfNull(hello);
+        return hello.Capabilities is null || Declares(hello.Capabilities, Corrections);
+    }
+
+    /// <summary>Regra S3 da SPEC §7: capacidades que o servidor anuncia no <c>HelloAck</c> desta conexão.</summary>
+    public static IReadOnlyList<string> ServerCapabilitiesFor(InspectionHello hello)
+    {
+        if (ClientAcceptsCorrections(hello))
+        {
+            return [Corrections];
+        }
+
+        return [];
+    }
 }
 
 public sealed class InspectionHello
