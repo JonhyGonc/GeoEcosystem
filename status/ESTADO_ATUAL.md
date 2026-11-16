@@ -4,7 +4,7 @@
 
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
-- **M2 — Monorepo:** M2.1–M2.4 ✅. Os ajustes pós-monorepo (docs das 3 apps e scripts do GAE) entraram no PR #10, mesclado em 16/11/2026 depois do roteiro manual do usuário. Falta só o **M2.5** (usuário): tags e arquivamento.
+- **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
 - **M3 — Contrato GADX:**
   - M3.1 ✅: especificação normativa GADX 1.1 + `DEC-ECO-0002`, no PR #13, mesclado em 16/11/2026;
   - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
@@ -16,17 +16,8 @@
 - **Próximo passo:** merge do PR #16 → **M3.3c**: o servidor (GAE) lê `capabilities` e responde no `HelloAck` (regras S1–S3). É a primeira mudança de comportamento real do M3.
 
 ## Pendências do usuário
-1. Criar as tags no monorepo (o agente não consegue enviar tags). Conferido em 16/11/2026: ainda não existem.
-   ```
-   cd C:\Users\João\Desktop\GeoEcosystem
-   git checkout main
-   git pull
-   git tag -a geoautoengine/v3.2.0 d762359 -m "GeoAutoEngine 3.2.0 (M1)"
-   git tag -a geoautodocs/v1.1.0 64081d5 -m "GeoAutoDocs 1.1.0 (M1)"
-   git push origin geoautoengine/v3.2.0 geoautodocs/v1.1.0
-   ```
-2. Arquivar `JonhyGonc/Geomap`, `JonhyGonc/GeoAutoEngine` e `JonhyGonc/GeoAutoDocs` (Settings → General → Danger Zone → Archive).
-3. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
+1. Mesclar o PR #16 (M3.3b, já testado).
+2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
 - **Transição do GADX (S2):** um cliente sem `capabilities` (GAD 1.1.0) continua recebendo correções de um GAE novo. Decisão do usuário, registrada na `DEC-ECO-0002`.

@@ -27,13 +27,13 @@
 ## Versões oficiais
 | Aplicação | Versão | Commit | Tag |
 |---|---|---|---|
-| GeoAutoEngine | 3.2.0 | `d762359` | `v3.2.0` (a criar pelo Chat 02) |
-| GeoAutoDocs | 1.1.0 | `64081d5` | `v1.1.0` (a criar pelo Chat 03) |
+| GeoAutoEngine | 3.2.0 | `d762359` | `geoautoengine/v3.2.0` (monorepo, 16/11/2026) |
+| GeoAutoDocs | 1.1.0 | `64081d5` | `geoautodocs/v1.1.0` (monorepo, 16/11/2026) |
 
 Com as versões oficiais, a forma de identificar a build é a versão do arquivo (GAE: `FileVersion` da `GeoAutoEngine.Plugin.dll` = `3.2.0.0`; GAD: versão exibida pelo instalador/programa = `1.1.0`).
 
 ## Decisão de instalação (usuário, 12/11/2026)
-- **GeoAutoDocs 1.1.0:** instalar em todas as máquinas, pelo instalador da Release `v1.1.0`.
+- **GeoAutoDocs 1.1.0:** instalar em todas as máquinas, pelo instalador da Release `v1.1.0`. *(Adiado em 16/11/2026: a instalação na equipe fica para o fim do projeto, numa rodada única; ver `roadmap/ROADMAP.md`, M3.)*
 - **GeoAutoEngine 3.2.0:** só em máquinas com **Civil 3D 2026** (o único host homologado). Os desenhistas que usam 2024 ou 2025 passarão para o Civil 3D 2026 e recebem o 3.2.0 depois disso. Até lá, continuam com o GeoAutoEngine que já têm.
 - Os hosts 2024 e 2025 continuam no código, mas **não são compilados nem testados** para a 3.2.0.
 

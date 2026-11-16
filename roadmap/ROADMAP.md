@@ -5,7 +5,7 @@
 > | Marco | Estado |
 > |---|---|
 > | M1 — Versão oficial completa | ✅ concluído em 12/11/2026 ([marcos/M1](marcos/M1-versao-oficial.md)) |
-> | M2 — Monorepo | 🔄 M2.1–M2.4 concluídos; falta o M2.5 (tags e arquivamento, pelo usuário) ([marcos/M2](marcos/M2-monorepo.md)) |
+> | M2 — Monorepo | ✅ concluído em 16/11/2026 ([marcos/M2](marcos/M2-monorepo.md)) |
 > | M3 — Contrato GADX | 🔄 M3.1 ✅; M3.2 em revisão ([marcos/M3](marcos/M3-contrato-gadx.md)) |
 > | M4 — Exportador GAE → GeoMap | ⏳ |
 > | M5 — Anomalias no mapa | ⏳ |
