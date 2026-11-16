@@ -6,14 +6,15 @@ O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contra
 
 - entidades `Polyline` 2D (`LWPOLYLINE`), abertas ou fechadas;
 - blocos (`INSERT`) como pontos, numa rede separada (desde o M4.3c, ver "Blocos");
-- segmentos retos;
+- `LINE` e `ARC` (desde o M4.3d);
+- arcos (bulge) nas Polylines e o `ARC` viram trechos retos, com no máximo 5 mm de diferença (ver "Arcos");
 - até 10.000 Polylines por arquivo e 100.000 posições por feição;
 - código próprio de cada Polyline (`sourceId`), gravado no desenho (ver "Identidade das feições");
 - preservação de handle (atributo `cadHandle`), layer, quantidade de vértices, fechamento e elevação CAD;
 - coordenadas X/Y no CRS declarado pelo operador;
 - unidades `metre`, `foot`, `us-survey-foot` ou `degree`.
 
-`Polyline2d`, `Polyline3d`, Feature Line, Pipe Network, Pressure Network e Polylines com arcos (bulge) não são exportadas nesta versão. Quando a seleção contém geometria não suportada, o comando cancela o arquivo inteiro e informa o handle ou o tipo problemático.
+`Polyline2d`, `Polyline3d`, `SPLINE`, `CIRCLE`, Feature Line, Pipe Network e Pressure Network não são exportados (decisão do usuário no M4.3d: só LINE, ARC e arcos de Polyline). Quando a seleção contém geometria não suportada, o comando cancela o arquivo inteiro e informa o handle ou o tipo problemático.
 
 ## Como usar
 
@@ -60,6 +61,18 @@ Os blocos (tês, registros, caps, poços de visita) vão para o GeoMap como pont
 - **Ficam de fora**, com a contagem por motivo na linha de comando: blocos em layers de levantamento `_TG*`, o símbolo de ponto levantado `SIMB_PONTO`, blocos anônimos, referências externas (xref) e `MINSERT`.
 - **Posição:** o ponto é o ponto de inserção. Alguns blocos têm o desenho nas coordenadas reais e o ponto base em 0,0; neles, o ponto vai para o centro do símbolo, e `posicaoPeloSimbolo` fica verdadeiro. É a mesma regra da ponte DXF.
 - Um bloco fora do plano XY (normal diferente de Z) cancela a exportação.
+
+## Arcos (desde o M4.3d)
+
+O contrato GeoMap só tem linhas retas. Por isso cada arco vira uma sequência de trechos retos (tesselação).
+
+- **Precisão:** a maior distância entre o arco verdadeiro e os trechos retos é de **5 mm** (decisão do usuário). Em desenhos em pés, o limite é convertido para a mesma medida. Um arco de raio 10 m e 90° vira cerca de 25 trechos.
+- Os vértices originais continuam no arquivo, exatamente como no desenho; os pontos novos ficam só entre eles. `vertexCount` continua sendo a quantidade de vértices do CAD.
+- `arcosTesselados` informa quantos segmentos curvos a feição tinha. Ele só aparece quando há arco.
+- **ARC** vira uma linha (`sourceType` = `Arc`) do ponto inicial ao final, já com os trechos retos.
+- **LINE** vira uma linha de dois pontos (`sourceType` = `Line`), com a elevação de cada ponta em `cadStartElevation` e `cadEndElevation`, como na ponte DXF.
+- Uma Polyline ou ARC espelhado (normal -Z) é aceito, e o sentido do arco é corrigido. Um arco fora do plano XY cancela a exportação.
+- LINE e ARC também ganham o código próprio (`FEATURE_ID`).
 
 ## Política geométrica
 

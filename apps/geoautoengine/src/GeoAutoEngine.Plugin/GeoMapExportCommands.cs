@@ -219,13 +219,13 @@ public sealed class GeoMapExportCommands
     {
         var options = new PromptSelectionOptions
         {
-            MessageForAdding = "\nSelecione as Polylines 2D e os blocos da rede: ",
+            MessageForAdding = "\nSelecione as linhas (Polyline, LINE, ARC) e os blocos da rede: ",
             MessageForRemoval = "\nRemova entidades da seleção: ",
         };
-        // Blocos (INSERT) desde o M4.3c: viram pontos numa rede separada.
+        // Blocos (INSERT) desde o M4.3c: viram pontos numa rede separada. LINE e ARC desde o M4.3d.
         var filter = new SelectionFilter(
         [
-            new TypedValue((int)DxfCode.Start, "LWPOLYLINE,INSERT"),
+            new TypedValue((int)DxfCode.Start, "LWPOLYLINE,LINE,ARC,INSERT"),
         ]);
         var result = editor.GetSelection(options, filter);
         return result.Status == PromptStatus.OK ? result.Value.GetObjectIds() : null;

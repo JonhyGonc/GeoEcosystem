@@ -46,7 +46,7 @@ public static class GeoMapExportSerializer
                 request.NetworkType.Trim().ToLowerInvariant(),
                 request.NetworkColor),
             request.ExportedAt.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture),
-            request.Features.Select(CreateFeature).ToArray());
+            request.Features.Select(feature => CreateFeature(feature, request.Units)).ToArray());
 
         return JsonSerializer.Serialize(document, SerializerOptions);
     }
@@ -63,7 +63,7 @@ public static class GeoMapExportSerializer
         return request.NetworkColor is null ? ContractVersion : ContractVersionWithColor;
     }
 
-    private static FeatureDto CreateFeature(GeoMapExportFeature feature)
+    private static FeatureDto CreateFeature(GeoMapExportFeature feature, string units)
     {
         if (feature.Block is { } block)
         {
@@ -85,31 +85,46 @@ public static class GeoMapExportSerializer
                     block.PositionFromSymbol));
         }
 
-        var coordinates = feature.Vertices
-            .Select(vertex => new[] { vertex.X, vertex.Y })
-            .ToList();
-
-        if (feature.IsClosed && !SamePosition(coordinates[0], coordinates[coordinates.Count - 1]))
+        // Arcos viram trechos retos com no máximo 5 mm de diferença (M4.3d); sem arcos, as posições são os
+        // vértices, e a linha fechada repete o primeiro no fim.
+        var positions = GeoMapArcTessellation.Positions(
+            feature.Vertices,
+            feature.Bulges,
+            feature.IsClosed,
+            GeoMapArcTessellation.ToleranceFor(units));
+        if (positions.Count > MaximumVerticesPerFeature)
         {
-            coordinates.Add(new[] { coordinates[0][0], coordinates[0][1] });
+            throw new InvalidOperationException(
+                $"A {feature.EntityType} {feature.CadHandle} excede {MaximumVerticesPerFeature:N0} posições depois de trocar os arcos por trechos retos.");
         }
 
-        return new(
-            feature.SourceId,
-            "Polyline",
-            feature.SourceLayer,
-            new GeometryDto("LineString", coordinates),
-            new PropertiesDto(
+        var coordinates = positions.Select(position => new[] { position.X, position.Y }).ToList();
+        var arcs = feature.Bulges?.Take(feature.IsClosed ? feature.Vertices.Count : feature.Vertices.Count - 1)
+            .Count(GeoMapArcTessellation.IsArc) ?? 0;
+        object properties = feature.EntityType == GeoMapEntityTypes.Line
+            ? new LinePropertiesDto(
                 feature.CadHandle,
-                "Polyline",
+                feature.EntityType,
+                feature.Vertices.Count,
+                feature.Elevation,
+                feature.EndElevation ?? feature.Elevation,
+                feature.ProjectedTo2D)
+            : new PropertiesDto(
+                feature.CadHandle,
+                feature.EntityType,
                 feature.Vertices.Count,
                 feature.IsClosed,
                 feature.Elevation,
-                feature.ProjectedTo2D));
-    }
+                feature.ProjectedTo2D,
+                arcs == 0 ? null : arcs);
 
-    private static bool SamePosition(double[] left, double[] right) =>
-        left[0].Equals(right[0]) && left[1].Equals(right[1]);
+        return new(
+            feature.SourceId,
+            feature.EntityType,
+            feature.SourceLayer,
+            new GeometryDto("LineString", coordinates),
+            properties);
+    }
 
     private static void Validate(GeoMapExportRequest request)
     {
@@ -158,7 +173,7 @@ public static class GeoMapExportSerializer
         var identities = new HashSet<string>(StringComparer.Ordinal);
         foreach (var feature in request.Features)
         {
-            var kind = feature.Block is null ? "Polyline" : "bloco";
+            var kind = feature.Block is null ? feature.EntityType : "bloco";
             Required(feature.SourceId, 255, "O código da feição");
             Required(feature.CadHandle, 255, "O handle da feição");
             Required(feature.SourceLayer, 255, "O layer da feição");
@@ -176,22 +191,48 @@ public static class GeoMapExportSerializer
 
             if (feature.Vertices is null || feature.Vertices.Count < 2)
             {
-                throw new InvalidOperationException($"A Polyline {feature.CadHandle} precisa ter pelo menos dois vértices.");
+                throw new InvalidOperationException($"A {kind} {feature.CadHandle} precisa ter pelo menos dois vértices.");
             }
+
+            ValidateLine(feature);
 
             var exportedVertexCount = feature.Vertices.Count +
                 (feature.IsClosed && feature.Vertices[0] != feature.Vertices[feature.Vertices.Count - 1] ? 1 : 0);
             if (exportedVertexCount > MaximumVerticesPerFeature)
             {
                 throw new InvalidOperationException(
-                    $"A Polyline {feature.CadHandle} excede {MaximumVerticesPerFeature:N0} vértices no contrato v0.1.");
+                    $"A {kind} {feature.CadHandle} excede {MaximumVerticesPerFeature:N0} vértices no contrato GeoMap.");
             }
 
             if (!IsFinite(feature.Elevation) ||
                 feature.Vertices.Any(vertex => !IsFinite(vertex.X) || !IsFinite(vertex.Y)))
             {
-                throw new InvalidOperationException($"A Polyline {feature.CadHandle} contém coordenadas não finitas.");
+                throw new InvalidOperationException($"A {kind} {feature.CadHandle} contém coordenadas não finitas.");
             }
+        }
+    }
+
+    private static void ValidateLine(GeoMapExportFeature feature)
+    {
+        if (feature.EntityType is not (GeoMapEntityTypes.Polyline or GeoMapEntityTypes.Line or GeoMapEntityTypes.Arc))
+        {
+            throw new InvalidOperationException(
+                $"O tipo {feature.EntityType} ({feature.CadHandle}) não é exportado para o GeoMap.");
+        }
+
+        if (feature.EntityType == GeoMapEntityTypes.Line &&
+            (feature.Vertices.Count != 2 || feature.IsClosed || feature.Bulges is not null ||
+             feature.EndElevation is not { } end || !IsFinite(end)))
+        {
+            throw new InvalidOperationException(
+                $"A Line {feature.CadHandle} precisa ter dois pontos, sem arco, e as duas elevações.");
+        }
+
+        if (feature.Bulges is not null &&
+            (feature.Bulges.Count != feature.Vertices.Count || feature.Bulges.Any(bulge => !IsFinite(bulge))))
+        {
+            throw new InvalidOperationException(
+                $"A {feature.EntityType} {feature.CadHandle} precisa de um bulge finito por vértice.");
         }
     }
 
@@ -268,6 +309,16 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("vertexCount")] int VertexCount,
         [property: JsonPropertyName("closed")] bool Closed,
         [property: JsonPropertyName("cadElevation")] double CadElevation,
+        [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
+        [property: JsonPropertyName("arcosTesselados"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArcosTesselados);
+
+    // LINE: as mesmas propriedades da ponte DXF, com a elevação de cada ponta (M4.3d).
+    private sealed record LinePropertiesDto(
+        [property: JsonPropertyName("cadHandle")] string CadHandle,
+        [property: JsonPropertyName("cadEntityType")] string CadEntityType,
+        [property: JsonPropertyName("vertexCount")] int VertexCount,
+        [property: JsonPropertyName("cadStartElevation")] double CadStartElevation,
+        [property: JsonPropertyName("cadEndElevation")] double CadEndElevation,
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D);
 
     // Mesmas propriedades e ordem da ponte DXF (DEC-029 do GeoMap). Atributos de bloco: M4.3e.

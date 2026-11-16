@@ -159,6 +159,7 @@ public sealed class GeoMapExportTests
     [InlineData("polyline-export.geomap.json", "0.1", "valid-geoautoengine-polyline.geomap.json")]
     [InlineData("polyline-export-color.geomap.json", "0.2", "valid-geoautoengine-color.geomap.json")]
     [InlineData("block-export.geomap.json", "0.3", "valid-geoautoengine-blocks.geomap.json")]
+    [InlineData("curve-export.geomap.json", "0.1", "valid-geoautoengine-curves.geomap.json")]
     [Trait("Category", "FAST")]
     public void Samples_AreIdenticalToTheExamplesValidatedByGeoMap(string sample, string version, string example)
     {
@@ -322,6 +323,167 @@ public sealed class GeoMapExportTests
         Assert.Equal(
             "MINSERT=1; bloco anônimo=3",
             GeoMapBlockRules.Describe(new Dictionary<string, int> { ["bloco anônimo"] = 3, ["MINSERT"] = 1 }));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_CurvesAndLines_ProduceTheVersionedSample()
+    {
+        var arc = Math.Tan(Math.PI / 8);
+        var request = CreateRequest(
+            new GeoMapExportFeature(
+                "5a1d2c3e-4b5f-4c6d-8e7f-9a0b1c2d3e4f",
+                "2C01",
+                "GF-Rede Pluvial",
+                [new(688100, 7086400), new(688110, 7086400), new(688110, 7086410)],
+                false,
+                0,
+                false,
+                Bulges: [arc, 0, 0]),
+            new GeoMapExportFeature(
+                "6b2e3d4f-5c6a-4d7e-9f8a-0b1c2d3e4f5a",
+                "2C02",
+                "GF-Rede Pluvial",
+                [new(688120, 7086400), new(688130, 7086405)],
+                false,
+                1.5,
+                true,
+                EntityType: GeoMapEntityTypes.Line,
+                EndElevation: 2),
+            new GeoMapExportFeature(
+                "7c3f4e5a-6d7b-4e8f-a09b-1c2d3e4f5a6b",
+                "2C03",
+                "GF-Rede Pluvial",
+                [new(688210, 7086400), new(688200, 7086410)],
+                false,
+                0,
+                false,
+                Bulges: [GeoMapArcTessellation.ArcBulge(0, Math.PI / 2, false), 0],
+                EntityType: GeoMapEntityTypes.Arc));
+
+        using var actual = JsonDocument.Parse(GeoMapExportSerializer.Serialize(request));
+        using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            RepositoryRoot(), "samples", "geomap", "curve-export.geomap.json")));
+        // Os pontos dos arcos vêm de seno e cosseno: a comparação aceita diferença no último dígito.
+        AssertJsonEquivalent(expected.RootElement, actual.RootElement, "$");
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Tessellation_StaysWithinFiveMillimetresOfTheArc()
+    {
+        // Meia-volta de raio 50 m: o centro fica no meio da corda.
+        GeoMapCoordinate start = new(0, 0);
+        GeoMapCoordinate end = new(100, 0);
+        var tolerance = GeoMapArcTessellation.ToleranceFor("metre");
+
+        var points = GeoMapArcTessellation.InteriorPoints(start, end, 1, tolerance);
+        GeoMapCoordinate[] all = [start, .. points, end];
+
+        Assert.Equal(0.005, tolerance);
+        Assert.All(points, point => Assert.Equal(50, Math.Sqrt(((point.X - 50) * (point.X - 50)) + (point.Y * point.Y)), 6));
+        Assert.All(points, point => Assert.True(point.Y < 0, "bulge positivo: arco anti-horário, abaixo da corda"));
+        for (var index = 1; index < all.Length; index++)
+        {
+            var half = Math.Sqrt(Math.Pow(all[index].X - all[index - 1].X, 2) + Math.Pow(all[index].Y - all[index - 1].Y, 2)) / 2;
+            var sagitta = 50 - Math.Sqrt((50 * 50) - (half * half));
+            Assert.True(sagitta <= tolerance + 1e-9, $"flecha {sagitta} no trecho {index}");
+        }
+
+        Assert.Equal(points.Count, GeoMapArcTessellation.InteriorPoints(end, start, -1, tolerance).Count);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Tessellation_KeepsStraightLinesAndClosingAsBefore()
+    {
+        GeoMapCoordinate[] square = [new(0, 0), new(1, 0), new(1, 1), new(0, 1)];
+
+        Assert.Equal(
+            new GeoMapCoordinate[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1), new(0, 0) },
+            GeoMapArcTessellation.Positions(square, null, true, 0.005));
+        Assert.Equal(square, GeoMapArcTessellation.Positions(square, [0, 0, 0, 0], false, 0.005));
+        Assert.Equal(
+            new GeoMapCoordinate[] { new(0, 0), new(1, 0), new(0, 0) },
+            GeoMapArcTessellation.Positions([new(0, 0), new(1, 0), new(0, 0)], null, true, 0.005));
+        Assert.Empty(GeoMapArcTessellation.InteriorPoints(new(0, 0), new(0, 0), 1, 0.005));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Tessellation_ClosedPolylineWithArcEndsOnTheFirstVertex()
+    {
+        // Círculo feito com duas meias-voltas (como o AutoCAD desenha uma Polyline circular).
+        GeoMapCoordinate[] vertices = [new(0, 0), new(10, 0)];
+
+        var positions = GeoMapArcTessellation.Positions(vertices, [1, 1], true, 0.005);
+
+        Assert.Equal(vertices[0], positions[0]);
+        Assert.Equal(vertices[0], positions[^1]);
+        Assert.Contains(vertices[1], positions);
+        Assert.All(positions, point => Assert.Equal(5, Math.Sqrt(((point.X - 5) * (point.X - 5)) + (point.Y * point.Y)), 6));
+    }
+
+    [Theory]
+    [InlineData(0, Math.PI / 2, false, 0.41421356237309503)]
+    [InlineData(0, Math.PI / 2, true, -0.41421356237309503)]
+    [InlineData(3 * Math.PI / 2, Math.PI / 2, false, 1)]
+    [Trait("Category", "FAST")]
+    public void ArcBulge_IsAQuarterOfTheSweepAndFlipsWhenMirrored(double start, double end, bool down, double bulge)
+    {
+        Assert.Equal(bulge, GeoMapArcTessellation.ArcBulge(start, end, down), 12);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Tolerance_IsFiveMillimetresInTheDrawingUnit()
+    {
+        Assert.Equal(0.005 / 0.3048, GeoMapArcTessellation.ToleranceFor("foot"), 12);
+        Assert.Equal(0.005 * 3937 / 1200, GeoMapArcTessellation.ToleranceFor("us-survey-foot"), 12);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_LineWithoutEndElevation_IsRejected()
+    {
+        var line = SampleFeature() with { EntityType = GeoMapEntityTypes.Line };
+
+        var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(CreateRequest(line)));
+        Assert.Contains("duas elevações", error.Message, StringComparison.Ordinal);
+    }
+
+    private static void AssertJsonEquivalent(JsonElement expected, JsonElement actual, string path)
+    {
+        Assert.True(expected.ValueKind == actual.ValueKind, $"{path}: {expected.ValueKind} ≠ {actual.ValueKind}");
+        switch (expected.ValueKind)
+        {
+            case JsonValueKind.Object:
+                Assert.Equal(
+                    expected.EnumerateObject().Select(property => property.Name),
+                    actual.EnumerateObject().Select(property => property.Name));
+                foreach (var property in expected.EnumerateObject())
+                {
+                    AssertJsonEquivalent(property.Value, actual.GetProperty(property.Name), $"{path}.{property.Name}");
+                }
+
+                break;
+            case JsonValueKind.Array:
+                Assert.True(expected.GetArrayLength() == actual.GetArrayLength(), $"{path}: tamanho diferente");
+                for (var index = 0; index < expected.GetArrayLength(); index++)
+                {
+                    AssertJsonEquivalent(expected[index], actual[index], $"{path}[{index}]");
+                }
+
+                break;
+            case JsonValueKind.Number:
+                Assert.True(
+                    Math.Abs(expected.GetDouble() - actual.GetDouble()) <= 1e-6,
+                    $"{path}: {expected.GetDouble()} ≠ {actual.GetDouble()}");
+                break;
+            default:
+                Assert.Equal(expected.ToString(), actual.ToString());
+                break;
+        }
     }
 
     private static GeoMapExportFeature BlockFeature(
