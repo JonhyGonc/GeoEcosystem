@@ -2,7 +2,9 @@
 
 Aplicativo desktop para Windows de **gestão de vídeo-inspeção de redes**: organiza projetos, locais e trechos inspecionados, reproduz os vídeos, registra anomalias com capturas e evidências, revisa os dados e gera o relatório técnico em Word (`.docx`).
 
-Faz parte do ecossistema **GeoEcosystem**, junto com o [GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine), plugin do AutoCAD Civil 3D, e o GeoMap. A governança, o roadmap e os contratos entre os projetos ficam no repositório [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem).
+Faz parte do monorepo [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem), na pasta `apps/geoautodocs`, junto com o GeoAutoEngine (`apps/geoautoengine`, plugin do AutoCAD Civil 3D) e o GeoMap (`apps/geomap`). A governança, o roadmap e os contratos entre os projetos ficam na raiz do monorepo. Os comandos deste README rodam **a partir de `apps/geoautodocs`**.
+
+O repositório antigo `JonhyGonc/GeoAutoDocs` está arquivado (somente leitura); números de Issues e PRs antigos se referem a ele.
 
 ## Stack
 
@@ -41,7 +43,7 @@ dotnet test GeoAutoDocs.sln -c Release
 dotnet run --project src/GeoAutoDocs.App
 ```
 
-A [CI](.github/workflows/ci.yml) executa restore, build e testes em Release no `windows-latest` a cada pull request e a cada push na `main`.
+A [CI](../../.github/workflows/geoautodocs-ci.yml), na raiz do monorepo, executa restore, build e testes em Release no `windows-latest` a cada pull request e a cada push na `main` que mexam em `apps/geoautodocs`.
 
 Para publicar, gerar o instalador e instalar, veja **[DISTRIBUICAO.md](DISTRIBUICAO.md)**.
 
@@ -60,6 +62,7 @@ Os detalhes estão em [docs/INTEGRACAO_GEOAUTOENGINE.md](docs/INTEGRACAO_GEOAUTO
 
 ## Como contribuir
 
-- Uma mudança por branch e por pull request, com a CI verde antes do merge.
-- Mudanças de contrato com o GeoAutoEngine ou de escopo passam pela coordenação do GeoEcosystem.
+- Uma mudança por branch e por pull request no GeoEcosystem, com a CI verde antes do merge. Siga as regras de `governanca/PROTOCOLO.md` (na raiz do monorepo).
+- Issues novas vão para o [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem/issues).
+- Mudanças de contrato com o GeoAutoEngine ou de escopo passam pelo roadmap e pelo registro de contratos do GeoEcosystem (`contratos/REGISTRO.md`).
 - Mudanças no esquema do banco seguem o procedimento descrito em [docs/DADOS_E_PERSISTENCIA.md](docs/DADOS_E_PERSISTENCIA.md#evolução-do-esquema).
