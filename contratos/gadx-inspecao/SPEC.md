@@ -1,6 +1,6 @@
 # GADX 1.1 + GeoAutoDocs.Inspection v1 — especificação **normativa**
 
-> **Estado:** normativa, em vigor desde 16/11/2026 (PR #13, [`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Até o M3.3, o código **ainda não implementa** o campo `capabilities` (seção 7); todo o resto descreve o que o código já faz em `main@85be834`. Fixtures de referência: [`fixtures/`](fixtures/README.md) (M3.2).
+> **Estado:** normativa, em vigor desde 16/11/2026 (PR #13, [`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Implementação da seção 7 (`capabilities`): **servidor** (GAE) desde o M3.3c, por `InspectionCapabilities.ClientAcceptsCorrections`/`ServerCapabilitiesFor` da biblioteca `libs/GeoEcosystem.Contracts.Inspection`; **cliente** (GAD) no M3.4. O resto descreve o que o código já fazia em `main@85be834`. Fixtures de referência: [`fixtures/`](fixtures/README.md) (M3.2).
 >
 > As palavras **DEVE**, **NÃO DEVE** e **PODE** são obrigatórias no sentido usual de especificação. Onde o texto diz "hoje", é uma observação sobre o código, não uma regra.
 

@@ -93,3 +93,11 @@ O GeoAutoDocs deve atualizar apenas os campos explicitamente autorizados pela co
 O GeoAutoEngine não considera a correção sincronizada apenas porque o frame foi transmitido. A alteração local somente vira novo baseline após confirmação no `CorrectionAck`.
 
 Enquanto houver correções locais não sincronizadas, o GeoAutoEngine protege a sessão contra substituição silenciosa por outra inspeção recebida e pede confirmação antes de descartar alterações em importações/remoções manuais.
+
+## Capacidades no handshake (GADX 1.1, M3.3c)
+Desde o M3.3c, o servidor lê o campo opcional `capabilities` do `Hello` (regras S1–S3 da [especificação](../../../contratos/gadx-inspecao/SPEC.md#7-capacidades-novo-na-11)):
+- **sem o campo** (GeoAutoDocs 1.1.0): o cliente continua recebendo correções, como antes;
+- **com `corrections`**: recebe correções;
+- **com a lista sem `corrections`**: o envio de correções é recusado com a mensagem "O GeoAutoDocs conectado não aceita correções".
+
+O `HelloAck` passa a trazer `capabilities`: `["corrections"]` quando o servidor pode enviar correções naquela conexão, `[]` caso contrário. O GeoAutoDocs 1.1.0 ignora o campo. O log do plugin registra, em cada handshake, as capacidades recebidas e se as correções estão liberadas.

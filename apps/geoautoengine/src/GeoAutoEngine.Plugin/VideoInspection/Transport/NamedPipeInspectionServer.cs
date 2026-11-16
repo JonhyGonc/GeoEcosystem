@@ -27,6 +27,7 @@ internal sealed class NamedPipeInspectionServer : IDisposable
     private Task? _listenerTask;
     private NamedPipeServerStream? _activePipe;
     private bool _connectionReady;
+    private bool _clientAcceptsCorrections;
     private int _nextServerRequestId = 100000;
 
     internal static NamedPipeInspectionServer? Current { get; private set; }
@@ -150,6 +151,13 @@ internal sealed class NamedPipeInspectionServer : IDisposable
                 throw new InvalidOperationException(
                     "O GeoAutoDocs não está conectado para receber correções. " +
                     "Abra o relatório no GeoAutoDocs e mantenha a conexão com o GeoAutoEngine ativa.");
+            }
+
+            // Regra S1 da especificação GADX 1.1: o cliente declarou capacidades sem "corrections".
+            if (!_clientAcceptsCorrections)
+            {
+                throw new InvalidOperationException(
+                    "O GeoAutoDocs conectado não aceita correções. Atualize o GeoAutoDocs para enviar correções.");
             }
 
             pipe = _activePipe;
@@ -336,6 +344,9 @@ internal sealed class NamedPipeInspectionServer : IDisposable
             return;
         }
 
+        // Regras S1–S3 da especificação GADX 1.1 (§7). Sem "capabilities" (GeoAutoDocs 1.1.0),
+        // o cliente continua recebendo correções, como no GeoAutoEngine 3.2.0.
+        var acceptsCorrections = InspectionCapabilities.ClientAcceptsCorrections(hello);
         var helloAck = new InspectionHelloAck
         {
             Application = "GeoAutoEngine",
@@ -344,6 +355,7 @@ internal sealed class NamedPipeInspectionServer : IDisposable
             InspectionSchemaVersion = InspectionExchangeSchema.CurrentVersion,
             CadProduct = _cadProduct,
             CadVersion = _cadVersion,
+            Capabilities = InspectionCapabilities.ServerCapabilitiesFor(hello),
         };
         await WriteFrameAsync(
             pipe,
@@ -356,12 +368,15 @@ internal sealed class NamedPipeInspectionServer : IDisposable
             if (ReferenceEquals(_activePipe, pipe) && pipe.IsConnected)
             {
                 _connectionReady = true;
+                _clientAcceptsCorrections = acceptsCorrections;
             }
         }
 
         PluginLog.Information(
             $"Handshake GADX aceito requestId={helloFrame.RequestId}; cliente={hello.Application}; " +
-            $"versão={hello.ApplicationVersion}.");
+            $"versão={hello.ApplicationVersion}; capabilities=" +
+            (hello.Capabilities is null ? "(não declaradas)" : $"[{string.Join(", ", hello.Capabilities)}]") +
+            $"; correções={(acceptsCorrections ? "sim" : "não")}.");
 
         while (!cancellationToken.IsCancellationRequested && pipe.IsConnected)
         {

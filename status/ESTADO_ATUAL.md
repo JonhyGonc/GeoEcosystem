@@ -9,14 +9,15 @@
   - M3.1 ✅: especificação normativa GADX 1.1 + `DEC-ECO-0002`, no PR #13, mesclado em 16/11/2026;
   - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
   - M3.3a ✅: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15, mesclado em 16/11/2026);
-  - M3.3b 🔄: payloads das correções na biblioteca + `deploy.ps1` com o .NET do Windows (PR #16). Roteiro executado pelo usuário em 16/11/2026: "Funcionou certinho" (cobre o M3.3a e o M3.3b). Falta o merge.
+  - M3.3b ✅: payloads das correções na biblioteca + `deploy.ps1` com o .NET do Windows (PR #16, mesclado em 16/11/2026). Roteiro executado pelo usuário: "Funcionou certinho" (cobre o M3.3a e o M3.3b);
+  - M3.3c 🔄: servidor (GAE) aplica as regras S1–S3 de `capabilities` (branch `feat/017-servidor-capabilities`).
 
   Acompanhamento: Issue #11; mudança de contrato: Issue #12.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** merge do PR #16 → **M3.3c**: o servidor (GAE) lê `capabilities` e responde no `HelloAck` (regras S1–S3). É a primeira mudança de comportamento real do M3.
+- **Próximo passo:** roteiro e merge do M3.3c → **M3.4**: o GAD declara `["corrections"]` e manda `applicationVersion` do produto; teste de nome canônico de `locationMode`.
 
 ## Pendências do usuário
-1. Mesclar o PR #16 (M3.3b, já testado).
+1. Roteiro e merge do PR do M3.3c.
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
