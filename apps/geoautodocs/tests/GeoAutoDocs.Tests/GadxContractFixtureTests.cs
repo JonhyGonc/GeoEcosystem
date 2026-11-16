@@ -113,7 +113,7 @@ public sealed class GadxContractFixtureTests
     {
         // Estado completo (SPEC §9.2): o servidor manda todos os campos, então o cliente
         // tem de vê-los todos como presentes, inclusive os nulos e as listas vazias.
-        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPackage>(Payload("correction-push"));
+        var package = InspectionPipeProtocol.DeserializePayload<InspectionCorrectionPush>(Payload("correction-push"));
 
         Assert.Equal(Guid.Parse("0e0c0000-0000-4000-8000-000000000002"), package.ReportId);
         Assert.Equal(3, package.Corrections.Count);

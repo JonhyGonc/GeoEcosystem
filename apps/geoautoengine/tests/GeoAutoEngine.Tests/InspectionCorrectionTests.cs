@@ -429,7 +429,6 @@ public sealed class InspectionCorrectionTests
             Message = "Uma correção aplicada e uma rejeitada.",
             RequestedCount = 2,
             AppliedCount = 1,
-            RejectedCount = 1,
             Results =
             [
                 new InspectionCorrectionItemAcknowledgement

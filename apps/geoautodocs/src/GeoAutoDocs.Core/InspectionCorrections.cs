@@ -2,115 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace GeoAutoDocs.Core;
 
-public sealed class InspectionCorrectionPackage
-{
-    public Guid ReportId { get; set; }
-    public List<InspectionCorrection> Corrections { get; set; } = [];
-}
-
-public sealed class InspectionCorrection
-{
-    private decimal? _meterage;
-    private decimal? _endMeterage;
-    private List<decimal> _meteragePoints = [];
-    private string? _description;
-
-    public Guid SectionId { get; set; }
-    public Guid OccurrenceId { get; set; }
-    public string LocationMode { get; set; } = string.Empty;
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public decimal? Meterage
-    {
-        get => _meterage;
-        set
-        {
-            _meterage = value;
-            HasMeterage = true;
-        }
-    }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public decimal? EndMeterage
-    {
-        get => _endMeterage;
-        set
-        {
-            _endMeterage = value;
-            HasEndMeterage = true;
-        }
-    }
-
-    public List<decimal> MeteragePoints
-    {
-        get => _meteragePoints;
-        set
-        {
-            _meteragePoints = value ?? [];
-            HasMeteragePoints = true;
-        }
-    }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description
-    {
-        get => _description;
-        set
-        {
-            _description = value;
-            HasDescription = true;
-        }
-    }
-
-    [JsonIgnore]
-    public bool HasMeterage { get; private set; }
-
-    [JsonIgnore]
-    public bool HasEndMeterage { get; private set; }
-
-    [JsonIgnore]
-    public bool HasMeteragePoints { get; private set; }
-
-    [JsonIgnore]
-    public bool HasDescription { get; private set; }
-}
-
-public sealed class InspectionCorrectionAcknowledgement
-{
-    private int _appliedCount;
-
-    public bool Accepted { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public int RequestedCount { get; set; }
-    public int AppliedCount
-    {
-        get
-        {
-            var confirmedByResults = Results.Count(result =>
-                result.Applied ||
-                string.Equals(result.Status, "Unchanged", StringComparison.OrdinalIgnoreCase));
-            return Math.Max(_appliedCount, confirmedByResults);
-        }
-        set => _appliedCount = value;
-    }
-    public int RejectedCount => Math.Max(0, RequestedCount - AppliedCount);
-    public List<InspectionCorrectionItemAcknowledgement> Results { get; set; } = [];
-}
-
-public sealed class InspectionCorrectionItemAcknowledgement
-{
-    public Guid SectionId { get; set; }
-    public Guid OccurrenceId { get; set; }
-    public bool Applied { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-}
+// Os payloads das mensagens 6/7 (InspectionCorrectionPush, InspectionOccurrenceCorrection,
+// InspectionCorrectionAcknowledgement) ficam na biblioteca compartilhada do contrato
+// libs/GeoEcosystem.Contracts.Inspection (DEC-ECO-0002, M3.3b).
 
 public interface IInspectionCorrectionChannel
 {
     void SetCorrectionHandler(
-        Func<InspectionCorrectionPackage, CancellationToken, Task<InspectionCorrectionAcknowledgement>> handler);
+        Func<InspectionCorrectionPush, CancellationToken, Task<InspectionCorrectionAcknowledgement>> handler);
 
     Task StopCorrectionSessionAsync();
 }
@@ -125,7 +24,7 @@ public enum InspectionCorrectionResolutionStatus
 
 public sealed class InspectionCorrectionResolution
 {
-    public required InspectionCorrection Correction { get; init; }
+    public required InspectionOccurrenceCorrection Correction { get; init; }
     public InspectionCorrectionResolutionStatus Status { get; init; }
     public string Message { get; init; } = string.Empty;
     public string LocationName { get; init; } = string.Empty;
@@ -173,7 +72,7 @@ public sealed class InspectionCorrectionService
     public const int MaxCorrectionsPerPackage = 1000;
     public const int MaxDescriptionLength = 4000;
 
-    public InspectionCorrectionPlan Prepare(Project project, InspectionCorrectionPackage package)
+    public InspectionCorrectionPlan Prepare(Project project, InspectionCorrectionPush package)
     {
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(package);
@@ -264,7 +163,7 @@ public sealed class InspectionCorrectionService
     }
 
     private static InspectionCorrectionResolution Resolve(Project project, Report? report,
-        InspectionCorrection correction, bool duplicated)
+        InspectionOccurrenceCorrection correction, bool duplicated)
     {
         if (correction.SectionId == Guid.Empty || correction.OccurrenceId == Guid.Empty)
             return Failure(correction, InspectionCorrectionResolutionStatus.Invalid,
@@ -380,7 +279,7 @@ public sealed class InspectionCorrectionService
         };
     }
 
-    private static bool TryResolveLocationMode(InspectionCorrection correction, Occurrence occurrence,
+    private static bool TryResolveLocationMode(InspectionOccurrenceCorrection correction, Occurrence occurrence,
         out OccurrenceLocationMode locationMode, out string message)
     {
         locationMode = occurrence.LocationMode;
@@ -402,7 +301,7 @@ public sealed class InspectionCorrectionService
         return true;
     }
 
-    private static bool HasPositionPayload(InspectionCorrection correction, OccurrenceLocationMode mode) => mode switch
+    private static bool HasPositionPayload(InspectionOccurrenceCorrection correction, OccurrenceLocationMode mode) => mode switch
     {
         OccurrenceLocationMode.Point or OccurrenceLocationMode.From => correction.HasMeterage,
         OccurrenceLocationMode.Range => correction.HasMeterage || correction.HasEndMeterage,
@@ -410,7 +309,7 @@ public sealed class InspectionCorrectionService
         _ => false
     };
 
-    private static bool ValidatePositionPayload(InspectionCorrection correction, Occurrence occurrence,
+    private static bool ValidatePositionPayload(InspectionOccurrenceCorrection correction, Occurrence occurrence,
         OccurrenceLocationMode mode, out string message)
     {
         message = string.Empty;
@@ -515,7 +414,7 @@ public sealed class InspectionCorrectionService
     private static List<OccurrenceMeteragePoint> OrderedPoints(Occurrence occurrence) =>
         occurrence.MeteragePoints.OrderBy(point => point.Order).ThenBy(point => point.Id).ToList();
 
-    private static InspectionCorrectionResolution Failure(InspectionCorrection correction,
+    private static InspectionCorrectionResolution Failure(InspectionOccurrenceCorrection correction,
         InspectionCorrectionResolutionStatus status, string message,
         string locationName = "", string sectionName = "",
         OccurrenceLocationMode locationMode = OccurrenceLocationMode.Point) => new()

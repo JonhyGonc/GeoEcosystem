@@ -5,7 +5,7 @@
 > | Marco | Estado |
 > |---|---|
 > | M1 — Versão oficial completa | ✅ concluído em 12/11/2026 ([marcos/M1](marcos/M1-versao-oficial.md)) |
-> | M2 — Monorepo | 🔄 M2.1–M2.4 concluídos; falta o M2.5 (tags e arquivamento, pelo usuário) ([marcos/M2](marcos/M2-monorepo.md)) |
+> | M2 — Monorepo | ✅ concluído em 16/11/2026 ([marcos/M2](marcos/M2-monorepo.md)) |
 > | M3 — Contrato GADX | 🔄 M3.1 ✅; M3.2 em revisão ([marcos/M3](marcos/M3-contrato-gadx.md)) |
 > | M4 — Exportador GAE → GeoMap | ⏳ |
 > | M5 — Anomalias no mapa | ⏳ |
@@ -137,9 +137,11 @@ GeoEcosystem/
 | M3.2 | Chat 00 | Fixtures de referência em `contratos/gadx-inspecao/fixtures/`: frames binários e JSON de cada mensagem, inclusive `Hello` com e sem capacidades | Fixtures validadas contra o código atual dos dois lados |
 | M3.3 | GAE / Chat 02 + Chat 03 | Criar `libs/GeoEcosystem.Contracts.Inspection` (frame, mensagens, schema) a partir das duas cópias, com testes contra as fixtures; GAE e GAD passam a referenciá-lo e apagam a cópia local. Servidor aceita `Hello` com e sem `capabilities`; só envia 6/7 a quem declarou | CI verde com as fixtures |
 | M3.4 | GAD / Chat 03 | Cliente declara `capabilities`; aplica as correções como estado completo; testes com as mesmas fixtures | CI verde; roteiro manual: correção de metragem e descrição chega ao GAD sem apagar campos |
-| M3.5 | Usuário | Instalação coordenada (servidor primeiro: GAE novo funciona com GAD antigo) | Todas as combinações de `COMPATIBILIDADE.md` em ✅ |
+| M3.5 | Usuário | ~~Instalação coordenada~~ **Adiada:** decisão do usuário em 16/11/2026, a instalação na equipe fica para o fim do projeto (ver abaixo). No M3, o usuário só homologa na própria máquina | Correções funcionando no Civil 3D 2026 do usuário, com GAD 1.1.0 e com o GAD novo |
 
 **Critério de aceitação:** as duas CIs testam contra as mesmas fixtures; nenhuma combinação de builds instaladas produz falha silenciosa.
+
+**Instalação na equipe — decisão do usuário (16/11/2026):** a equipe quase não usa o GeoAutoDocs. Por isso, só se instala na equipe quando o projeto inteiro estiver terminado (depois do M5), numa única rodada com as versões finais do GAE e do GAD. Até lá, os marcos são homologados só na máquina do usuário. A instalação pendente do M1.4 (GAD 1.1.0 / GAE 3.2.0 na equipe) entra nessa mesma rodada.
 
 ### M4 — Caminho oficial DWG → GeoMap (D-03, D-04; resolve R-05, R-07)
 **Objetivo:** um único caminho reproduzível para levar a rede do DWG ao GeoMap.

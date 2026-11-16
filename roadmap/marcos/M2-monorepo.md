@@ -1,6 +1,6 @@
 # M2 — Repositório único (monorepo)
 
-- **Estado:** M2.1–M2.4 concluídos (PR #7 mesclado em 13/11/2026; CI 6/6 verde). Os ajustes de documentação e scripts apontados na validação M2.4 estão no PR `docs/010-ajustes-pos-monorepo`. Falta o M2.5: tags com prefixo e arquivamento dos repositórios antigos (usuário). Ver `status/ESTADO_ATUAL.md`.
+- **Estado:** ✅ **concluído em 16/11/2026.** M2.1–M2.4 no PR #7 (13/11/2026), ajustes pós-monorepo no PR #10, M2.5 pelo usuário em 16/11/2026: tags `geoautoengine/v3.2.0` (`d762359`) e `geoautodocs/v1.1.0` (`64081d5`) conferidas no GitHub; arquivamento dos 3 repositórios antigos confirmado pelo usuário (o agente não tem acesso a eles para conferir).
 - **Decisão:** [DEC-ECO-0001](../../decisoes/DEC-ECO-0001-monorepo.md)
 - **Dono:** Chat 00 (M2.1, M2.3); Chats 01–03 (M2.2, M2.4); usuário (merge, M2.5)
 
@@ -18,7 +18,7 @@
 | M2.2 | Chat 01 | Varredura do histórico do GeoMap | Feita em `83259c2`: nenhuma credencial; itens de privacidade aceitos (12/11/2026). **Revarrer o delta** se a `main` do GeoMap mudar antes do M2.3 | ✅ |
 | M2.3 | Chat 00 | Congelamento anunciado → importação com histórico (`git subtree add --prefix=apps/<app>`, sem squash) numa branch → workflows movidos para `.github/workflows/<app>-*.yml` com `paths: apps/<app>/**` e `working-directory` → nenhuma mudança de código além de caminhos | `git diff <origem> HEAD:apps/<app>` vazio para cada app (exceto `.github/`); `git log -- apps/<app>` mostra o histórico | ✅ importado `Geomap@83259c2`, `GeoAutoEngine@71588ab`, `GeoAutoDocs@64081d5` — árvores idênticas às origens (PR #7, mesclado em 13/11/2026) |
 | M2.4 | Chats 01–03 | Cada especialista valida a sua pasta: CI verde; scripts com caminho relativo funcionando | CI das três aplicações verde no PR; o usuário gera o bundle do GAE e o instalador do GAD a partir do monorepo | ✅ validado pelos Chats 01–03 no PR #7 (CI 6/6); ajustes de docs e scripts no PR `docs/010-ajustes-pos-monorepo`. Sem registro de que o bundle do GAE e o instalador do GAD já foram gerados a partir do monorepo: está no roteiro manual desse PR |
-| M2.5 | Usuário | Merge; arquivar os 3 repositórios antigos (Settings → Archive) com aviso no README; tags novas com prefixo (`geoautoengine/v3.2.0`, `geoautodocs/v1.1.0`) | Repositórios antigos somente leitura; trabalho novo só no monorepo | ⏳ |
+| M2.5 | Usuário | Merge; arquivar os 3 repositórios antigos (Settings → Archive) com aviso no README; tags novas com prefixo (`geoautoengine/v3.2.0`, `geoautodocs/v1.1.0`) | Repositórios antigos somente leitura; trabalho novo só no monorepo | ✅ 16/11/2026 |
 
 ## Congelamento
 - **Começa:** quando o Chat 00 anunciar o início do M2.3.
