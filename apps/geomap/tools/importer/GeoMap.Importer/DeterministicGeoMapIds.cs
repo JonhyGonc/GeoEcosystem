@@ -10,8 +10,11 @@ public static class DeterministicGeoMapIds
     public static Guid Project(GeoMapImportDocument document) =>
         Project(document.Metadata);
 
+    // DEC-032: a identidade do projeto depende só do externalId. O sourceSystem identifica o
+    // programa que exportou (fica em network_imports) e não pode separar a mesma obra em dois
+    // projetos quando ela chega por produtores diferentes (GM-05).
     public static Guid Project(GeoMapImportMetadata metadata) =>
-        Create($"project\u001f{metadata.SourceSystem}\u001f{metadata.Project.ExternalId}");
+        Create($"project-v2\u001f{metadata.Project.ExternalId}");
 
     public static Guid Network(Guid projectId, GeoMapImportDocument document) =>
         Network(projectId, document.Metadata);

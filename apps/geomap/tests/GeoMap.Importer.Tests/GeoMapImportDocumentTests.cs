@@ -135,6 +135,38 @@ public sealed class GeoMapImportDocumentTests
     }
 
     [Fact]
+    public void Project_and_network_ids_do_not_depend_on_the_source_system()
+    {
+        // DEC-032 (GM-05): a mesma obra exportada pela ponte DXF e pelo GeoAutoEngine
+        // cai no mesmo projeto e na mesma rede.
+        var fromBridge = GeoMapImportDocument.Parse(WithSourceSystem("Civil 3D DXF"));
+        var fromEngine = GeoMapImportDocument.Parse(WithSourceSystem("GeoAutoEngine"));
+        var otherProject = GeoMapImportDocument.Parse(Encoding.UTF8.GetBytes(
+            Encoding.UTF8.GetString(ValidDocument()).Replace("project-001", "project-002", StringComparison.Ordinal)));
+
+        var projectId = DeterministicGeoMapIds.Project(fromBridge);
+
+        Assert.Equal(projectId, DeterministicGeoMapIds.Project(fromEngine));
+        Assert.Equal(
+            DeterministicGeoMapIds.Network(projectId, fromBridge),
+            DeterministicGeoMapIds.Network(DeterministicGeoMapIds.Project(fromEngine), fromEngine));
+        Assert.NotEqual(projectId, DeterministicGeoMapIds.Project(otherProject));
+    }
+
+    [Fact]
+    public void Streaming_and_document_metadata_resolve_the_same_project()
+    {
+        var document = GeoMapImportDocument.Parse(ValidDocument());
+        var metadata = GeoMapImportDocument.ParseStreamingMetadata(StreamingMetadata());
+
+        Assert.Equal(DeterministicGeoMapIds.Project(document), DeterministicGeoMapIds.Project(metadata));
+    }
+
+    private static byte[] WithSourceSystem(string sourceSystem) => Encoding.UTF8.GetBytes(
+        Encoding.UTF8.GetString(ValidDocument())
+            .Replace("\"sourceSystem\": \"Civil 3D\"", $"\"sourceSystem\": \"{sourceSystem}\"", StringComparison.Ordinal));
+
+    [Fact]
     public void Streaming_records_parse_to_the_same_logical_model()
     {
         var metadata = GeoMapImportDocument.ParseStreamingMetadata(

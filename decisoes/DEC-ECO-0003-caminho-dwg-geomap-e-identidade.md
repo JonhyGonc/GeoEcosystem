@@ -40,7 +40,10 @@ A ponte continua em uso até o exportador do GAE cobrir o que ela faz (M4.3): co
    - `sourceId` = `FEATURE_ID`;
    - o handle continua indo como atributo (`properties.cadHandle`), para rastreio;
    - o contrato não muda de versão, porque `sourceId` já é um texto opaco de até 255 caracteres. Muda só o que o produtor GAE coloca nele, e isso fica documentado.
-5. **`sourceSystem` único (GM-05, M4.2):** `"GeoAutoEngine"`. Os bancos de desenvolvimento do GeoMap podem ser recriados, porque não há produção (Q-B).
+5. **`sourceSystem` (GM-05):**
+   - o produtor oficial usa `"GeoAutoEngine"` (M4.3a);
+   - no GeoMap, a identidade do projeto deixa de depender do `sourceSystem`, que vira só o registro da origem (M4.2, DEC-032 do GeoMap). Assim, a mesma obra não vira dois projetos mesmo enquanto a ponte DXF ainda for usada;
+   - os bancos de desenvolvimento do GeoMap podem ser recriados, porque não há produção (Q-B).
 6. **Vínculo com a vídeo-inspeção (M5):** hoje a associação trecho ↔ Polyline (`CadSectionAssociation`) guarda o handle. Passar a guardar também o `FEATURE_ID` é avaliado no início do M5, com alternativas (regra 12). Não faz parte do M4.
 
 ## Impacto por aplicação
