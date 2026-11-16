@@ -135,7 +135,7 @@ public sealed class InspectionExchangeService
     {
         OccurrenceId = occurrence.Id,
         Order = occurrence.Order,
-        LocationMode = occurrence.LocationMode.ToString(),
+        LocationMode = occurrence.LocationMode.ToWireName(),
         Meterage = occurrence.Meterage,
         EndMeterage = occurrence.EndMeterage,
         MeteragePoints = occurrence.MeteragePoints.OrderBy(x => x.Order).Select(x => x.Meterage).ToList(),

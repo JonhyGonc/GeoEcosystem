@@ -19,14 +19,31 @@ public sealed class NamedPipeInspectionTransport : IInspectionTransport, IInspec
     private CorrectionSession? _correctionSession;
     private Task? _correctionReconnectTask;
     private bool _stopped;
+    private readonly string _applicationVersion;
 
     public string PipeName { get; }
+
+    /// <summary>Versão informada no Hello (SPEC GADX §5.1).</summary>
+    public string ApplicationVersion => _applicationVersion;
+
+    /// <summary>
+    /// Hello do cliente GADX 1.1: declara que aceita correções (regra C1 da SPEC §7).
+    /// </summary>
+    public static InspectionHello CreateHello(string applicationVersion) => new()
+    {
+        ApplicationVersion = applicationVersion,
+        InspectionSchemaVersion = InspectionExchangeSchema.CurrentVersion,
+        Capabilities = [InspectionCapabilities.Corrections]
+    };
 
     public NamedPipeInspectionTransport(InspectionExchangeSerializer serializer,
         string pipeName = InspectionPipeProtocol.DefaultPipeName,
         TimeSpan? connectTimeout = null, TimeSpan? responseTimeout = null,
-        LocalLogger? logger = null)
+        LocalLogger? logger = null, string? applicationVersion = null)
     {
+        _applicationVersion = string.IsNullOrWhiteSpace(applicationVersion)
+            ? InspectionClientVersion.Of(typeof(NamedPipeInspectionTransport).Assembly)
+            : applicationVersion.Trim();
         _serializer = serializer;
         PipeName = string.IsNullOrWhiteSpace(pipeName)
             ? throw new ArgumentException("O nome do Named Pipe é obrigatório.", nameof(pipeName))
@@ -491,11 +508,7 @@ public sealed class NamedPipeInspectionTransport : IInspectionTransport, IInspec
             await pipe.ConnectAsync((int)Math.Ceiling(_connectTimeout.TotalMilliseconds), cancellationToken);
             connected = true;
             var requestId = Random.Shared.Next(1, int.MaxValue);
-            var hello = new InspectionHello
-            {
-                ApplicationVersion = typeof(NamedPipeInspectionTransport).Assembly.GetName().Version?.ToString() ?? "0.0.0",
-                InspectionSchemaVersion = InspectionExchangeSchema.CurrentVersion
-            };
+            var hello = CreateHello(_applicationVersion);
             await RunWithResponseTimeoutAsync(token => InspectionPipeProtocol.WriteFrameAsync(pipe,
                 InspectionPipeMessageType.Hello, requestId,
                 InspectionPipeProtocol.SerializePayload(hello), token), cancellationToken);

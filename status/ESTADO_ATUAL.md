@@ -10,14 +10,15 @@
   - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
   - M3.3a ✅: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15, mesclado em 16/11/2026);
   - M3.3b ✅: payloads das correções na biblioteca + `deploy.ps1` com o .NET do Windows (PR #16, mesclado em 16/11/2026). Roteiro executado pelo usuário: "Funcionou certinho" (cobre o M3.3a e o M3.3b);
-  - M3.3c 🔄: servidor (GAE) aplica as regras S1–S3 de `capabilities` (branch `feat/017-servidor-capabilities`).
+  - M3.3c ✅: servidor (GAE) aplica as regras S1–S3 de `capabilities` (PR #17, mesclado; roteiro com o GAD 1.1.0: "Funcionou");
+  - M3.4 🔄: o GAD declara `["corrections"]`, envia a versão do produto e escreve `locationMode` canônico (branch `feat/018-gad-capabilities`).
 
   Acompanhamento: Issue #11; mudança de contrato: Issue #12.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** roteiro e merge do M3.3c → **M3.4**: o GAD declara `["corrections"]` e manda `applicationVersion` do produto; teste de nome canônico de `locationMode`.
+- **Próximo passo:** roteiro e merge do M3.4. Com isso, o **M3 fica concluído** (a instalação na equipe foi adiada para o fim do projeto). Depois: **M4**, que começa pela decisão D-03/D-04 com o usuário (`DEC-ECO-0003`).
 
 ## Pendências do usuário
-1. Roteiro e merge do PR do M3.3c.
+1. Roteiro e merge do PR do M3.4.
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
@@ -35,8 +36,6 @@
 - **Sessões do agente:** não têm .NET nem PowerShell; código C# só é verificado pela CI.
 - **SDK na máquina do usuário:** .NET 8 SDK global (ele gerou o instalador do GAD com `dotnet publish`).
 
-## Notas para o M3.3/M3.4
-- O `Hello` do GeoAutoDocs envia `applicationVersion` = 1.0.0.0 (versão do assembly Infrastructure). Corrigir no M3.4.
+## Notas técnicas
 - Alvo da biblioteca: **só `net8.0`** (decisão do usuário, 16/11/2026). O host 2024 do GAE não compila mais. `build-release.ps1` precisa de `-Versions 2026`.
 - A CI **não compila** o `GeoAutoEngine.Plugin` nem o `Cad2026` (exigem DLLs da Autodesk). Toda mudança neles precisa de compilação na máquina do usuário.
-- `locationMode`: o GAE compara o nome exato. O enum do GAD tem aliases. Falta o teste de nome canônico (M3.4).
