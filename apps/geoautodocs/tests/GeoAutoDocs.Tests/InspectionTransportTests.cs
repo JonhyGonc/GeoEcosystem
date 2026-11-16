@@ -216,22 +216,19 @@ public sealed class InspectionTransportTests : IDisposable
                     Message = "Inspeção recebida."
                 }));
 
-            var correction = new InspectionCorrectionPush
-            {
-                ReportId = NewDocument().Report.ReportId,
-                Corrections =
-                [
-                    new InspectionOccurrenceCorrection
-                    {
-                        SectionId = NewDocument().Sections[0].SectionId,
-                        OccurrenceId = NewDocument().Sections[0].Occurrences[0].OccurrenceId,
-                        Meterage = 13.75m
-                    }
-                ]
-            };
+            // Pacote parcial escrito à mão (só a metragem), para exercitar a tolerância da
+            // SPEC §9.2: campo ausente = "não alterar". O produtor conforme (GAE) manda
+            // sempre o estado completo, e a biblioteca serializa todos os campos.
+            var document = NewDocument();
+            var correction = System.Text.Encoding.UTF8.GetBytes(
+                $$"""
+                {"reportId":"{{document.Report.ReportId}}","corrections":[
+                  {"sectionId":"{{document.Sections[0].SectionId}}",
+                   "occurrenceId":"{{document.Sections[0].Occurrences[0].OccurrenceId}}",
+                   "meterage":13.75}]}
+                """);
             await InspectionPipeProtocol.WriteFrameAsync(server,
-                InspectionPipeMessageType.CorrectionPush, correctionRequestId,
-                InspectionPipeProtocol.SerializePayload(correction));
+                InspectionPipeMessageType.CorrectionPush, correctionRequestId, correction);
 
             var ackFrame = await InspectionPipeProtocol.ReadFrameAsync(server);
             Assert.Equal(InspectionPipeMessageType.CorrectionAck, ackFrame.MessageType);
