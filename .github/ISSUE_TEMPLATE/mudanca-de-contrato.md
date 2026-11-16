@@ -26,5 +26,5 @@ labels: tipo:contrato
 ## Rollback
 
 ## Aprovação
-- [ ] `APROVADO-CHAT-00`
+- [ ] Merge do PR pelo usuário (Emenda 2)
 - [ ] Usuário ciente (se afetar operação)

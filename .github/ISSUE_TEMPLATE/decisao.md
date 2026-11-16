@@ -21,4 +21,4 @@ labels: tipo:decisao
 - GeoAutoDocs:
 
 ## Quem decide
-<!-- Chat 00 (técnica) ou usuário (negócio/roadmap). -->
+<!-- Agente único (técnica, registrada em DEC-ECO) ou usuário (negócio/roadmap). Emenda 2. -->

@@ -1,9 +1,9 @@
 <!-- Relatório padrão (protocolo, seção "Relatório padrão obrigatório"). Preencha todos os itens; use "não aplicável" quando for o caso. -->
 
 ## 1. Identificação
-- Agente:
+- Agente: (agente único, Emenda 2)
 - Repositórios/commits de referência:
-- Estado: proposta / documentação / contrato / decisão
+- Estado: proposta / documentação / contrato / decisão / código
 
 ## 2. Objetivo e critérios de aceitação
 
@@ -25,7 +25,13 @@
 
 ## 9. Próximo passo
 
-## 10. Resumo para o Chat 00
+## 10. Autorrevisão (Emenda 2)
+- [ ] Só itens do roadmap aprovado (ou pedido explícito do usuário)
+- [ ] Diff revisado; sem mudanças acidentais
+- [ ] Nenhuma credencial, dado real ou caminho pessoal adicionado
+- [ ] CI verde nas aplicações afetadas (números conferidos nos logs)
+- [ ] Roteiro de teste manual, se mudou comportamento no Civil 3D ou no GeoAutoDocs
+- [ ] Contratos: versão e compatibilidade preenchidas na seção 7
 
 ---
-Revisão: aguardando `APROVADO-CHAT-00` em comentário. Merge somente pelo usuário ([processo](../governanca/PROCESSO_PR.md)).
+Merge somente pelo usuário ([processo](../governanca/PROCESSO_PR.md)).
