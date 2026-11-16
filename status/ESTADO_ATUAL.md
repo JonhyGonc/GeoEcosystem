@@ -8,11 +8,12 @@
 - **M3 — Contrato GADX:**
   - M3.1 ✅: especificação normativa GADX 1.1 + `DEC-ECO-0002`, no PR #13, mesclado em 16/11/2026;
   - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
-  - M3.3a 🔄: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15). Falta o usuário compilar o plugin 2026 e fazer o teste de sempre.
+  - M3.3a ✅: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15, mesclado em 16/11/2026);
+  - M3.3b 🔄: payloads das correções na biblioteca + `deploy.ps1` com o .NET do Windows (PR #16). Roteiro executado pelo usuário em 16/11/2026: "Funcionou certinho" (cobre o M3.3a e o M3.3b). Falta o merge.
 
   Acompanhamento: Issue #11; mudança de contrato: Issue #12.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** teste manual e merge do PR #15 → M3.3b (payloads das correções na biblioteca) → M3.3c (servidor com `capabilities`, regras S1–S3).
+- **Próximo passo:** merge do PR #16 → **M3.3c**: o servidor (GAE) lê `capabilities` e responde no `HelloAck` (regras S1–S3). É a primeira mudança de comportamento real do M3.
 
 ## Pendências do usuário
 1. Criar as tags no monorepo (o agente não consegue enviar tags). Conferido em 16/11/2026: ainda não existem.
@@ -35,6 +36,8 @@
 - **Máquina do usuário:** não tem as pastas externas `reference` e `GeoAutoEngine.Legacy` nem o .NET portátil `.dotnet`. Os testes `EXTERNAL` e as suítes `legacy`/`full` do GAE não rodam lá; nunca rodaram.
 - **Clone do monorepo:** fica em `C:\Users\João\Desktop\GeoEcosystem`. O clone antigo do GAE fica em `Documentos\GitHub\GeoAutoEngine`.
 - **Geração do instalador:** o usuário gera o do GAD a partir do monorepo (testado em 16/11/2026).
+- **Instalação do GAE para testar:** com o Civil 3D fechado, rodar `apps\geoautoengine\Instalar GeoAutoEngine 3.cmd`. Ele compila o host 2026 e instala, com backup em `Contents\2026.backup-<data>`. Funciona com o .NET do Windows desde o PR #16.
+- **GAD para testar:** `dotnet run --project src\GeoAutoDocs.App -c Release` em `apps\geoautodocs`.
 - **Sessões do agente:** não têm .NET nem PowerShell; código C# só é verificado pela CI.
 - **SDK na máquina do usuário:** .NET 8 SDK global (ele gerou o instalador do GAD com `dotnet publish`).
 

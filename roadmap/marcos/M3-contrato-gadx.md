@@ -11,7 +11,7 @@
 | M3.1 | Especificação normativa GADX 1.1 + DEC-ECO-0002 | PR mesclado pelo usuário | ✅ PR #13 |
 | M3.2 | Fixtures em `contratos/gadx-inspecao/fixtures/`: frames binários e JSON de cada mensagem; `Hello`/`HelloAck` com e sem `capabilities`; `CorrectionPush` com `Point`, `Range` e `MultiPoint`; `CorrectionAck` `Partial` | Fixtures lidas pelo código atual dos dois lados (testes nas duas CIs) | ✅ PR #14 |
 | M3.3a | `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) com o protocolo e o documento; GAE e GAD apagam as cópias e passam a usá-la; **sem mudança de comportamento** | CI da biblioteca, do GAE e do GAD verde; o usuário compila o plugin 2026 e faz o teste de sempre (inspeção e correção) | ✅ PR #15 |
-| M3.3b | Payloads das correções (mensagens 6/7) unificados na biblioteca | CI verde com as fixtures `correction-*` | 🔄 |
+| M3.3b | Payloads das correções (mensagens 6/7) unificados na biblioteca | CI verde com as fixtures `correction-*` | 🔄 PR #16 (roteiro OK em 16/11/2026) |
 | M3.3c | Servidor aplica S1–S3 (§7): lê `capabilities` e responde no `HelloAck` | CI verde; roteiro no Civil 3D 2026 com o GAD 1.1.0 | ⏳ |
 | M3.4 | GAD envia `capabilities: ["corrections"]` e `applicationVersion` do produto; teste de que `locationMode` sai com o nome canônico | CI verde; roteiro manual no Civil 3D 2026 | ⏳ |
 | M3.5 | Instalação: GAE primeiro, depois GAD (sem urgência entre os dois, pela regra S2) | Usuário confirma correções funcionando com GAD 1.1.0 e com o GAD novo | ⏳ |
