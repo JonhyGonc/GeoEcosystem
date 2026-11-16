@@ -10,4 +10,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>

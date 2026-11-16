@@ -25,4 +25,7 @@
   <Target Name="RemoveUnusedLibVlcArchitectures" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <RemoveDir Directories="$(PublishDir)libvlc\win-x86;$(PublishDir)libvlc\win-arm64" />
   </Target>
+  <ItemGroup>
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>

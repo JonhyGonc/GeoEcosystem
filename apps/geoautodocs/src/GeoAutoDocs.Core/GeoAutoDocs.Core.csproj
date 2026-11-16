@@ -4,5 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\libs\GeoEcosystem.Contracts.Inspection\GeoEcosystem.Contracts.Inspection.csproj" />
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>
-

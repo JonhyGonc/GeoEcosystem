@@ -1,4 +1,4 @@
-namespace GeoAutoEngine.Application.VideoInspection;
+namespace GeoEcosystem.Contracts.Inspection;
 
 public static class InspectionExchangeSchema
 {

@@ -7,12 +7,14 @@ on:
     paths:
       - "apps/geoautoengine/**"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautoengine-tests.yml"
   push:
     branches: [main]
     paths:
       - "apps/geoautoengine/**"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautoengine-tests.yml"
 
 permissions:

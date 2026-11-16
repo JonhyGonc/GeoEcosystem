@@ -44,4 +44,7 @@
     <Copy SourceFiles="@(BundleTemplateAssets)" DestinationFolder="$(BundleRoot)\Contents\Assets\Templates" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(BundleBrandAssets)" DestinationFolder="$(BundleRoot)\Contents\Assets\Branding" SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>

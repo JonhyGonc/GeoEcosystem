@@ -13,6 +13,7 @@ on:
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/SectionLabelSyncPlannerTests.cs"
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/GadxContractFixtureTests.cs"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
   push:
     branches: [main]
     paths:
@@ -24,6 +25,7 @@ on:
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/SectionLabelSyncPlannerTests.cs"
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/GadxContractFixtureTests.cs"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
 
 permissions:
   contents: read
