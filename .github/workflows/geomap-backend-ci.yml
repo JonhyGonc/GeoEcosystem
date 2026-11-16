@@ -666,6 +666,9 @@ jobs:
 
           cat /tmp/geomap-stream-large.time
 
+      - name: Verify import through the web API
+        run: tests/integration/verify-web-import-api.sh http://localhost:8080
+
       - name: Show streaming import diagnostics
         if: failure()
         shell: bash

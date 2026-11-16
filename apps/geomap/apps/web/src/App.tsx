@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
+import { ImportPanel } from './ImportPanel'
 import { LayerControl } from './LayerControl'
 import { ProjectSelector } from './ProjectSelector'
 import { SelectionSummary } from './SelectionSummary'
@@ -78,6 +79,9 @@ function App({ configuration = networkConfiguration }: AppProps) {
     kind: 'idle',
   })
   const [detailsRevision, setDetailsRevision] = useState(0)
+  // Importação pelo site (M4.5): cada importação recarrega o catálogo e as redes, e abre o projeto importado.
+  const [dataRevision, setDataRevision] = useState(0)
+  const importedProjectId = useRef<string | null>(null)
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -129,13 +133,14 @@ function App({ configuration = networkConfiguration }: AppProps) {
     void fetchProjects(configuration.value.apiBaseUrl, abortController.signal)
       .then((projects) => {
         if (abortController.signal.aborted) return
+        const imported = importedProjectId.current
         const initialProjectId = chooseInitialProjectId(
           projects,
-          configuration.value.initialProjectId,
+          imported ?? configuration.value.initialProjectId,
         )
         setProjectCatalog({ kind: 'ready', projects })
         setSelectedProjectId(initialProjectId)
-        setStartupProjectId(initialProjectId)
+        setStartupProjectId(imported ? null : initialProjectId)
       })
       .catch((error: unknown) => {
         if (abortController.signal.aborted) return
@@ -149,7 +154,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
       })
 
     return () => abortController.abort()
-  }, [configuration])
+  }, [configuration, dataRevision])
 
   useEffect(() => {
     if (configuration.kind !== 'ready' || !selectedProjectId) return
@@ -183,7 +188,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
       })
 
     return () => abortController.abort()
-  }, [configuration, selectedProjectId])
+  }, [configuration, selectedProjectId, dataRevision])
 
   const catalogConfig = useMemo(() => {
     if (configuration.kind !== 'ready' || !selectedProjectId) return null
@@ -252,7 +257,8 @@ function App({ configuration = networkConfiguration }: AppProps) {
       layerController.current?.cleanup()
       layerController.current = null
     }
-  }, [catalogConfig, styleRevision])
+  // dataRevision: depois de uma importação, as redes do mesmo projeto são buscadas de novo.
+  }, [catalogConfig, styleRevision, dataRevision])
 
   useEffect(() => {
     if (!selectedFeature || !catalogConfig) return
@@ -296,6 +302,11 @@ function App({ configuration = networkConfiguration }: AppProps) {
   const changeProject = (projectId: string) => {
     setStartupProjectId(null)
     setSelectedProjectId(projectId)
+  }
+
+  const showImportedProject = (projectId: string) => {
+    importedProjectId.current = projectId
+    setDataRevision((revision) => revision + 1)
   }
 
   const changeVisibility = (networkId: string, visible: boolean) => {
@@ -345,6 +356,12 @@ function App({ configuration = networkConfiguration }: AppProps) {
             onProjectChange={changeProject}
             onLocate={locateSelectedProject}
             locateDisabledReason={locateDisabledReason(currentLocation)}
+          />
+        )}
+        {configuration.kind === 'ready' && (
+          <ImportPanel
+            apiBaseUrl={configuration.value.apiBaseUrl}
+            onImported={showImportedProject}
           />
         )}
       </header>

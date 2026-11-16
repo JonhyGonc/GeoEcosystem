@@ -263,6 +263,16 @@ Revisa a DEC-022 em um ponto: o UUID do projeto passa a ser derivado só de `pro
 
 Consequências: os UUIDs de projeto mudam uma vez (novo prefixo de nome, `project-v2`). Uma reimportação num banco antigo cria o projeto de novo, e o antigo fica órfão. Isso é aceitável porque o GeoMap ainda não tem produção (Q-B do roadmap): os bancos de desenvolvimento podem ser recriados. Dois produtores que usem o mesmo `project.externalId` passam a escrever no mesmo projeto, e esse é o objetivo. O produtor oficial (GeoAutoEngine) passa a usar `sourceSystem` = `"GeoAutoEngine"` no M4.3a.
 
+## DEC-033 — Importação pelo site
+
+Status: aprovada pelo usuário em 16/11/2026 (M4.5 do roadmap do GeoEcosystem: "Criar o botão no site"; "Aprovo, mas sempre ligado").
+
+O site ganha o botão **Importar**, que envia um ou mais `.geomap.json` para `POST /api/imports`. A rota usa o mesmo caminho do importador do terminal (`GeoMapDocumentImporter`): limite de 50 MiB, validação estrita do contrato, hash do arquivo (DEC-031), transformação de CRS e troca atômica do snapshot da rede. Por isso, os códigos de erro e a regra de reimportação sem duplicar são os mesmos. O NDJSON, usado para redes muito grandes, continua só pelo terminal, porque o envio pelo navegador teria de guardar o arquivo inteiro na memória da API.
+
+Isso não contraria a regra de que "a geometria nasce no CAD; o navegador apenas visualiza e consulta": o navegador só entrega um arquivo que já foi gerado pelo CAD. Ele não cria nem edita feições.
+
+**Risco aceito pelo usuário:** a API não tem login, e a rota fica sempre ligada. No uso local, isso não é problema. Antes de qualquer hospedagem fora da máquina do usuário (PEND-007), a rota precisa de autenticação ou precisa ser desligada; qualquer pessoa com acesso à API poderia substituir redes.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |

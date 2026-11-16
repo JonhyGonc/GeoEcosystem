@@ -11,4 +11,9 @@
     <PackageReference Include="Npgsql" Version="8.0.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Importação pelo site (M4.5): o mesmo código do importador do terminal. -->
+    <ProjectReference Include="../../../tools/importer/GeoMap.Importer/GeoMap.Importer.csproj" />
+  </ItemGroup>
+
 </Project>

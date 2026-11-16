@@ -156,6 +156,10 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
 
 Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
+### Importar pelo site
+
+Com a API e o site rodando, clique em **Importar arquivos .geomap.json** no quadro do GeoMap e escolha um ou mais arquivos, por exemplo o de linhas e o `-blocos` gerados pelo GeoAutoEngine. Cada arquivo mostra o resultado: as feições importadas ou o erro do validador. No fim, o mapa recarrega e abre o projeto importado. As regras são as mesmas do importador do terminal (DEC-033). O botão é para uso local, porque a API não tem login.
+
 ### Importar um contrato GeoMap (v0.1, v0.2 ou v0.3)
 
 Com o banco iniciado e a migration aplicada, defina a conexão e informe um arquivo validado. O exemplo abaixo usa a v0.1; as diferenças da v0.2 (cor da layer) e da v0.3 (pontos de blocos) estão no [contrato de importação](docs/IMPORT_CONTRACT.md):
