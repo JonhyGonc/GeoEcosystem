@@ -4,7 +4,7 @@ Status: exportador inicial implementado pela Issue #18.
 
 ## Componente
 
-O exportador faz parte do [GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine), aplicativo C# já integrado ao AutoCAD/Civil 3D. A implementação entrou pela [PR #3 do GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine/pull/3). O GeoMap não carrega DLLs Autodesk: a integração ocorre exclusivamente pelo contrato JSON v0.1.
+O exportador faz parte do GeoAutoEngine, aplicativo C# já integrado ao AutoCAD/Civil 3D, que fica em `apps/geoautoengine` neste mesmo monorepo. A implementação entrou pela [PR #3 do repositório antigo do GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine/pull/3), hoje arquivado. O GeoMap não carrega DLLs Autodesk: a integração ocorre exclusivamente pelo contrato JSON v0.1.
 
 ## Instalação
 

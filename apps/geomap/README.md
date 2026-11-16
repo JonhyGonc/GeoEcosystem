@@ -2,6 +2,15 @@
 
 Prova de conceito para armazenar e visualizar, em um mapa web, redes de tubulação 2D originadas no AutoCAD Civil 3D.
 
+> **Monorepo.** O GeoMap vive na pasta `apps/geomap` do repositório [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem), junto com o GeoAutoEngine e o GeoAutoDocs. Todos os comandos deste README rodam **a partir de `apps/geomap`**:
+>
+> ```bash
+> git clone https://github.com/JonhyGonc/GeoEcosystem.git
+> cd GeoEcosystem/apps/geomap
+> ```
+>
+> A CI fica na raiz do monorepo, em `.github/workflows/geomap-*.yml`. Números como `#14` ou `#52` nesta documentação são Issues e PRs do repositório antigo `JonhyGonc/Geomap` (arquivado, somente leitura); Issues novas vão para o [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem/issues).
+
 ## Objetivo atual
 
 O Protótipo 0.1 deve demonstrar que uma rede proveniente do CAD pode ser normalizada, armazenada em PostgreSQL/PostGIS e exibida corretamente no navegador sobre um mapa de fundo.
@@ -147,9 +156,9 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
 
 Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
-### Importar um contrato GeoMap v0.1
+### Importar um contrato GeoMap (v0.1, v0.2 ou v0.3)
 
-Com o banco iniciado e a migration aplicada, defina a conexão e informe um arquivo validado:
+Com o banco iniciado e a migration aplicada, defina a conexão e informe um arquivo validado. O exemplo abaixo usa a v0.1; as diferenças da v0.2 (cor da layer) e da v0.3 (pontos de blocos) estão no [contrato de importação](docs/IMPORT_CONTRACT.md):
 
 ~~~bash
 export GEOMAP_DB_CONNECTION_STRING='Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only'
@@ -179,7 +188,7 @@ Consulte [a integração com o Civil 3D](docs/CIVIL3D_EXPORTER.md) para instala�
 ### Converter um DXF para validação real
 
 A ponte provisória usada antes do exportador definitivo continua disponível para
-reproduzir a validação por DXF ASCII e converte uma camada linear para o mesmo contrato v0.1:
+reproduzir a validação por DXF ASCII e converte as camadas para o mesmo contrato (v0.1; v0.2 quando a layer tem cor; v0.3 para os blocos):
 
 ~~~bash
 python3 tools/dxf-converter/geomap_dxf.py --help
@@ -245,18 +254,19 @@ apps/api/GeoMap.Api/                API mínima ASP.NET Core
 apps/web/                            frontend React, TypeScript e MapLibre
 database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
-tools/importer/GeoMap.Contract/        validador do contrato de importação v0.1
-tools/importer/GeoMap.Importer/        importador transacional do contrato v0.1
+tools/importer/GeoMap.Contract/        validador do contrato de importação (v0.1 a v0.3)
+tools/importer/GeoMap.Importer/        importador transacional do contrato (v0.1 a v0.3)
 tools/dxf-converter/                    ponte DXF provisória da validação real
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
 tests/GeoMap.Importer.Tests/        testes do parser, CLI e identidade
 tests/integration/                  testes reais de schema, integridade e datasets
-.github/workflows/                  CI do backend, frontend e PostGIS
 docker-compose.yml                  ambiente local
 ~~~
 
-O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, a importação GeoMap v0.1, a conversão privada da primeira rede CAD real e o exportador inicial de Polyline no GeoAutoEngine estão implementados.
+A CI do backend, do frontend e do PostGIS fica na raiz do monorepo: `.github/workflows/geomap-backend-ci.yml` e `.github/workflows/geomap-frontend-ci.yml`.
+
+O modelo espacial, os datasets SMALL, MEDIUM e LARGE, a API espacial, os tiles vetoriais, a fundação do frontend, o mapa base configurável, a visualização MVT, o controle de múltiplas camadas, a seleção, os atributos básicos, a importação GeoMap (v0.1 a v0.3), a conversão privada da primeira rede CAD real e o exportador inicial de Polyline no GeoAutoEngine estão implementados.
 
 ## Documentação
 
