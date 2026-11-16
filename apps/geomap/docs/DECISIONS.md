@@ -170,7 +170,7 @@ Status: aprovada.
 
 O arquivo `.geomap.json` v0.1 representa o estado completo de uma rede. O importador valida o documento integralmente antes de abrir a persistência e, em uma única transação, cria ou atualiza o projeto e a rede, substitui as feições anteriores e insere o novo snapshot. Um advisory lock transacional derivado do ID da rede impede duas substituições concorrentes da mesma rede.
 
-Projeto e rede recebem UUIDs determinísticos derivados de `sourceSystem` e dos respectivos `externalId`. Feições com `sourceId` usam rede + `sourceType` + `sourceId`; feições anônimas usam sua posição no documento. Assim, a reimportação idêntica mantém IDs e quantidade, enquanto qualquer falha provoca rollback e preserva o snapshot anterior. A transformação espacial usa o EPSG declarado e as definições instaladas no PostGIS, armazenando sempre EPSG:4326.
+Projeto e rede recebem UUIDs determinísticos derivados de `sourceSystem` e dos respectivos `externalId` *(substituído pela DEC-032: o projeto passa a depender só do `externalId`)*. Feições com `sourceId` usam rede + `sourceType` + `sourceId`; feições anônimas usam sua posição no documento. Assim, a reimportação idêntica mantém IDs e quantidade, enquanto qualquer falha provoca rollback e preserva o snapshot anterior. A transformação espacial usa o EPSG declarado e as definições instaladas no PostGIS, armazenando sempre EPSG:4326.
 
 ## DEC-023 — NDJSON com staging temporário para importação escalável
 
@@ -254,6 +254,14 @@ Complementa a DEC-012 sem substituí-la: as migrations continuam sendo SQL up/do
 Status: aprovada (Issue #64; melhoria interna autorizada pelo roadmap do GeoEcosystem de 11/11/2026).
 
 Cada importação concluída grava uma linha em `network_imports`, na mesma transação que troca o snapshot da rede: versão do contrato, sistema de origem, SRID, unidade, `exportedAt`, feições importadas e substituídas e o SHA-256 dos bytes do arquivo. A tabela só recebe inserções; uma reimportação acrescenta uma linha, e uma importação que falha não deixa nenhuma. O contrato não muda: os campos já eram obrigatórios e validados, mas não chegavam ao banco. O nome e o caminho do arquivo ficam de fora, porque podem conter nomes de cliente; o hash basta para confirmar se um arquivo é o que foi importado. No NDJSON, o hash custa uma leitura sequencial a mais do arquivo, sem mudar o pico de memória. Preservar o `created_at` das feições entre reimportações e expor a origem na API ficam para decisões futuras.
+
+## DEC-032 — Identidade do projeto independente do sistema de origem
+
+Status: aprovada (M4.2 do roadmap do GeoEcosystem; [DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)).
+
+Revisa a DEC-022 em um ponto: o UUID do projeto passa a ser derivado só de `project.externalId`. O `sourceSystem` deixa de entrar na identidade. Antes, a mesma obra exportada pela ponte DXF (`"Civil 3D DXF"`) e pelo GeoAutoEngine (`"Civil 3D"`) virava dois projetos (GM-05). O `sourceSystem` continua obrigatório no contrato e gravado em `network_imports` (DEC-031), como registro de qual programa gerou cada importação. A rede continua derivada do projeto + `network.externalId`, e a feição da rede + `sourceType` + `sourceId`.
+
+Consequências: os UUIDs de projeto mudam uma vez (novo prefixo de nome, `project-v2`). Uma reimportação num banco antigo cria o projeto de novo, e o antigo fica órfão. Isso é aceitável porque o GeoMap ainda não tem produção (Q-B do roadmap): os bancos de desenvolvimento podem ser recriados. Dois produtores que usem o mesmo `project.externalId` passam a escrever no mesmo projeto, e esse é o objetivo. O produtor oficial (GeoAutoEngine) passa a usar `sourceSystem` = `"GeoAutoEngine"` no M4.3a.
 
 ## Decisões pendentes
 

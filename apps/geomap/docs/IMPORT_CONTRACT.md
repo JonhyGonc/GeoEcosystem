@@ -13,7 +13,7 @@ Separar a origem Autodesk do restante do sistema. Qualquer exportador deve produ
 | Campo | Obrigatório | Descrição |
 |---|---:|---|
 | `contractVersion` | sim | `0.1`, `0.2` ou `0.3`; o valor exato seleciona o validador |
-| `sourceSystem` | sim | sistema de origem, até 100 caracteres |
+| `sourceSystem` | sim | sistema de origem, até 100 caracteres. É gravado em cada importação (`network_imports`), mas não entra na identidade do projeto (DEC-032). Produtor oficial: `"GeoAutoEngine"` |
 | `sourceCrs` | sim | identificador no formato `EPSG:<código>` |
 | `project` | sim | objeto com `externalId` e `name` |
 | `network` | sim | objeto com `externalId`, `name` e `type` |
@@ -171,7 +171,7 @@ Cada erro possui código estável, caminho JSON e mensagem legível. O importado
 ## Persistência e reimportação
 
 - o documento representa o snapshot completo da rede indicada;
-- projeto e rede são resolvidos por UUIDs determinísticos derivados de `sourceSystem` e `externalId`;
+- o projeto é resolvido por um UUID determinístico derivado só de `project.externalId` (DEC-032), e a rede pelo projeto + `network.externalId`;
 - uma reimportação atualiza os nomes e o tipo e substitui as feições da rede;
 - validação e gravação são atômicas: qualquer erro mantém o snapshot anterior;
 - importações concorrentes da mesma rede são serializadas no banco;

@@ -7,11 +7,11 @@
 - **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
 - **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **M4 — DWG → GeoMap:** 🔄 M4.1 (DEC-ECO-0003) no PR #19. D-04 decidida pelo usuário em 16/11/2026: código próprio por feição. Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
-- **Próximo passo:** merge do PR #19 → M4.2 (GeoMap: `sourceSystem` único) e M4.3a (GAE: `FEATURE_ID` em XData).
+- **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 🔄: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
+- **Próximo passo:** merge do M4.2 → M4.3a (GAE: `FEATURE_ID` em XData, com roteiro no Civil 3D).
 
 ## Pendências do usuário
-1. Mesclar o PR #19 (M3 concluído + DEC-ECO-0003).
+1. Mesclar o PR do M4.2 (só GeoMap; sem teste manual).
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
@@ -29,6 +29,13 @@
 - **GAD para testar:** `dotnet run --project src\GeoAutoDocs.App -c Release` em `apps\geoautodocs`.
 - **Sessões do agente:** não têm .NET nem PowerShell; código C# só é verificado pela CI.
 - **SDK na máquina do usuário:** .NET 8 SDK global (ele gerou o instalador do GAD com `dotnet publish`).
+
+## Assuntos em aberto (fora do roadmap, para decidir depois)
+- **Civil 3D 2027 e .NET 10** (perguntado pelo usuário em 16/11/2026; "depois vemos isso"):
+  - o Civil 3D 2027 exige plugins .NET 10, recompilados contra as DLLs do 2027 (série R26.0), então o GAE precisaria de um host 2027;
+  - o GAD e o GeoMap não dependem da versão do Civil 3D;
+  - o .NET 8 perdeu o suporte da Microsoft em 10/11/2026: vale migrar o GAD e a biblioteca do contrato para .NET 10;
+  - a Autodesk também passa o Civil 3D 2026 para .NET 10 pela atualização 2026.1.2. O plugin atual funcionou na máquina do usuário em 16/11/2026.
 
 ## Notas técnicas
 - Alvo da biblioteca: **só `net8.0`** (decisão do usuário, 16/11/2026). O host 2024 do GAE não compila mais. `build-release.ps1` precisa de `-Versions 2026`.

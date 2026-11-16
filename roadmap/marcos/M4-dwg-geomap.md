@@ -1,6 +1,6 @@
 # M4 — Caminho oficial DWG → GeoMap
 
-- **Estado:** M4.1 em revisão (PR #19). Acompanhamento: Issue [#20](https://github.com/JonhyGonc/GeoEcosystem/issues/20).
+- **Estado:** M4.1 ✅ (PR #19, mesclado em 16/11/2026). M4.2 em revisão. Acompanhamento: Issue [#20](https://github.com/JonhyGonc/GeoEcosystem/issues/20).
 - **Decisão:** [DEC-ECO-0003](../../decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)
 - **Dono:** agente único (Emenda 2); decisões de negócio, merge e testes no Civil 3D: usuário
 - **Objetivo:** um único caminho reproduzível para levar a rede do DWG ao GeoMap, em que reimportar a mesma rede atualiza, sem duplicar.
@@ -8,8 +8,8 @@
 ## Passos
 | Passo | Entrega | Verificação | Estado |
 |---|---|---|---|
-| M4.1 | DEC-ECO-0003: D-03 (b) e D-04 (código próprio por feição) | PR mesclado pelo usuário | 🔄 PR #19 |
-| M4.2 | GeoMap: `sourceSystem` único `GeoAutoEngine` (GM-05); documentação de `sourceId` | Teste: reimportar a mesma rede gera o mesmo UUID | ⏳ |
+| M4.1 | DEC-ECO-0003: D-03 (b) e D-04 (código próprio por feição) | PR mesclado pelo usuário | ✅ PR #19 |
+| M4.2 | GeoMap: identidade do projeto independente do `sourceSystem` (DEC-032, GM-05); documentação | Teste: a mesma obra por produtores diferentes gera o mesmo UUID de projeto e de rede | 🔄 |
 | M4.3a | GAE: `FEATURE_ID` em XData (`GEOAUTOENGINE_FEATURE`), regra de duplicatas, `sourceId` = GUID, `sourceSystem` = `GeoAutoEngine` | CI (regras na camada Application); roteiro no Civil 3D: exportar, reexportar, mover, copiar e BREAK | ⏳ |
 | M4.3b | GAE: cor da layer (contrato 0.2) | Fixture gerada pelo GAE validada pelo validador do GeoMap na CI; comparação com a ponte DXF | ⏳ |
 | M4.3c | GAE: blocos como pontos (contrato 0.3) | idem | ⏳ |
