@@ -1,6 +1,6 @@
 # M2 — Repositório único (monorepo)
 
-- **Estado:** em execução desde 12/11/2026 (M2.1). O M1 foi concluído em 12/11/2026.
+- **Estado:** M2.1–M2.4 concluídos (PR #7 mesclado em 13/11/2026; CI 6/6 verde). Falta o M2.5: tags com prefixo e arquivamento dos repositórios antigos (usuário). Ver `status/ESTADO_ATUAL.md`.
 - **Decisão:** [DEC-ECO-0001](../../decisoes/DEC-ECO-0001-monorepo.md)
 - **Dono:** Chat 00 (M2.1, M2.3); Chats 01–03 (M2.2, M2.4); usuário (merge, M2.5)
 

@@ -1,14 +1,25 @@
 # Agentes
 
-| Agente | Escopo | Escreve em | Não faz |
-|---|---|---|---|
-| **Chat 00** — coordenador | Prioridades, dependências, contratos, decisões entre projetos, roadmap | `GeoEcosystem` (por PR) | Implementar funcionalidades nos três aplicativos |
-| **Chat 01** — GeoMap | `JonhyGonc/Geomap` | `Geomap` (respeitando o `AGENTS.md` dele) | Alterar outros repositórios sem autorização do Chat 00 |
-| **Chat 02** — GeoAutoEngine | `JonhyGonc/GeoAutoEngine` | `GeoAutoEngine` | Idem |
-| **Chat 03** — GeoAutoDocs | `JonhyGonc/GeoAutoDocs` | `GeoAutoDocs` | Idem |
-| **Usuário** | Requisitos de negócio, aprovação do roadmap, merges, operações em produção | Todos | — |
+> **Desde 16/11/2026 vale a [Emenda 2](PROTOCOLO.md#emenda-2--agente-único-decisão-do-usuário-em-16112026): um único agente.** A tabela antiga (Chats 00–03) fica abaixo como histórico.
 
-> **A partir do M2.3 (monorepo):** cada especialista escreve só em `apps/<sua aplicação>/` do `GeoEcosystem` ([Emenda 1](PROTOCOLO.md#emendas)). Os repositórios antigos ficam arquivados.
+| Agente | Papel | Escreve em |
+|---|---|---|
+| **Claude** (chat no Project "GeoEcosystem") | Coordena e implementa em todo o repositório | `JonhyGonc/GeoEcosystem`, por PR |
+| **ChatGPT** (só quando os créditos do Claude acabarem) | O mesmo papel, com o mesmo prompt | Idem |
+| **Usuário** | Requisitos de negócio, aprovação do roadmap, merges, tags, Releases, instalação nas máquinas | Todos |
+
+Prompt para iniciar qualquer sessão: [`PROMPT_AGENTE_UNICO.md`](PROMPT_AGENTE_UNICO.md). Estado para retomar: [`status/ESTADO_ATUAL.md`](../status/ESTADO_ATUAL.md).
+
+<details><summary>Histórico: quatro agentes (10–13/11/2026)</summary>
+
+| Agente | Escopo |
+|---|---|
+| Chat 00 — coordenador | Prioridades, contratos, decisões, roadmap |
+| Chat 01 — GeoMap | `apps/geomap` |
+| Chat 02 — GeoAutoEngine | `apps/geoautoengine` |
+| Chat 03 — GeoAutoDocs | `apps/geoautodocs` |
+
+</details>
 
 ## Regras de comunicação
 - Os chats não se comunicam automaticamente: o usuário encaminha mensagens, e Issues, PRs e arquivos deste repositório são a trilha oficial.

@@ -75,3 +75,20 @@ A partir da conclusão do M2.3 (importação para o monorepo), a regra 6 passa a
 - O workflow de CI de cada aplicação (`.github/workflows/<app>-*.yml`) pode ser alterado pelo especialista dono da aplicação, com parecer do Chat 00.
 - Continua valendo: o merge na `main` é feito pelo usuário ([`PROCESSO_PR.md`](PROCESSO_PR.md)), exceto as melhorias internas autorizadas, que o especialista mescla após CI verde quando a pasta é só dele.
 
+
+### Emenda 2 — agente único (decisão do usuário em 16/11/2026)
+A partir de 16/11/2026, por custo, o ecossistema passa a ter **um único agente** em vez de quatro. Esta emenda substitui a divisão de papéis das seções "Identidade e escopo" e "Domínios e especialidades" e a Emenda 1.
+
+- **Agente principal:** um chat do Claude no Project "GeoEcosystem". Ele coordena **e** implementa nas três aplicações (`apps/geomap`, `apps/geoautoengine`, `apps/geoautodocs`), em `libs/` e na documentação central.
+- **Agente reserva:** quando os créditos do Claude acabarem, o usuário continua no ChatGPT com o mesmo prompt ([`PROMPT_AGENTE_UNICO.md`](PROMPT_AGENTE_UNICO.md)) e as mesmas regras. Nunca os dois trabalham ao mesmo tempo.
+- **Continuidade:** o estado oficial fica no GitHub. Ao final de cada sessão, o agente atualiza [`status/ESTADO_ATUAL.md`](../status/ESTADO_ATUAL.md) (o que foi feito, o que está aberto, próximo passo). Ao começar, ele lê esse arquivo antes de qualquer coisa.
+- **Sem revisor separado:** o usuário dispensou a revisão por outro agente. Compensação obrigatória em todo PR:
+  - CI verde de todas as aplicações afetadas;
+  - autorrevisão escrita no PR (checklist do template);
+  - roteiro de teste manual para o usuário quando o PR muda comportamento no Civil 3D ou no GeoAutoDocs.
+- **Continua valendo:**
+  - nenhuma implementação fora do roadmap aprovado;
+  - mudanças de contrato com versão e compatibilidade (regra 8);
+  - merge na `main`, tags, Releases, arquivamento e operações em máquinas reais são do usuário;
+  - nunca alegar ação ou teste sem evidência (regra 1).
+- Os Chats 01, 02 e 03 estão encerrados. Os relatórios deles continuam em `auditorias/` e no Project.
