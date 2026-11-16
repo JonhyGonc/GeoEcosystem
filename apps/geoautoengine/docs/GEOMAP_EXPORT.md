@@ -1,12 +1,14 @@
 # Exportação de Polylines e blocos para o GeoMap
 
-O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contrato GeoMap (`*.geomap.json`). A versão é a menor que aceita o arquivo: 0.3 para os blocos (pontos), 0.2 para linhas com cor de layer e 0.1 para linhas sem cor. Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
+O comando `GEOAUTO3GEOMAPEXPORT` exporta as redes do desenho ativo para o contrato GeoMap (`*.geomap.json`), **uma rede por layer** (desde o M4.3e), cada uma no seu arquivo. A versão é a menor que aceita o arquivo: 0.3 para os blocos (pontos), 0.2 para linhas com cor de layer e 0.1 para linhas sem cor. Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
 
 ## Escopo desta versão
 
 - entidades `Polyline` 2D (`LWPOLYLINE`), abertas ou fechadas;
 - blocos (`INSERT`) como pontos, numa rede separada (desde o M4.3c, ver "Blocos");
 - `LINE` e `ARC` (desde o M4.3d);
+- seleção por layer, com curinga, e uma rede por layer (desde o M4.3e, ver "Redes por layer");
+- diâmetro e material lidos do nome da layer `RD_<diâmetro>[_<material>]` e atributos dos blocos (desde o M4.3e, ver "Atributos");
 - arcos (bulge) nas Polylines e o `ARC` viram trechos retos, com no máximo 5 mm de diferença (ver "Arcos");
 - até 10.000 Polylines por arquivo e 100.000 posições por feição;
 - código próprio de cada Polyline (`sourceId`), gravado no desenho (ver "Identidade das feições");
@@ -21,11 +23,11 @@ O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contra
 1. Instale ou atualize o bundle `GeoAutoEngine.bundle` normalmente.
 2. Abra o DWG no Civil 3D e confirme o sistema de coordenadas e a unidade do desenho.
 3. Execute `GEOAUTO3GEOMAPEXPORT` na linha de comando.
-4. Selecione as Polylines e os blocos da mesma rede e pressione Enter.
-5. Confirme projeto, rede (e a rede dos blocos, se houver blocos) e tipo. Quando o layer pertence ao catálogo oficial do GeoAutoEngine, a rede é sugerida automaticamente.
+4. Em "Selecionar por [Layers/Objetos]", pressione Enter para **Layers** e digite as layers, por exemplo `RD_*,TÊ`. O comando pega todas as linhas e blocos dessas layers no espaço do modelo. Ou escolha **Objetos** e selecione na tela.
+5. O comando lista as redes que vai criar, uma por layer. Confirme o projeto e o tipo das redes. Quando a layer pertence ao catálogo oficial do GeoAutoEngine, o tipo é sugerido automaticamente.
 6. Informe o EPSG de origem, por exemplo `EPSG:31982`. Também é aceito informar somente `31982`.
-7. Confirme a unidade e escolha o arquivo `*.geomap.json`.
-8. Importe o arquivo pelo importador do GeoMap.
+7. Confirme a unidade e escolha a pasta e o nome base, por exemplo `obra.geomap.json`. Os arquivos saem como `obra-<layer>.geomap.json` e, para os blocos, `obra-<layer>-blocos.geomap.json`. Arquivos com o mesmo nome são substituídos.
+8. Importe os arquivos pelo botão **Importar** do site do GeoMap (aceita vários de uma vez) ou pelo importador do terminal.
 9. **Salve o DWG** se o comando avisar que o desenho recebeu códigos novos.
 
 ## Identidade das feições (desde o M4.3a)
@@ -52,15 +54,28 @@ O comando lê a cor da layer das Polylines e grava em `network.color` (`#RRGGBB`
 
 Os blocos (tês, registros, caps, poços de visita) vão para o GeoMap como pontos (`Point`), no contrato 0.3. Pela DEC-029 do GeoMap, eles ficam numa rede separada das linhas.
 
-- **Uma seleção com linhas e blocos gera dois arquivos.** O primeiro é o que você escolhe na janela. O dos blocos fica na mesma pasta, com `-blocos` no nome (`rede.geomap.json` → `rede-blocos.geomap.json`). Se esse arquivo já existir, ele é substituído.
-- A rede dos blocos é sugerida a partir da rede das linhas: identificador com `:blocos` no fim e nome com `(blocos)`. As duas redes têm o mesmo projeto, tipo, CRS e unidade.
-- Uma seleção só com blocos gera um arquivo só, o da rede dos blocos.
-- Cada rede tem a sua cor, a da layer com mais feições dela.
-- O nome do bloco vai em `properties.bloco`. No bloco dinâmico, é o nome do bloco, e não o nome interno `*U…`. Também vão a rotação em graus (`rotacao`), a escala (`escalaX`, `escalaY`), a elevação (`cadElevation`) e o handle (`cadHandle`). Os atributos do bloco ficam para o M4.3e.
+- Os blocos de cada layer vão numa rede e num arquivo próprios, com `-blocos` no nome (ver "Redes por layer").
+- O nome do bloco vai em `properties.bloco`. No bloco dinâmico, é o nome do bloco, e não o nome interno `*U…`. Também vão a rotação em graus (`rotacao`), a escala (`escalaX`, `escalaY`), a elevação (`cadElevation`) e o handle (`cadHandle`). Os atributos do bloco também vão (ver "Atributos").
 - Cada bloco também ganha o código próprio (`FEATURE_ID`), com as mesmas regras das Polylines.
 - **Ficam de fora**, com a contagem por motivo na linha de comando: blocos em layers de levantamento `_TG*`, o símbolo de ponto levantado `SIMB_PONTO`, blocos anônimos, referências externas (xref) e `MINSERT`.
 - **Posição:** o ponto é o ponto de inserção. Alguns blocos têm o desenho nas coordenadas reais e o ponto base em 0,0; neles, o ponto vai para o centro do símbolo, e `posicaoPeloSimbolo` fica verdadeiro. É a mesma regra da ponte DXF.
 - Um bloco fora do plano XY (normal diferente de Z) cancela a exportação.
+
+## Redes por layer (desde o M4.3e)
+
+Cada layer vira uma rede, com a cor da própria layer, como fazia a ponte DXF (decisão do usuário, 16/11/2026). No mapa, cada uma pode ser ligada e desligada separadamente.
+
+- Rede das linhas: identificador `<projeto>:<layer>` e nome `<layer>`, por exemplo `GF-CV-02:RD_150_PVC`.
+- Se a layer também tem blocos, eles vão numa rede própria (DEC-029 do GeoMap): `<projeto>:<layer>:blocos` e `<layer> (blocos)`.
+- Todas as redes saem com o mesmo projeto, tipo, CRS, unidade e data.
+- Cada arquivo aceita até 10.000 feições. Uma layer com mais feições cancela a exportação com aviso.
+- Exportações anteriores ao M4.3e usavam uma rede só (por exemplo, "Rede" e "Bloco"). Essas redes antigas continuam no GeoMap até o banco ser recriado.
+
+## Atributos (desde o M4.3e)
+
+- **Diâmetro e material:** numa layer `RD_<diâmetro>[_<material>]`, a feição ganha `diametroMm` e `material` (`RD_150_PVC` → 150 e `PVC`; `RD_200` → só 200). É a mesma convenção da validação com dados reais do GeoMap. Layers fora desse padrão ficam sem esses campos, sem erro.
+- **Atributos dos blocos (ATTRIB):** cada atributo vira uma propriedade com o nome da tag, como na ponte DXF. Uma tag com o nome de um campo que o exportador já preenche (por exemplo, `material` ou `bloco`) ganha o prefixo `atributo_`. O atributo multilinha vai como texto simples.
+- O contrato aceita até 4.096 caracteres por valor e 128 campos por feição. Um bloco fora disso cancela a exportação com aviso.
 
 ## Arcos (desde o M4.3d)
 

@@ -46,7 +46,7 @@ dotnet run --project tools/importer/GeoMap.Importer -- `
 | Aberta | `LineString` na ordem original |
 | Fechada | repete a primeira posição ao final |
 | Identidade | código próprio da Polyline (GUID em XData, gravado pelo GeoAutoEngine) em `sourceId`; handle em `cadHandle` ([DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)) |
-| Layer | preservado em `sourceLayer` |
+| Layer | preservado em `sourceLayer`; uma rede por layer (M4.3e), selecionável por nome com curinga; `RD_<diâmetro>[_<material>]` → `diametroMm` e `material` |
 | Cor | cor da layer com mais Polylines em `network.color` (versão 0.2); sem cor, o arquivo fica na 0.1 |
 | Z | saída X/Y; perda declarada em `projectedTo2D` e elevação em `cadElevation` |
 | CRS | obrigatório, no formato EPSG |
@@ -57,7 +57,7 @@ Ficam fora desta versão: `Polyline2d`, `Polyline3d`, `SPLINE`, `CIRCLE`, Featur
 
 ## Validação cruzada
 
-Os arquivos `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json`, `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json` e `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json` e `contracts/geomap/0.1/examples/valid-geoautoengine-curves.geomap.json` são cópias sintéticas das saídas de referência mantidas no GeoAutoEngine (`apps/geoautoengine/samples/geomap/`). Um teste do GeoAutoEngine confere, na CI, que o serializador gera esses arquivos e que as cópias são idênticas byte a byte. Os testes do GeoMap verificam:
+Os arquivos `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json`, `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json` e `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json` e `contracts/geomap/0.1/examples/valid-geoautoengine-curves.geomap.json` e `contracts/geomap/0.3/examples/valid-geoautoengine-attributes.geomap.json` são cópias sintéticas das saídas de referência mantidas no GeoAutoEngine (`apps/geoautoengine/samples/geomap/`). Um teste do GeoAutoEngine confere, na CI, que o serializador gera esses arquivos e que as cópias são idênticas byte a byte. Os testes do GeoMap verificam:
 
 - aceitação pelo validador estrito v0.1;
 - leitura de projeto, rede, handle, layer e propriedades pelo importador;

@@ -37,12 +37,14 @@ public static class GeoMapEntityTypes
 /// </summary>
 /// <param name="Name">Nome do bloco (nome efetivo, no caso de bloco dinâmico); vai em <c>properties.bloco</c>.</param>
 /// <param name="PositionFromSymbol">Verdadeiro quando a posição é o centro do símbolo, e não o ponto de inserção.</param>
+/// <param name="Attributes">Atributos do bloco (ATTRIB), tag e valor, na ordem do desenho (M4.3e).</param>
 public sealed record GeoMapBlockInfo(
     string Name,
     double RotationDegrees,
     double ScaleX,
     double ScaleY,
-    bool PositionFromSymbol);
+    bool PositionFromSymbol,
+    IReadOnlyList<KeyValuePair<string, string>>? Attributes = null);
 
 public sealed record GeoMapExportRequest(
     string SourceCrs,

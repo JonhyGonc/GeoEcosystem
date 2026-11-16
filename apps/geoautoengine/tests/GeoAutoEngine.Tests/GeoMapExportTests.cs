@@ -160,6 +160,7 @@ public sealed class GeoMapExportTests
     [InlineData("polyline-export-color.geomap.json", "0.2", "valid-geoautoengine-color.geomap.json")]
     [InlineData("block-export.geomap.json", "0.3", "valid-geoautoengine-blocks.geomap.json")]
     [InlineData("curve-export.geomap.json", "0.1", "valid-geoautoengine-curves.geomap.json")]
+    [InlineData("layer-attributes-export.geomap.json", "0.3", "valid-geoautoengine-attributes.geomap.json")]
     [Trait("Category", "FAST")]
     public void Samples_AreIdenticalToTheExamplesValidatedByGeoMap(string sample, string version, string example)
     {
@@ -450,6 +451,122 @@ public sealed class GeoMapExportTests
 
         var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(CreateRequest(line)));
         Assert.Contains("duas elevações", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_BlockAttributesAndLayerDiameter_ProduceTheVersionedSample()
+    {
+        var network = new GeoMapLayerNetwork(
+            "RD_150_PVC",
+            true,
+            [
+                new GeoMapExportFeature(
+                    "8d4f5a6b-7c8d-4e9f-b0a1-2c3d4e5f6a7b",
+                    "2D01",
+                    "RD_150_PVC",
+                    [new(688150.5, 7086420.25)],
+                    false,
+                    0,
+                    false,
+                    new GeoMapBlockInfo(
+                        "REGISTRO",
+                        45,
+                        1,
+                        1,
+                        false,
+                        [new("DN", "150"), new("ESTADO", "Aberto"), new("material", "Ferro fundido")])),
+            ]);
+        var request = CreateRequest(network.Features.ToArray()) with
+        {
+            NetworkExternalId = GeoMapLayerNetworks.NetworkExternalId("project-001", network),
+            NetworkName = GeoMapLayerNetworks.NetworkName(network),
+            NetworkType = "potable_water",
+            NetworkColor = "#00A0FF",
+        };
+
+        using var actual = JsonDocument.Parse(GeoMapExportSerializer.Serialize(request));
+        using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            RepositoryRoot(), "samples", "geomap", "layer-attributes-export.geomap.json")));
+        Assert.Equal(
+            JsonSerializer.Serialize(expected.RootElement),
+            JsonSerializer.Serialize(actual.RootElement));
+    }
+
+    [Theory]
+    [InlineData("RD_150_PVC", 150d, "PVC")]
+    [InlineData("RD_200", 200d, null)]
+    [InlineData("rd_50_pead", 50d, "pead")]
+    [InlineData("RD_32,5_PVC", 32.5d, "PVC")]
+    [InlineData("RD_150_", 150d, null)]
+    [InlineData("RD_150_DEFOFO_NOVO", 150d, "DEFOFO_NOVO")]
+    [InlineData("RD_", null, null)]
+    [InlineData("RD_ABC_PVC", null, null)]
+    [InlineData("GF-Rede Pluvial", null, null)]
+    [InlineData("TÊ", null, null)]
+    [Trait("Category", "FAST")]
+    public void LayerAttributes_ReadDiameterAndMaterialFromTheLayerName(string layer, double? diameter, string? material)
+    {
+        Assert.Equal(new GeoMapLayerAttributes(diameter, material), GeoMapLayerNetworks.Attributes(layer));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void LayerNetworks_OneNetworkPerLayerWithBlocksApart()
+    {
+        GeoMapExportFeature[] features =
+        [
+            SampleFeature("A", "RD_200"),
+            BlockFeature("10000000-0000-4000-8000-000000000001", "B1", new(1, 2), 0, new GeoMapBlockInfo("TE", 0, 1, 1, false)) with
+            {
+                SourceLayer = "RD_150_PVC",
+            },
+            SampleFeature("C", "RD_150_PVC"),
+            SampleFeature("D", "RD_200"),
+        ];
+
+        var networks = GeoMapLayerNetworks.Split(features);
+
+        Assert.Equal(
+            new[] { ("RD_150_PVC", false, 1), ("RD_150_PVC", true, 1), ("RD_200", false, 2) },
+            networks.Select(network => (network.Layer, network.IsBlocks, network.Features.Count)).ToArray());
+        Assert.Equal("obra:RD_150_PVC", GeoMapLayerNetworks.NetworkExternalId("obra", networks[0]));
+        Assert.Equal("obra:RD_150_PVC:blocos", GeoMapLayerNetworks.NetworkExternalId("obra", networks[1]));
+        Assert.Equal("RD_150_PVC (blocos)", GeoMapLayerNetworks.NetworkName(networks[1]));
+        Assert.Equal(@"C:\obra\GF-CV-RD_200.geomap.json", GeoMapLayerNetworks.FilePath(@"C:\obra\GF-CV.geomap.json", networks[2]));
+        Assert.Equal(
+            @"C:\obra\GF-CV-TÊ-blocos.geomap.json",
+            GeoMapLayerNetworks.FilePath(@"C:\obra\GF-CV.geomap.json", new GeoMapLayerNetwork("TÊ", true, [])));
+        Assert.Equal(
+            @"C:\obra\GF-CV-A-B-C.geomap.json",
+            GeoMapLayerNetworks.FilePath(@"C:\obra\GF-CV.geomap.json", new GeoMapLayerNetwork("A/B|C", false, [])));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_LineOnRdLayer_CarriesDiameterAndMaterial()
+    {
+        var json = GeoMapExportSerializer.Serialize(CreateRequest(SampleFeature("A", "RD_150_PVC")));
+
+        using var document = JsonDocument.Parse(json);
+        var properties = document.RootElement.GetProperty("features")[0].GetProperty("properties");
+        Assert.Equal(150, properties.GetProperty("diametroMm").GetDouble());
+        Assert.Equal("PVC", properties.GetProperty("material").GetString());
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_BlockAttributeTooLong_IsRejected()
+    {
+        var block = BlockFeature(
+            SampleFeatureId,
+            "2B10",
+            new(1, 2),
+            0,
+            new GeoMapBlockInfo("TE", 0, 1, 1, false, [new("OBS", new string('x', 4097))]));
+
+        var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(CreateRequest(block)));
+        Assert.Contains("atributo", error.Message, StringComparison.Ordinal);
     }
 
     private static void AssertJsonEquivalent(JsonElement expected, JsonElement actual, string path)

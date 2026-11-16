@@ -65,6 +65,7 @@ public static class GeoMapExportSerializer
 
     private static FeatureDto CreateFeature(GeoMapExportFeature feature, string units)
     {
+        var layerAttributes = GeoMapLayerNetworks.Attributes(feature.SourceLayer);
         if (feature.Block is { } block)
         {
             var position = feature.Vertices[0];
@@ -73,16 +74,7 @@ public static class GeoMapExportSerializer
                 "BlockReference",
                 feature.SourceLayer,
                 new GeometryDto("Point", new[] { position.X, position.Y }),
-                new BlockPropertiesDto(
-                    feature.CadHandle,
-                    "BlockReference",
-                    block.Name,
-                    block.RotationDegrees,
-                    block.ScaleX,
-                    block.ScaleY,
-                    feature.Elevation,
-                    feature.ProjectedTo2D,
-                    block.PositionFromSymbol));
+                BlockProperties(feature, block, layerAttributes));
         }
 
         // Arcos viram trechos retos com no máximo 5 mm de diferença (M4.3d); sem arcos, as posições são os
@@ -108,7 +100,9 @@ public static class GeoMapExportSerializer
                 feature.Vertices.Count,
                 feature.Elevation,
                 feature.EndElevation ?? feature.Elevation,
-                feature.ProjectedTo2D)
+                feature.ProjectedTo2D,
+                layerAttributes.DiameterMm,
+                layerAttributes.Material)
             : new PropertiesDto(
                 feature.CadHandle,
                 feature.EntityType,
@@ -116,7 +110,9 @@ public static class GeoMapExportSerializer
                 feature.IsClosed,
                 feature.Elevation,
                 feature.ProjectedTo2D,
-                arcs == 0 ? null : arcs);
+                arcs == 0 ? null : arcs,
+                layerAttributes.DiameterMm,
+                layerAttributes.Material);
 
         return new(
             feature.SourceId,
@@ -212,6 +208,62 @@ public static class GeoMapExportSerializer
         }
     }
 
+    // Mesmas propriedades e ordem da ponte DXF (DEC-029 do GeoMap), depois o diâmetro e o material da layer e os
+    // atributos do bloco (M4.3e). Um atributo com nome de propriedade gerada ganha o prefixo "atributo_".
+    private static readonly HashSet<string> ReservedBlockProperties = new(StringComparer.Ordinal)
+    {
+        "cadHandle", "cadEntityType", "bloco", "rotacao", "escalaX", "escalaY", "cadElevation",
+        "projectedTo2D", "posicaoPeloSimbolo", DiameterProperty, MaterialProperty,
+    };
+
+    private const string DiameterProperty = "diametroMm";
+    private const string MaterialProperty = "material";
+
+    // Limites do validador do GeoMap para properties.
+    private const int MaximumProperties = 128;
+    private const int MaximumPropertyStringLength = 4_096;
+
+    private static Dictionary<string, object> BlockProperties(
+        GeoMapExportFeature feature,
+        GeoMapBlockInfo block,
+        GeoMapLayerAttributes layerAttributes)
+    {
+        var properties = new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["cadHandle"] = feature.CadHandle,
+            ["cadEntityType"] = "BlockReference",
+            ["bloco"] = block.Name,
+            ["rotacao"] = block.RotationDegrees,
+            ["escalaX"] = block.ScaleX,
+            ["escalaY"] = block.ScaleY,
+            ["cadElevation"] = feature.Elevation,
+            ["projectedTo2D"] = feature.ProjectedTo2D,
+            ["posicaoPeloSimbolo"] = block.PositionFromSymbol,
+        };
+        if (layerAttributes.DiameterMm is { } diameter)
+        {
+            properties[DiameterProperty] = diameter;
+        }
+
+        if (layerAttributes.Material is { } material)
+        {
+            properties[MaterialProperty] = material;
+        }
+
+        foreach (var attribute in block.Attributes ?? [])
+        {
+            properties[BlockAttributeName(attribute.Key)] = attribute.Value;
+        }
+
+        return properties;
+    }
+
+    private static string BlockAttributeName(string tag)
+    {
+        var name = tag.Trim();
+        return ReservedBlockProperties.Contains(name) ? "atributo_" + name : name;
+    }
+
     private static void ValidateLine(GeoMapExportFeature feature)
     {
         if (feature.EntityType is not (GeoMapEntityTypes.Polyline or GeoMapEntityTypes.Line or GeoMapEntityTypes.Arc))
@@ -242,6 +294,20 @@ public static class GeoMapExportSerializer
         if (feature.Vertices is null || feature.Vertices.Count != 1)
         {
             throw new InvalidOperationException($"O bloco {feature.CadHandle} precisa ter exatamente uma posição.");
+        }
+
+        var attributes = block.Attributes ?? [];
+        if (attributes.Any(attribute =>
+                string.IsNullOrWhiteSpace(attribute.Key) ||
+                BlockAttributeName(attribute.Key).Length > 128 ||
+                attribute.Value is null ||
+                attribute.Value.Length > MaximumPropertyStringLength) ||
+            attributes.Select(attribute => BlockAttributeName(attribute.Key)).Distinct(StringComparer.Ordinal).Count() +
+            ReservedBlockProperties.Count > MaximumProperties)
+        {
+            throw new InvalidOperationException(
+                $"O bloco {feature.CadHandle} tem atributo vazio, longo demais (mais de {MaximumPropertyStringLength} " +
+                $"caracteres) ou atributos demais para o contrato GeoMap.");
         }
 
         if (!IsFinite(feature.Elevation) ||
@@ -310,7 +376,9 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("closed")] bool Closed,
         [property: JsonPropertyName("cadElevation")] double CadElevation,
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
-        [property: JsonPropertyName("arcosTesselados"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArcosTesselados);
+        [property: JsonPropertyName("arcosTesselados"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArcosTesselados,
+        [property: JsonPropertyName(DiameterProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? DiametroMm,
+        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material);
 
     // LINE: as mesmas propriedades da ponte DXF, com a elevação de cada ponta (M4.3d).
     private sealed record LinePropertiesDto(
@@ -319,17 +387,7 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("vertexCount")] int VertexCount,
         [property: JsonPropertyName("cadStartElevation")] double CadStartElevation,
         [property: JsonPropertyName("cadEndElevation")] double CadEndElevation,
-        [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D);
-
-    // Mesmas propriedades e ordem da ponte DXF (DEC-029 do GeoMap). Atributos de bloco: M4.3e.
-    private sealed record BlockPropertiesDto(
-        [property: JsonPropertyName("cadHandle")] string CadHandle,
-        [property: JsonPropertyName("cadEntityType")] string CadEntityType,
-        [property: JsonPropertyName("bloco")] string Bloco,
-        [property: JsonPropertyName("rotacao")] double Rotacao,
-        [property: JsonPropertyName("escalaX")] double EscalaX,
-        [property: JsonPropertyName("escalaY")] double EscalaY,
-        [property: JsonPropertyName("cadElevation")] double CadElevation,
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
-        [property: JsonPropertyName("posicaoPeloSimbolo")] bool PosicaoPeloSimbolo);
+        [property: JsonPropertyName(DiameterProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? DiametroMm,
+        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material);
 }
