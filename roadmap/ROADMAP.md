@@ -6,8 +6,8 @@
 > |---|---|
 > | M1 — Versão oficial completa | ✅ concluído em 12/11/2026 ([marcos/M1](marcos/M1-versao-oficial.md)) |
 > | M2 — Monorepo | ✅ concluído em 16/11/2026 ([marcos/M2](marcos/M2-monorepo.md)) |
-> | M3 — Contrato GADX | 🔄 M3.1 ✅; M3.2 em revisão ([marcos/M3](marcos/M3-contrato-gadx.md)) |
-> | M4 — Exportador GAE → GeoMap | ⏳ |
+> | M3 — Contrato GADX | ✅ concluído em 16/11/2026; instalação na equipe adiada para o fim do projeto ([marcos/M3](marcos/M3-contrato-gadx.md)) |
+> | M4 — Exportador GAE → GeoMap | 🔄 M4.1 em revisão ([marcos/M4](marcos/M4-dwg-geomap.md)) |
 > | M5 — Anomalias no mapa | ⏳ |
 
 - **Autor:** Chat 00

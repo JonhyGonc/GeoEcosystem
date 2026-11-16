@@ -5,20 +5,13 @@
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
 - **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
-- **M3 — Contrato GADX:**
-  - M3.1 ✅: especificação normativa GADX 1.1 + `DEC-ECO-0002`, no PR #13, mesclado em 16/11/2026;
-  - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
-  - M3.3a ✅: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15, mesclado em 16/11/2026);
-  - M3.3b ✅: payloads das correções na biblioteca + `deploy.ps1` com o .NET do Windows (PR #16, mesclado em 16/11/2026). Roteiro executado pelo usuário: "Funcionou certinho" (cobre o M3.3a e o M3.3b);
-  - M3.3c ✅: servidor (GAE) aplica as regras S1–S3 de `capabilities` (PR #17, mesclado; roteiro com o GAD 1.1.0: "Funcionou");
-  - M3.4 🔄: o GAD declara `["corrections"]`, envia a versão do produto e escreve `locationMode` canônico (branch `feat/018-gad-capabilities`).
-
-  Acompanhamento: Issue #11; mudança de contrato: Issue #12.
+- **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** roteiro e merge do M3.4. Com isso, o **M3 fica concluído** (a instalação na equipe foi adiada para o fim do projeto). Depois: **M4**, que começa pela decisão D-03/D-04 com o usuário (`DEC-ECO-0003`).
+- **M4 — DWG → GeoMap:** 🔄 M4.1 (DEC-ECO-0003) no PR #19. D-04 decidida pelo usuário em 16/11/2026: código próprio por feição. Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
+- **Próximo passo:** merge do PR #19 → M4.2 (GeoMap: `sourceSystem` único) e M4.3a (GAE: `FEATURE_ID` em XData).
 
 ## Pendências do usuário
-1. Roteiro e merge do PR do M3.4.
+1. Mesclar o PR #19 (M3 concluído + DEC-ECO-0003).
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
@@ -26,6 +19,7 @@
 - **Versão do GADX:** no fio continua `1`; a especificação vira a revisão 1.1.
 - **Biblioteca do contrato:** só `net8.0` ("somente com a versão de 2026").
 - **Instalação na equipe:** só no fim do projeto, numa rodada única.
+- **Identidade no GeoMap (D-04):** código próprio (GUID) gravado pelo GAE em XData em cada feição exportada.
 
 ## Fatos aprendidos (para não repetir)
 - **Máquina do usuário:** não tem as pastas externas `reference` e `GeoAutoEngine.Legacy` nem o .NET portátil `.dotnet`. Os testes `EXTERNAL` e as suítes `legacy`/`full` do GAE não rodam lá; nunca rodaram.

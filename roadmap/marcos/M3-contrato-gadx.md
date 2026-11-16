@@ -1,6 +1,6 @@
 # M3 — Contrato GADX estável
 
-- **Estado:** M3.1 ✅ (PR #13), M3.2 ✅ (PR #14), M3.3a ✅ (PR #15), M3.3b ✅ (PR #16) e M3.3c ✅ (PR #17), mesclados em 16/11/2026. M3.4 em revisão. Acompanhamento: Issue [#11](https://github.com/JonhyGonc/GeoEcosystem/issues/11). Mudança de contrato: Issue [#12](https://github.com/JonhyGonc/GeoEcosystem/issues/12).
+- **Estado:** M3.1 ✅ (PR #13), M3.2 ✅ (PR #14), M3.3a ✅ (PR #15), M3.3b ✅ (PR #16), M3.3c ✅ (PR #17) e M3.4 ✅ (PR #18), mesclados em 16/11/2026. **M3 concluído em 16/11/2026**: GADX 1.1 implementado e homologado na máquina do usuário; a instalação na equipe (M3.5) fica para a rodada final do projeto. Acompanhamento: Issue [#11](https://github.com/JonhyGonc/GeoEcosystem/issues/11). Mudança de contrato: Issue [#12](https://github.com/JonhyGonc/GeoEcosystem/issues/12).
 - **Decisão:** [DEC-ECO-0002](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)
 - **Especificação:** [`contratos/gadx-inspecao/SPEC.md`](../../contratos/gadx-inspecao/SPEC.md) (GADX 1.1)
 - **Dono:** agente único (Emenda 2); merge, instalação e testes no Civil 3D: usuário
@@ -13,8 +13,8 @@
 | M3.3a | `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) com o protocolo e o documento; GAE e GAD apagam as cópias e passam a usá-la; **sem mudança de comportamento** | CI da biblioteca, do GAE e do GAD verde; o usuário compila o plugin 2026 e faz o teste de sempre (inspeção e correção) | ✅ PR #15 |
 | M3.3b | Payloads das correções (mensagens 6/7) unificados na biblioteca | CI verde com as fixtures `correction-*` | ✅ PR #16 (roteiro OK em 16/11/2026) |
 | M3.3c | Servidor aplica S1–S3 (§7): lê `capabilities` e responde no `HelloAck` | CI verde; roteiro no Civil 3D 2026 com o GAD 1.1.0 | ✅ PR #17 (roteiro OK) |
-| M3.4 | GAD envia `capabilities: ["corrections"]` e `applicationVersion` do produto; teste de que `locationMode` sai com o nome canônico | CI verde; roteiro manual no Civil 3D 2026 | 🔄 |
-| M3.5 | ~~Instalação na equipe~~ **adiada para o fim do projeto** (decisão do usuário, 16/11/2026). No M3, só homologação na máquina do usuário | Usuário confirma correções funcionando no Civil 3D 2026 dele, com GAD 1.1.0 e com o GAD novo | ⏳ |
+| M3.4 | GAD envia `capabilities: ["corrections"]` e `applicationVersion` do produto; teste de que `locationMode` sai com o nome canônico | CI verde; roteiro manual no Civil 3D 2026 | ✅ PR #18 (roteiro OK: `capabilities=[corrections]` no log) |
+| M3.5 | ~~Instalação na equipe~~ **adiada para o fim do projeto** (decisão do usuário, 16/11/2026). No M3, só homologação na máquina do usuário | Usuário confirma correções funcionando no Civil 3D 2026 dele, com GAD 1.1.0 e com o GAD novo | ✅ homologação: GAD 1.1.0 (PR #17) e GAD novo (PR #18); instalação na equipe adiada |
 
 ## Decisões tomadas neste marco
 | Data | Decisão | Quem |
