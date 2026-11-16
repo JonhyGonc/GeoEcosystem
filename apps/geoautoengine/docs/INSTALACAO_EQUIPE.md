@@ -49,15 +49,16 @@ Get-ChildItem "$env:APPDATA\Autodesk\ApplicationPlugins\GeoAutoEngine.bundle" -R
 
 ## Opção B — instalador com os três anos
 
-Na máquina de build (com as DLLs do AutoCAD 2024, 2025 e 2026; para o 2024 serve o ObjectARX em `C:\Autodesk\ObjectARX_for_AutoCAD_2024_Win_64bit_dlm\inc`):
+Na máquina de build (com as DLLs do AutoCAD 2024, 2025 e 2026; para o 2024 serve o ObjectARX em `C:\Autodesk\ObjectARX_for_AutoCAD_2024_Win_64bit_dlm\inc`), a partir da pasta `apps\geoautoengine` do clone do [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem):
 ```powershell
+cd GeoEcosystem\apps\geoautoengine
 .\scripts\build-release.ps1
 ```
 O script roda os testes, compila os 3 hosts, recusa empacotar DLLs da Autodesk e gera:
 - `artifacts\release\installer\GeoAutoEngine3_Setup.exe`
 - `artifacts\release\installer\GeoAutoEngine3_Setup.exe.sha256.txt`
 
-Esses dois arquivos podem ser anexados à Release `v3.2.0` no GitHub.
+Esses dois arquivos podem ser anexados à Release `geoautoengine/v3.2.0` do GeoEcosystem no GitHub (as tags `vX.Y.Z` sem prefixo são do repositório antigo, arquivado).
 
 No computador do colega:
 1. faça o **backup do passo 2** da opção A (o instalador só guarda um backup temporário durante a instalação);
