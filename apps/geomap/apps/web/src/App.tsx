@@ -216,7 +216,6 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
     const projectId = selectedProjectId
     const abortController = new AbortController()
-    setOrthophoto({ projectId, state: { kind: 'loading' } })
     void fetchOrthophoto(configuration.value.apiBaseUrl, projectId, abortController.signal)
       .then((info) => {
         if (abortController.signal.aborted) return
@@ -430,9 +429,13 @@ function App({ configuration = networkConfiguration }: AppProps) {
             locateDisabledReason={locateDisabledReason(currentLocation)}
           />
         )}
-        {orthophoto && orthophoto.projectId === selectedProjectId && (
+        {selectedProjectId && (
           <OrthophotoControl
-            state={orthophoto.state}
+            state={
+              orthophoto?.projectId === selectedProjectId
+                ? orthophoto.state
+                : { kind: 'loading' }
+            }
             display={orthophotoDisplay}
             onDisplayChange={changeOrthophotoDisplay}
           />
