@@ -13,7 +13,15 @@ public sealed class ArchitectureTests
     public void ProjectDependencyDirection_IsExactlyTheApprovedMinimum()
     {
         Assert.Equal([], ProjectReferences("GeoAutoEngine.Domain"));
-        Assert.Equal(["GeoAutoEngine.Domain"], ProjectReferences("GeoAutoEngine.Application"));
+        // GeoEcosystem.Contracts.Inspection: contrato GADX compartilhado com o GeoAutoDocs
+        // (libs/ do monorepo, DEC-ECO-0002). Ela não pode depender de nenhum outro projeto.
+        Assert.Equal(
+            ["GeoAutoEngine.Domain", "GeoEcosystem.Contracts.Inspection"],
+            ProjectReferences("GeoAutoEngine.Application"));
+        Assert.Empty(XDocument.Load(Path.Combine(
+                RepositoryRoot, "..", "..", "libs", "GeoEcosystem.Contracts.Inspection",
+                "GeoEcosystem.Contracts.Inspection.csproj"))
+            .Descendants("ProjectReference"));
         Assert.Equal(["GeoAutoEngine.Application"], ProjectReferences("GeoAutoEngine.Csv"));
         Assert.Equal(["GeoAutoEngine.Application"], ProjectReferences("GeoAutoEngine.Cad2026"));
         Assert.Equal(["GeoAutoEngine.Cad2026", "GeoAutoEngine.Csv"], ProjectReferences("GeoAutoEngine.Plugin"));
