@@ -60,6 +60,8 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
+            // Cor da rede (contrato 0.2): a da layer com mais Polylines na seleção (M4.3b).
+            var colorChoice = GeoMapLayerColor.ChooseNetworkColor(features, read.LayerColors);
             var request = new GeoMapExportRequest(
                 sourceCrs,
                 units.Trim().ToLowerInvariant(),
@@ -69,7 +71,8 @@ public sealed class GeoMapExportCommands
                 networkName,
                 networkType,
                 DateTimeOffset.UtcNow,
-                features);
+                features,
+                colorChoice.Color);
             var json = GeoMapExportSerializer.Serialize(request);
 
             using var dialog = new SaveFileDialog
@@ -95,7 +98,11 @@ public sealed class GeoMapExportCommands
             document.Editor.WriteMessage(
                 $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n" +
                 $"GeoAutoEngine: códigos novos={read.AssignedCount}; renovados por cópia/BREAK={read.RenewedCount}; " +
-                $"mantidos={features.Count - written}.\n");
+                $"mantidos={features.Count - written}.\n" +
+                (colorChoice.Color is null
+                    ? $"GeoAutoEngine: sem cor de layer; arquivo na versão {GeoMapExportSerializer.ContractVersion}.\n"
+                    : $"GeoAutoEngine: cor da rede {colorChoice.Color} (layer {colorChoice.Layer}); " +
+                      $"arquivo na versão {GeoMapExportSerializer.ContractVersionWithColor}.\n"));
             if (written > 0)
             {
                 document.Editor.WriteMessage(

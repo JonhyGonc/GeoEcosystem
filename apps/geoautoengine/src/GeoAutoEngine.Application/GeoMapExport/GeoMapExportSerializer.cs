@@ -6,7 +6,9 @@ namespace GeoAutoEngine.Application.GeoMapExport;
 
 public static class GeoMapExportSerializer
 {
+    // 0.2 só quando a rede tem cor (network.color); sem cor, 0.1, como a ponte DXF (M4.3b).
     public const string ContractVersion = "0.1";
+    public const string ContractVersionWithColor = "0.2";
     // Produtor oficial do contrato GeoMap (DEC-ECO-0003). Antes: "Civil 3D".
     public const string SourceSystem = "GeoAutoEngine";
     public const int MaximumFeatures = 10_000;
@@ -31,12 +33,16 @@ public static class GeoMapExportSerializer
         Validate(request);
 
         var document = new DocumentDto(
-            ContractVersion,
+            request.NetworkColor is null ? ContractVersion : ContractVersionWithColor,
             SourceSystem,
             request.SourceCrs,
             request.Units,
             new ProjectDto(request.ProjectExternalId, request.ProjectName),
-            new NetworkDto(request.NetworkExternalId, request.NetworkName, request.NetworkType.Trim().ToLowerInvariant()),
+            new NetworkDto(
+                request.NetworkExternalId,
+                request.NetworkName,
+                request.NetworkType.Trim().ToLowerInvariant(),
+                request.NetworkColor),
             request.ExportedAt.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture),
             request.Features.Select(CreateFeature).ToArray());
 
@@ -100,6 +106,10 @@ public static class GeoMapExportSerializer
         Required(request.NetworkExternalId, 255, "O identificador da rede");
         Required(request.NetworkName, 200, "O nome da rede");
         Required(request.NetworkType, 100, "O tipo da rede");
+        if (request.NetworkColor is not null && !GeoMapLayerColor.IsValid(request.NetworkColor))
+        {
+            throw new InvalidOperationException("A cor da rede deve usar o formato #RRGGBB, em maiúsculas.");
+        }
 
         if (request.Features is null || request.Features.Count == 0)
         {
@@ -176,7 +186,8 @@ public static class GeoMapExportSerializer
     private sealed record NetworkDto(
         [property: JsonPropertyName("externalId")] string ExternalId,
         [property: JsonPropertyName("name")] string Name,
-        [property: JsonPropertyName("type")] string Type);
+        [property: JsonPropertyName("type")] string Type,
+        [property: JsonPropertyName("color"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Color);
 
     private sealed record FeatureDto(
         [property: JsonPropertyName("sourceId")] string SourceId,

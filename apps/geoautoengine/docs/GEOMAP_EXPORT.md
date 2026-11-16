@@ -1,6 +1,6 @@
 # Exportação de Polyline para o GeoMap
 
-O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contrato GeoMap v0.1 (`*.geomap.json`). Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
+O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contrato GeoMap (`*.geomap.json`): versão 0.2 quando a layer tem cor, versão 0.1 quando não tem. Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
 
 ## Escopo desta versão
 
@@ -35,6 +35,16 @@ Cada Polyline exportada ganha um código próprio (GUID) na XData `GEOAUTOENGINE
 - O `sourceSystem` do arquivo é `GeoAutoEngine` (antes: `Civil 3D`).
 
 O EPSG nunca recebe um valor silencioso: ele deve ser informado em cada exportação. A unidade é sugerida somente quando `INSUNITS` está configurado como metros, pés ou US survey feet.
+
+## Cor da rede (desde o M4.3b)
+
+O comando lê a cor da layer das Polylines e grava em `network.color` (`#RRGGBB`, maiúsculas), no contrato 0.2. O GeoMap pinta a rede com essa cor.
+
+- A rede tem uma cor só: vale a cor da layer com mais Polylines na seleção. Em empate, a primeira layer em ordem alfabética.
+- True color e índice ACI usam a conversão do próprio AutoCAD. O ACI 7 (branco ou preto, conforme o fundo) vira preto (`#000000`), porque o mapa base é claro. É a mesma regra da ponte DXF.
+- Se a layer escolhida não tem cor (ByLayer, ByBlock), o arquivo sai na versão 0.1, sem `color`.
+- Só a cor da **layer** conta. A cor definida direto na Polyline é ignorada.
+- O comando informa a cor e a layer de onde ela veio.
 
 ## Política geométrica
 

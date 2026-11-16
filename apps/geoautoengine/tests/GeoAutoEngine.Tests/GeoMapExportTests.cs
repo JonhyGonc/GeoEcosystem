@@ -116,6 +116,108 @@ public sealed class GeoMapExportTests
             JsonSerializer.Serialize(actual.RootElement));
     }
 
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_WithNetworkColor_ProducesVersion02AndTheVersionedSample()
+    {
+        var json = GeoMapExportSerializer.Serialize(CreateRequest(SampleFeature()) with { NetworkColor = "#1F77B4" });
+
+        using var actual = JsonDocument.Parse(json);
+        Assert.Equal("0.2", actual.RootElement.GetProperty("contractVersion").GetString());
+        Assert.Equal("#1F77B4", actual.RootElement.GetProperty("network").GetProperty("color").GetString());
+        using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            RepositoryRoot(), "samples", "geomap", "polyline-export-color.geomap.json")));
+        Assert.Equal(
+            JsonSerializer.Serialize(expected.RootElement),
+            JsonSerializer.Serialize(actual.RootElement));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_WithoutNetworkColor_StaysVersion01WithoutTheField()
+    {
+        using var document = JsonDocument.Parse(GeoMapExportSerializer.Serialize(CreateRequest(SampleFeature())));
+
+        Assert.Equal("0.1", document.RootElement.GetProperty("contractVersion").GetString());
+        Assert.False(document.RootElement.GetProperty("network").TryGetProperty("color", out _));
+    }
+
+    [Theory]
+    [InlineData("#1f77b4")]
+    [InlineData("1F77B4")]
+    [InlineData("#1F77B")]
+    [Trait("Category", "FAST")]
+    public void Serialize_InvalidNetworkColor_IsRejected(string color)
+    {
+        var request = CreateRequest(SampleFeature()) with { NetworkColor = color };
+
+        var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(request));
+        Assert.Contains("#RRGGBB", error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("polyline-export.geomap.json", "0.1", "valid-geoautoengine-polyline.geomap.json")]
+    [InlineData("polyline-export-color.geomap.json", "0.2", "valid-geoautoengine-color.geomap.json")]
+    [Trait("Category", "FAST")]
+    public void Samples_AreIdenticalToTheExamplesValidatedByGeoMap(string sample, string version, string example)
+    {
+        // Teste cruzado (M4.3, GM-10): a saída do GAE é a mesma fixture que o GeoMap valida e importa na CI.
+        var geoMapExample = Path.Combine(
+            RepositoryRoot(), "..", "geomap", "contracts", "geomap", version, "examples", example);
+
+        Assert.Equal(
+            File.ReadAllBytes(Path.Combine(RepositoryRoot(), "samples", "geomap", sample)),
+            File.ReadAllBytes(geoMapExample));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void NetworkColor_ComesFromTheLayerWithMostPolylines()
+    {
+        GeoMapExportFeature[] features =
+        [
+            SampleFeature("A", "REDE-B"),
+            SampleFeature("B", "REDE-A"),
+            SampleFeature("C", "REDE-A"),
+        ];
+        var colors = new Dictionary<string, string?> { ["REDE-A"] = "#FF7F00", ["REDE-B"] = "#000000" };
+
+        Assert.Equal(new GeoMapNetworkColorChoice("#FF7F00", "REDE-A"), GeoMapLayerColor.ChooseNetworkColor(features, colors));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void NetworkColor_TieGoesToTheFirstLayerAndMissingColorMeansNone()
+    {
+        GeoMapExportFeature[] features = [SampleFeature("A", "REDE-B"), SampleFeature("B", "REDE-A")];
+
+        Assert.Equal(
+            new GeoMapNetworkColorChoice("#00FF00", "REDE-A"),
+            GeoMapLayerColor.ChooseNetworkColor(features, new Dictionary<string, string?> { ["REDE-A"] = "#00FF00" }));
+        Assert.Equal(
+            new GeoMapNetworkColorChoice(null, "REDE-A"),
+            GeoMapLayerColor.ChooseNetworkColor(features, new Dictionary<string, string?> { ["REDE-B"] = "#00FF00" }));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void LayerColor_IsWrittenAsUppercaseHex()
+    {
+        Assert.Equal("#FF7F00", GeoMapLayerColor.ToHex(255, 127, 0));
+        Assert.Equal("#000000", GeoMapLayerColor.ForegroundColor);
+        Assert.True(GeoMapLayerColor.IsValid("#0A0B0C"));
+        Assert.False(GeoMapLayerColor.IsValid("#0a0b0c"));
+    }
+
+    private static GeoMapExportFeature SampleFeature(string handle = "2A7F", string layer = "GF-Rede Pluvial") => new(
+        handle == "2A7F" ? SampleFeatureId : $"00000000-0000-4000-8000-00000000000{handle}",
+        handle,
+        layer,
+        [new(688100.25, 7086400.75), new(688112.5, 7086411)],
+        false,
+        0,
+        false);
+
     private const string SampleFeatureId = "7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d";
 
     private static string RepositoryRoot()

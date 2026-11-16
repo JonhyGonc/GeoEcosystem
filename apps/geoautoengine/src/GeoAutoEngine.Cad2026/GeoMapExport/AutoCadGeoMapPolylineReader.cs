@@ -1,4 +1,5 @@
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using GeoAutoEngine.Application.GeoMapExport;
 
@@ -7,7 +8,8 @@ namespace GeoAutoEngine.Cad2026.GeoMapExport;
 /// <summary>Resultado da leitura: as feições prontas para exportar e os códigos que ainda precisam ser gravados.</summary>
 public sealed record GeoMapPolylineReadResult(
     IReadOnlyList<GeoMapExportFeature> Features,
-    IReadOnlyList<GeoMapFeatureIdWrite> PendingWrites)
+    IReadOnlyList<GeoMapFeatureIdWrite> PendingWrites,
+    IReadOnlyDictionary<string, string?> LayerColors)
 {
     public int AssignedCount => PendingWrites.Count(write => write.Assignment.Status == GeoMapFeatureIdStatus.Assigned);
 
@@ -35,6 +37,7 @@ public static class AutoCadGeoMapPolylineReader
         }
 
         var polylines = new List<ReadPolyline>(objectIds.Count);
+        var layerColors = new Dictionary<string, string?>(StringComparer.Ordinal);
         using (var transaction = document.Database.TransactionManager.StartOpenCloseTransaction())
         {
             foreach (var objectId in objectIds)
@@ -51,6 +54,11 @@ public static class AutoCadGeoMapPolylineReader
                 }
 
                 RejectCurvedSegments(polyline, handle);
+                if (!layerColors.ContainsKey(polyline.Layer) &&
+                    transaction.GetObject(polyline.LayerId, OpenMode.ForRead) is LayerTableRecord layer)
+                {
+                    layerColors[polyline.Layer] = LayerColor(layer.Color);
+                }
 
                 var vertices = new List<GeoMapCoordinate>(polyline.NumberOfVertices);
                 var projectedTo2D = false;
@@ -98,7 +106,7 @@ public static class AutoCadGeoMapPolylineReader
             }
         }
 
-        return new GeoMapPolylineReadResult(features, pendingWrites);
+        return new GeoMapPolylineReadResult(features, pendingWrites, layerColors);
     }
 
     /// <summary>
@@ -143,6 +151,24 @@ public static class AutoCadGeoMapPolylineReader
 
         transaction.Commit();
         return writes.Count;
+    }
+
+    // Cor da layer em #RRGGBB para o contrato GeoMap 0.2 (M4.3b). True color e ACI usam a conversão
+    // do próprio AutoCAD; o ACI 7 (branco/preto conforme o fundo) vira preto, como na ponte DXF.
+    private static string? LayerColor(Color color)
+    {
+        if (color.IsByAci && color.ColorIndex == GeoMapLayerColor.AciForegroundIndex)
+        {
+            return GeoMapLayerColor.ForegroundColor;
+        }
+
+        if (color.IsByAci || color.IsByColor)
+        {
+            var value = color.ColorValue;
+            return GeoMapLayerColor.ToHex(value.R, value.G, value.B);
+        }
+
+        return null;
     }
 
     private sealed record ReadPolyline(

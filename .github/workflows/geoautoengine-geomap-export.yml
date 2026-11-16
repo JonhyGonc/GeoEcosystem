@@ -10,6 +10,8 @@ on:
       - "apps/geoautoengine/src/GeoAutoEngine.Cad2026/GeoMapExport/**"
       - "apps/geoautoengine/src/GeoAutoEngine.Plugin/GeoMapExportCommands.cs"
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/GeoMapExportTests.cs"
+      - "apps/geoautoengine/samples/geomap/**"
+      - "apps/geomap/contracts/geomap/**"
       - "apps/geoautoengine/build/GeoAutoEngine.bundle/PackageContents.xml"
   push:
     branches: [main]
@@ -19,6 +21,8 @@ on:
       - "apps/geoautoengine/src/GeoAutoEngine.Cad2026/GeoMapExport/**"
       - "apps/geoautoengine/src/GeoAutoEngine.Plugin/GeoMapExportCommands.cs"
       - "apps/geoautoengine/tests/GeoAutoEngine.Tests/GeoMapExportTests.cs"
+      - "apps/geoautoengine/samples/geomap/**"
+      - "apps/geomap/contracts/geomap/**"
       - "apps/geoautoengine/build/GeoAutoEngine.bundle/PackageContents.xml"
 
 permissions:

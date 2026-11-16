@@ -7,6 +7,7 @@ on:
     paths:
       - "apps/geoautoengine/**"
       - "contratos/gadx-inspecao/**"
+      - "apps/geomap/contracts/geomap/**"
       - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautoengine-tests.yml"
   push:
@@ -14,6 +15,7 @@ on:
     paths:
       - "apps/geoautoengine/**"
       - "contratos/gadx-inspecao/**"
+      - "apps/geomap/contracts/geomap/**"
       - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautoengine-tests.yml"
 
