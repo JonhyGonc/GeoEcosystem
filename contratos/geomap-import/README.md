@@ -8,7 +8,7 @@
 - Exportador GAE: `GeoAutoEngine/src/GeoAutoEngine.Application/GeoMapExport/GeoMapExportSerializer.cs`
 
 ## Regras entre projetos (vigentes)
-- Mudança de versão ou de regra que afete produtores exige Issue `mudanca-de-contrato` aqui e aprovação do Chat 00.
+- Mudança de versão ou de regra que afete produtores exige Issue `mudanca-de-contrato` aqui e merge do usuário (Emenda 2).
 - O UUID do projeto no GeoMap depende de `sourceSystem`. Hoje a ponte usa `"Civil 3D DXF"` e o GAE `"Civil 3D"`: **mudar esse valor muda os IDs** (GM-05). Não alterar sem decisão (D-03/D-04).
 
 ## Estado por versão (10/11/2026)
