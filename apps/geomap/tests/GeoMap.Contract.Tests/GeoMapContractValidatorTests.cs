@@ -13,6 +13,7 @@ public sealed class GeoMapContractValidatorTests
     [InlineData("valid-network-color.geomap.json")]
     [InlineData("valid-geoautoengine-color.geomap.json")]
     [InlineData("valid-geoautoengine-blocks.geomap.json")]
+    [InlineData("valid-geoautoengine-curves.geomap.json")]
     public void Valid_examples_pass(string fileName)
     {
         var result = ValidateExample(fileName);

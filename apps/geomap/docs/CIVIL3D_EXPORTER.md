@@ -41,8 +41,8 @@ dotnet run --project tools/importer/GeoMap.Importer -- `
 
 | Item | Comportamento |
 |---|---|
-| Entidade | `LWPOLYLINE` (linhas) e `INSERT` (blocos como pontos, numa segunda rede e num segundo arquivo `-blocos`) |
-| Segmentos | somente retos; bulges cancelam o arquivo |
+| Entidade | `LWPOLYLINE`, `LINE` e `ARC` (linhas) e `INSERT` (blocos como pontos, numa segunda rede e num segundo arquivo `-blocos`) |
+| Segmentos | retos; arcos (bulge e `ARC`) viram trechos retos com no máximo 5 mm de diferença (M4.3d) |
 | Aberta | `LineString` na ordem original |
 | Fechada | repete a primeira posição ao final |
 | Identidade | código próprio da Polyline (GUID em XData, gravado pelo GeoAutoEngine) em `sourceId`; handle em `cadHandle` ([DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)) |
@@ -53,11 +53,11 @@ dotnet run --project tools/importer/GeoMap.Importer -- `
 | Unidade | obrigatória e restrita ao contrato v0.1 |
 | Limites | 10.000 feições; 100.000 posições por feição |
 
-Ficam fora desta versão: `Polyline2d`, `Polyline3d`, Feature Line, Pipe Network, Pressure Network, arcos, sincronização bidirecional e edição no site.
+Ficam fora desta versão: `Polyline2d`, `Polyline3d`, `SPLINE`, `CIRCLE`, Feature Line, Pipe Network, Pressure Network, sincronização bidirecional e edição no site.
 
 ## Validação cruzada
 
-Os arquivos `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json`, `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json` e `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json` são cópias sintéticas das saídas de referência mantidas no GeoAutoEngine (`apps/geoautoengine/samples/geomap/`). Um teste do GeoAutoEngine confere, na CI, que o serializador gera esses arquivos e que as cópias são idênticas byte a byte. Os testes do GeoMap verificam:
+Os arquivos `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json`, `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json` e `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json` e `contracts/geomap/0.1/examples/valid-geoautoengine-curves.geomap.json` são cópias sintéticas das saídas de referência mantidas no GeoAutoEngine (`apps/geoautoengine/samples/geomap/`). Um teste do GeoAutoEngine confere, na CI, que o serializador gera esses arquivos e que as cópias são idênticas byte a byte. Os testes do GeoMap verificam:
 
 - aceitação pelo validador estrito v0.1;
 - leitura de projeto, rede, handle, layer e propriedades pelo importador;

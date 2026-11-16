@@ -88,7 +88,7 @@ O nome do bloco vai em `properties.bloco`, porque ele já descreve o que é o el
 
 O exportador do GeoAutoEngine também gera a `0.3` desde o M4.3c: os blocos da seleção vão para uma rede separada, num segundo arquivo, com as mesmas propriedades e regras de posição da ponte. Exemplo executável: `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json`.
 
-Os exemplos `valid-geoautoengine-*.geomap.json` (0.1, 0.2 e 0.3) são cópias das amostras em `apps/geoautoengine/samples/geomap/`, geradas pelo serializador do comando `GEOAUTO3GEOMAPEXPORT`. Desde o M4.3b, um teste do GeoAutoEngine confere na CI que o serializador gera essas amostras e que as cópias são idênticas byte a byte. Os testes de contrato do GeoMap validam as três; a CI do backend importa a de 0.1.
+Os exemplos `valid-geoautoengine-*.geomap.json` (0.1, 0.2 e 0.3; em 0.1, também o de LINE e arcos tesselados, desde o M4.3d) são cópias das amostras em `apps/geoautoengine/samples/geomap/`, geradas pelo serializador do comando `GEOAUTO3GEOMAPEXPORT`. Desde o M4.3b, um teste do GeoAutoEngine confere na CI que o serializador gera essas amostras e que as cópias são idênticas byte a byte. Os testes de contrato do GeoMap validam todos; a CI do backend importa a de 0.1.
 
 ## Formatos físicos
 

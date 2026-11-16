@@ -22,7 +22,10 @@ public sealed record GeoMapPolylineReadResult(
 
 public sealed record GeoMapFeatureIdWrite(ObjectId ObjectId, GeoMapFeatureIdAssignment Assignment);
 
-/// <summary>Lê Polylines 2D (linhas) e blocos (pontos, desde o M4.3c) da seleção para o contrato GeoMap.</summary>
+/// <summary>
+/// Lê da seleção, para o contrato GeoMap: Polylines 2D, inclusive com arcos, LINE e ARC (linhas; arcos desde o
+/// M4.3d) e blocos (pontos, desde o M4.3c).
+/// </summary>
 public static class AutoCadGeoMapPolylineReader
 {
     private const double Tolerance = 1e-10;
@@ -53,9 +56,11 @@ public static class AutoCadGeoMapPolylineReader
                 ReadItem? item = entity switch
                 {
                     Polyline polyline => ReadPolyline(objectId, polyline),
+                    Line line => ReadLine(objectId, line),
+                    Arc arc => ReadArc(objectId, arc),
                     BlockReference block => ReadBlock(transaction, objectId, block, definitionExtents, skippedBlocks),
                     _ => throw new InvalidOperationException(
-                        "A seleção contém uma entidade que não é Polyline 2D nem bloco."),
+                        "A seleção contém uma entidade que não é Polyline 2D, LINE, ARC nem bloco."),
                 };
                 if (item is null)
                 {
@@ -98,7 +103,10 @@ public static class AutoCadGeoMapPolylineReader
                 item.Closed,
                 item.Elevation,
                 item.ProjectedTo2D,
-                item.Block));
+                item.Block,
+                item.Bulges,
+                item.EntityType,
+                item.EndElevation));
             if (assignment.MustBeWritten)
             {
                 pendingWrites.Add(new GeoMapFeatureIdWrite(item.Id, assignment));
@@ -116,7 +124,7 @@ public static class AutoCadGeoMapPolylineReader
             throw new InvalidOperationException($"A Polyline {handle} possui menos de dois vértices.");
         }
 
-        RejectCurvedSegments(polyline, handle);
+        var bulges = Bulges(polyline, handle);
         var vertices = new List<GeoMapCoordinate>(polyline.NumberOfVertices);
         var projectedTo2D = false;
         for (var index = 0; index < polyline.NumberOfVertices; index++)
@@ -135,7 +143,84 @@ public static class AutoCadGeoMapPolylineReader
             polyline.Closed,
             polyline.Elevation,
             projectedTo2D,
+            null,
+            bulges,
+            GeoMapEntityTypes.Polyline,
             null);
+    }
+
+    // LINE (M4.3d): dois pontos, cada um com a sua elevação, como na ponte DXF.
+    private static ReadItem ReadLine(ObjectId objectId, Line line)
+    {
+        var start = line.StartPoint;
+        var end = line.EndPoint;
+        return new ReadItem(
+            objectId,
+            line.Handle.ToString(),
+            ReadFeatureId(line),
+            line.Layer,
+            [new GeoMapCoordinate(start.X, start.Y), new GeoMapCoordinate(end.X, end.Y)],
+            false,
+            start.Z,
+            Math.Abs(start.Z) > Tolerance || Math.Abs(end.Z) > Tolerance,
+            null,
+            null,
+            GeoMapEntityTypes.Line,
+            end.Z);
+    }
+
+    // ARC (M4.3d): vira uma linha de dois pontos com um arco, que a serialização troca por trechos retos.
+    private static ReadItem ReadArc(ObjectId objectId, Arc arc)
+    {
+        var handle = arc.Handle.ToString();
+        var normalPointsDown = PlaneDirection(arc.Normal.Z, $"O ARC {handle}");
+        var start = arc.StartPoint;
+        var end = arc.EndPoint;
+        return new ReadItem(
+            objectId,
+            handle,
+            ReadFeatureId(arc),
+            arc.Layer,
+            [new GeoMapCoordinate(start.X, start.Y), new GeoMapCoordinate(end.X, end.Y)],
+            false,
+            arc.Center.Z,
+            Math.Abs(arc.Center.Z) > Tolerance,
+            null,
+            [GeoMapArcTessellation.ArcBulge(arc.StartAngle, arc.EndAngle, normalPointsDown), 0],
+            GeoMapEntityTypes.Arc,
+            null);
+    }
+
+    // Bulges da Polyline no sentido visto de cima (WCS); null quando todos os segmentos são retos.
+    private static List<double>? Bulges(Polyline polyline, string handle)
+    {
+        var bulges = new List<double>(polyline.NumberOfVertices);
+        for (var index = 0; index < polyline.NumberOfVertices; index++)
+        {
+            bulges.Add(polyline.GetBulgeAt(index));
+        }
+
+        if (!bulges.Any(GeoMapArcTessellation.IsArc))
+        {
+            return null;
+        }
+
+        // Polyline espelhada (normal -Z): o sentido do arco se inverte quando visto de cima.
+        return PlaneDirection(polyline.Normal.Z, $"A Polyline {handle}")
+            ? bulges.Select(bulge => -bulge).ToList()
+            : bulges;
+    }
+
+    // Arcos só no plano XY: normal +Z ou -Z (entidade espelhada). Retorna true para -Z.
+    private static bool PlaneDirection(double normalZ, string entity)
+    {
+        if (Math.Abs(Math.Abs(normalZ) - 1) > 1e-9)
+        {
+            throw new InvalidOperationException(
+                $"{entity} tem arco fora do plano XY (normal diferente de Z). Exportação cancelada.");
+        }
+
+        return normalZ < 0;
     }
 
     // Bloco como ponto (M4.3c), com as regras da ponte DXF (DEC-029 do GeoMap). Retorna null quando o
@@ -203,7 +288,10 @@ public static class AutoCadGeoMapPolylineReader
             false,
             insertion.Z,
             Math.Abs(insertion.Z) > Tolerance,
-            new GeoMapBlockInfo(name, rotation, scale.X, scale.Y, position.FromSymbol));
+            new GeoMapBlockInfo(name, rotation, scale.X, scale.Y, position.FromSymbol),
+            null,
+            GeoMapEntityTypes.Polyline,
+            null);
     }
 
     // Extensão do desenho da definição, sem textos e definições de atributo (como a ponte DXF).
@@ -310,7 +398,10 @@ public static class AutoCadGeoMapPolylineReader
         bool Closed,
         double Elevation,
         bool ProjectedTo2D,
-        GeoMapBlockInfo? Block);
+        GeoMapBlockInfo? Block,
+        List<double>? Bulges,
+        string EntityType,
+        double? EndElevation);
 
     private static Guid? ReadFeatureId(Entity entity)
     {
@@ -323,20 +414,5 @@ public static class AutoCadGeoMapPolylineReader
         return GeoMapFeatureIdentity.ParseXData(data.AsArray()
             .Where(item => item.TypeCode == (int)DxfCode.ExtendedDataAsciiString)
             .Select(item => Convert.ToString(item.Value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty));
-    }
-
-    private static void RejectCurvedSegments(Polyline polyline, string handle)
-    {
-        var segmentCount = polyline.Closed
-            ? polyline.NumberOfVertices
-            : polyline.NumberOfVertices - 1;
-        for (var index = 0; index < segmentCount; index++)
-        {
-            if (Math.Abs(polyline.GetBulgeAt(index)) > Tolerance)
-            {
-                throw new InvalidOperationException(
-                    $"A Polyline {handle} contém arco. O exportador GeoMap v0.1 aceita somente segmentos retos.");
-            }
-        }
     }
 }
