@@ -1,8 +1,25 @@
 param()
 
 $ErrorActionPreference = 'Stop'
-$repositoryRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$referenceRoot = Join-Path $repositoryRoot 'reference'
+
+# The reference collection lives outside the repository (never versioned). In the
+# GeoEcosystem monorepo it can be in apps\, in the monorepo root or next to the
+# clone, so search upward from the parent of the application folder.
+$applicationRoot = Split-Path -Parent $PSScriptRoot
+$referenceRoot = $null
+$directory = Split-Path -Parent $applicationRoot
+while ($directory) {
+    $candidate = Join-Path $directory 'reference'
+    if (Test-Path -LiteralPath $candidate -PathType Container) {
+        $referenceRoot = $candidate
+        break
+    }
+    $directory = Split-Path -Parent $directory
+}
+if (-not $referenceRoot) {
+    throw "External folder 'reference' not found in any parent folder of $applicationRoot."
+}
+
 $manifestPath = Join-Path $referenceRoot 'SHA256SUMS.csv'
 $dataDirectories = @('legacy_csv', 'legacy_outputs', 'legacy_dwgs', 'regression_data')
 
