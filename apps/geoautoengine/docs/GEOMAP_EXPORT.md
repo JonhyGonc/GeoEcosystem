@@ -1,10 +1,11 @@
-# Exportação de Polyline para o GeoMap
+# Exportação de Polylines e blocos para o GeoMap
 
-O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contrato GeoMap (`*.geomap.json`): versão 0.2 quando a layer tem cor, versão 0.1 quando não tem. Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
+O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contrato GeoMap (`*.geomap.json`). A versão é a menor que aceita o arquivo: 0.3 para os blocos (pontos), 0.2 para linhas com cor de layer e 0.1 para linhas sem cor. Ele está disponível no bundle do GeoAutoEngine para Civil 3D 2024, 2025 e 2026.
 
 ## Escopo desta versão
 
 - entidades `Polyline` 2D (`LWPOLYLINE`), abertas ou fechadas;
+- blocos (`INSERT`) como pontos, numa rede separada (desde o M4.3c, ver "Blocos");
 - segmentos retos;
 - até 10.000 Polylines por arquivo e 100.000 posições por feição;
 - código próprio de cada Polyline (`sourceId`), gravado no desenho (ver "Identidade das feições");
@@ -19,8 +20,8 @@ O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contra
 1. Instale ou atualize o bundle `GeoAutoEngine.bundle` normalmente.
 2. Abra o DWG no Civil 3D e confirme o sistema de coordenadas e a unidade do desenho.
 3. Execute `GEOAUTO3GEOMAPEXPORT` na linha de comando.
-4. Selecione as Polylines da mesma rede e pressione Enter.
-5. Confirme projeto, rede e tipo. Quando o layer pertence ao catálogo oficial do GeoAutoEngine, a rede é sugerida automaticamente.
+4. Selecione as Polylines e os blocos da mesma rede e pressione Enter.
+5. Confirme projeto, rede (e a rede dos blocos, se houver blocos) e tipo. Quando o layer pertence ao catálogo oficial do GeoAutoEngine, a rede é sugerida automaticamente.
 6. Informe o EPSG de origem, por exemplo `EPSG:31982`. Também é aceito informar somente `31982`.
 7. Confirme a unidade e escolha o arquivo `*.geomap.json`.
 8. Importe o arquivo pelo importador do GeoMap.
@@ -45,6 +46,20 @@ O comando lê a cor da layer das Polylines e grava em `network.color` (`#RRGGBB`
 - Se a layer escolhida não tem cor (ByLayer, ByBlock), o arquivo sai na versão 0.1, sem `color`.
 - Só a cor da **layer** conta. A cor definida direto na Polyline é ignorada.
 - O comando informa a cor e a layer de onde ela veio.
+
+## Blocos (desde o M4.3c)
+
+Os blocos (tês, registros, caps, poços de visita) vão para o GeoMap como pontos (`Point`), no contrato 0.3. Pela DEC-029 do GeoMap, eles ficam numa rede separada das linhas.
+
+- **Uma seleção com linhas e blocos gera dois arquivos.** O primeiro é o que você escolhe na janela. O dos blocos fica na mesma pasta, com `-blocos` no nome (`rede.geomap.json` → `rede-blocos.geomap.json`). Se esse arquivo já existir, ele é substituído.
+- A rede dos blocos é sugerida a partir da rede das linhas: identificador com `:blocos` no fim e nome com `(blocos)`. As duas redes têm o mesmo projeto, tipo, CRS e unidade.
+- Uma seleção só com blocos gera um arquivo só, o da rede dos blocos.
+- Cada rede tem a sua cor, a da layer com mais feições dela.
+- O nome do bloco vai em `properties.bloco`. No bloco dinâmico, é o nome do bloco, e não o nome interno `*U…`. Também vão a rotação em graus (`rotacao`), a escala (`escalaX`, `escalaY`), a elevação (`cadElevation`) e o handle (`cadHandle`). Os atributos do bloco ficam para o M4.3e.
+- Cada bloco também ganha o código próprio (`FEATURE_ID`), com as mesmas regras das Polylines.
+- **Ficam de fora**, com a contagem por motivo na linha de comando: blocos em layers de levantamento `_TG*`, o símbolo de ponto levantado `SIMB_PONTO`, blocos anônimos, referências externas (xref) e `MINSERT`.
+- **Posição:** o ponto é o ponto de inserção. Alguns blocos têm o desenho nas coordenadas reais e o ponto base em 0,0; neles, o ponto vai para o centro do símbolo, e `posicaoPeloSimbolo` fica verdadeiro. É a mesma regra da ponte DXF.
+- Um bloco fora do plano XY (normal diferente de Z) cancela a exportação.
 
 ## Política geométrica
 

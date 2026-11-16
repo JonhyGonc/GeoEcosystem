@@ -36,82 +36,131 @@ public sealed class GeoMapExportCommands
             }
 
             var read = AutoCadGeoMapPolylineReader.Read(document, selection);
-            var features = read.Features;
-            var inferredNetwork = InferNetwork(features);
+            // DEC-029 do GeoMap: blocos numa rede separada das linhas. Uma seleção com os dois gera
+            // dois arquivos, um por rede (M4.3c, decisão do usuário de 16/11/2026).
+            var lines = read.Features.Where(feature => feature.Block is null).ToArray();
+            var blocks = read.Features.Where(feature => feature.Block is not null).ToArray();
+            var inferredNetwork = InferNetwork(lines.Length > 0 ? lines : blocks);
             var drawingName = Path.GetFileNameWithoutExtension(document.Name);
+            var editor = document.Editor;
+            if (read.SkippedBlocks.Count > 0)
+            {
+                editor.WriteMessage(
+                    $"\nGeoAutoEngine: blocos deixados de fora: {GeoMapBlockRules.Describe(read.SkippedBlocks)}.\n");
+            }
 
-            if (!TryPrompt(document.Editor, "Identificador do projeto", drawingName, out var projectExternalId) ||
-                !TryPrompt(document.Editor, "Nome do projeto", drawingName, out var projectName) ||
+            if (!TryPrompt(editor, "Identificador do projeto", drawingName, out var projectExternalId) ||
+                !TryPrompt(editor, "Nome do projeto", drawingName, out var projectName))
+            {
+                editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
+                return;
+            }
+
+            // Rede das linhas e, se houver blocos, a rede dos blocos, sugerida a partir da primeira.
+            var networkExternalId = $"{projectExternalId}:{inferredNetwork.NetworkId}";
+            var networkName = inferredNetwork.DisplayName;
+            var blockNetworkExternalId = string.Empty;
+            var blockNetworkName = string.Empty;
+            if ((lines.Length > 0 &&
+                 (!TryPrompt(editor, "Identificador da rede", networkExternalId, out networkExternalId) ||
+                  !TryPrompt(editor, "Nome da rede", networkName, out networkName))) ||
+                (blocks.Length > 0 &&
+                 (!TryPrompt(
+                      editor,
+                      "Identificador da rede dos blocos",
+                      GeoMapBlockRules.BlockNetworkExternalId(networkExternalId),
+                      out blockNetworkExternalId) ||
+                  !TryPrompt(
+                      editor,
+                      "Nome da rede dos blocos",
+                      GeoMapBlockRules.BlockNetworkName(networkName),
+                      out blockNetworkName))) ||
+                !TryPrompt(editor, "Tipo da rede", CanonicalNetworkType(inferredNetwork.NetworkId), out var networkType))
+            {
+                editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
+                return;
+            }
+
+            if (!TryPromptCrs(editor, out var sourceCrs) ||
                 !TryPrompt(
-                    document.Editor,
-                    "Identificador da rede",
-                    $"{projectExternalId}:{inferredNetwork.NetworkId}",
-                    out var networkExternalId) ||
-                !TryPrompt(document.Editor, "Nome da rede", inferredNetwork.DisplayName, out var networkName) ||
-                !TryPrompt(document.Editor, "Tipo da rede", CanonicalNetworkType(inferredNetwork.NetworkId), out var networkType) ||
-                !TryPromptCrs(document.Editor, out var sourceCrs) ||
-                !TryPrompt(
-                    document.Editor,
+                    editor,
                     "Unidade (metre, foot, us-survey-foot ou degree)",
                     DrawingUnit(document.Database),
                     out var units))
             {
-                document.Editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
+                editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
                 return;
             }
 
-            // Cor da rede (contrato 0.2): a da layer com mais Polylines na seleção (M4.3b).
-            var colorChoice = GeoMapLayerColor.ChooseNetworkColor(features, read.LayerColors);
-            var request = new GeoMapExportRequest(
-                sourceCrs,
-                units.Trim().ToLowerInvariant(),
-                projectExternalId,
-                projectName,
-                networkExternalId,
-                networkName,
-                networkType,
-                DateTimeOffset.UtcNow,
-                features,
-                colorChoice.Color);
-            var json = GeoMapExportSerializer.Serialize(request);
+            // Cada rede leva a cor da layer com mais feições dela (M4.3b). Os dois arquivos são montados
+            // e validados antes de qualquer gravação.
+            var exportedAt = DateTimeOffset.UtcNow;
+            var outputs = new List<NetworkOutput>(2);
+            if (lines.Length > 0)
+            {
+                outputs.Add(CreateOutput(
+                    "linhas", lines, read, sourceCrs, units, projectExternalId, projectName,
+                    networkExternalId, networkName, networkType, exportedAt));
+            }
 
+            if (blocks.Length > 0)
+            {
+                outputs.Add(CreateOutput(
+                    "blocos", blocks, read, sourceCrs, units, projectExternalId, projectName,
+                    blockNetworkExternalId, blockNetworkName, networkType, exportedAt));
+            }
+
+            var suggestedName = $"{projectExternalId}-{inferredNetwork.NetworkId}{GeoMapBlockRules.FileExtension}";
             using var dialog = new SaveFileDialog
             {
                 AddExtension = true,
                 DefaultExt = "geomap.json",
-                FileName = SafeFileName($"{projectExternalId}-{inferredNetwork.NetworkId}.geomap.json"),
+                FileName = SafeFileName(lines.Length > 0 ? suggestedName : GeoMapBlockRules.BlockFilePath(suggestedName)),
                 Filter = "Contrato GeoMap (*.geomap.json)|*.geomap.json",
                 OverwritePrompt = true,
                 RestoreDirectory = true,
-                Title = "Exportar rede para o GeoMap",
+                Title = lines.Length > 0 && blocks.Length > 0
+                    ? "Exportar para o GeoMap (os blocos vão num segundo arquivo, com -blocos no nome)"
+                    : "Exportar rede para o GeoMap",
             };
             if (dialog.ShowDialog() != DialogResult.OK)
             {
-                document.Editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
+                editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
                 return;
             }
 
-            // Os códigos novos são gravados antes do arquivo: se a gravação do arquivo falhar,
+            outputs[0] = outputs[0] with { Path = dialog.FileName };
+            if (outputs.Count == 2)
+            {
+                outputs[1] = outputs[1] with { Path = GeoMapBlockRules.BlockFilePath(dialog.FileName) };
+            }
+
+            // Os códigos novos são gravados antes dos arquivos: se a gravação de um arquivo falhar,
             // os códigos já estão no desenho e a próxima exportação usa os mesmos (DEC-ECO-0003).
             var written = AutoCadGeoMapPolylineReader.WriteFeatureIds(document, read.PendingWrites);
-            File.WriteAllText(dialog.FileName, json, new UTF8Encoding(false));
-            document.Editor.WriteMessage(
-                $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n" +
+            foreach (var output in outputs)
+            {
+                File.WriteAllText(output.Path, output.Json, new UTF8Encoding(false));
+                editor.WriteMessage(
+                    $"\nGeoAutoEngine: {output.Count} {output.Kind} na rede \"{output.NetworkName}\" " +
+                    $"(versão {output.Version}, cor {output.Color ?? "nenhuma"}" +
+                    (output.Color is null ? string.Empty : $", da layer {output.ColorLayer}") +
+                    $") -> {output.Path}\n");
+            }
+
+            editor.WriteMessage(
                 $"GeoAutoEngine: códigos novos={read.AssignedCount}; renovados por cópia/BREAK={read.RenewedCount}; " +
-                $"mantidos={features.Count - written}.\n" +
-                (colorChoice.Color is null
-                    ? $"GeoAutoEngine: sem cor de layer; arquivo na versão {GeoMapExportSerializer.ContractVersion}.\n"
-                    : $"GeoAutoEngine: cor da rede {colorChoice.Color} (layer {colorChoice.Layer}); " +
-                      $"arquivo na versão {GeoMapExportSerializer.ContractVersionWithColor}.\n"));
+                $"mantidos={read.Features.Count - written}.\n");
             if (written > 0)
             {
-                document.Editor.WriteMessage(
-                    "\nGeoAutoEngine: o desenho recebeu os códigos das Polylines. Salve o DWG para mantê-los.\n");
+                editor.WriteMessage(
+                    "\nGeoAutoEngine: o desenho recebeu os códigos das feições. Salve o DWG para mantê-los.\n");
             }
 
             PluginLog.Information(
-                $"Exportação GeoMap: {features.Count} feição(ões); novos={read.AssignedCount}; " +
-                $"renovados={read.RenewedCount}; arquivo={Path.GetFileName(dialog.FileName)}.");
+                $"Exportação GeoMap: {lines.Length} linha(s), {blocks.Length} bloco(s); novos={read.AssignedCount}; " +
+                $"renovados={read.RenewedCount}; fora={GeoMapBlockRules.Describe(read.SkippedBlocks)}; " +
+                $"arquivos={string.Join(", ", outputs.Select(output => Path.GetFileName(output.Path)))}.");
         }
         catch (System.Exception exception) when (exception is not StackOverflowException and not OutOfMemoryException)
         {
@@ -120,16 +169,63 @@ public sealed class GeoMapExportCommands
         }
     }
 
+    private static NetworkOutput CreateOutput(
+        string kind,
+        IReadOnlyList<GeoMapExportFeature> features,
+        GeoMapPolylineReadResult read,
+        string sourceCrs,
+        string units,
+        string projectExternalId,
+        string projectName,
+        string networkExternalId,
+        string networkName,
+        string networkType,
+        DateTimeOffset exportedAt)
+    {
+        var color = GeoMapLayerColor.ChooseNetworkColor(features, read.LayerColors);
+        var request = new GeoMapExportRequest(
+            sourceCrs,
+            units.Trim().ToLowerInvariant(),
+            projectExternalId,
+            projectName,
+            networkExternalId,
+            networkName,
+            networkType,
+            exportedAt,
+            features,
+            color.Color);
+        return new NetworkOutput(
+            kind,
+            features.Count,
+            networkName,
+            GeoMapExportSerializer.ContractVersionFor(request),
+            color.Color,
+            color.Layer,
+            GeoMapExportSerializer.Serialize(request),
+            string.Empty);
+    }
+
+    private sealed record NetworkOutput(
+        string Kind,
+        int Count,
+        string NetworkName,
+        string Version,
+        string? Color,
+        string? ColorLayer,
+        string Json,
+        string Path);
+
     private static ObjectId[]? SelectPolylines(Editor editor)
     {
         var options = new PromptSelectionOptions
         {
-            MessageForAdding = "\nSelecione as Polylines 2D da rede: ",
-            MessageForRemoval = "\nRemova as Polylines da seleção: ",
+            MessageForAdding = "\nSelecione as Polylines 2D e os blocos da rede: ",
+            MessageForRemoval = "\nRemova entidades da seleção: ",
         };
+        // Blocos (INSERT) desde o M4.3c: viram pontos numa rede separada.
         var filter = new SelectionFilter(
         [
-            new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+            new TypedValue((int)DxfCode.Start, "LWPOLYLINE,INSERT"),
         ]);
         var result = editor.GetSelection(options, filter);
         return result.Status == PromptStatus.OK ? result.Value.GetObjectIds() : null;

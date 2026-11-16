@@ -5,11 +5,15 @@ using GeoAutoEngine.Application.GeoMapExport;
 
 namespace GeoAutoEngine.Cad2026.GeoMapExport;
 
-/// <summary>Resultado da leitura: as feições prontas para exportar e os códigos que ainda precisam ser gravados.</summary>
+/// <summary>
+/// Resultado da leitura: as feições prontas para exportar (Polylines e blocos), os códigos que ainda
+/// precisam ser gravados, a cor de cada layer e os blocos deixados de fora, por motivo.
+/// </summary>
 public sealed record GeoMapPolylineReadResult(
     IReadOnlyList<GeoMapExportFeature> Features,
     IReadOnlyList<GeoMapFeatureIdWrite> PendingWrites,
-    IReadOnlyDictionary<string, string?> LayerColors)
+    IReadOnlyDictionary<string, string?> LayerColors,
+    IReadOnlyDictionary<string, int> SkippedBlocks)
 {
     public int AssignedCount => PendingWrites.Count(write => write.Assignment.Status == GeoMapFeatureIdStatus.Assigned);
 
@@ -18,6 +22,7 @@ public sealed record GeoMapPolylineReadResult(
 
 public sealed record GeoMapFeatureIdWrite(ObjectId ObjectId, GeoMapFeatureIdAssignment Assignment);
 
+/// <summary>Lê Polylines 2D (linhas) e blocos (pontos, desde o M4.3c) da seleção para o contrato GeoMap.</summary>
 public static class AutoCadGeoMapPolylineReader
 {
     private const double Tolerance = 1e-10;
@@ -33,64 +38,57 @@ public static class AutoCadGeoMapPolylineReader
 
         if (objectIds is null || objectIds.Count == 0)
         {
-            throw new InvalidOperationException("Selecione pelo menos uma Polyline 2D.");
+            throw new InvalidOperationException("Selecione pelo menos uma Polyline 2D ou bloco.");
         }
 
-        var polylines = new List<ReadPolyline>(objectIds.Count);
+        var items = new List<ReadItem>(objectIds.Count);
         var layerColors = new Dictionary<string, string?>(StringComparer.Ordinal);
+        var skippedBlocks = new Dictionary<string, int>(StringComparer.Ordinal);
+        var definitionExtents = new Dictionary<ObjectId, GeoMapBlockDefinitionExtents?>();
         using (var transaction = document.Database.TransactionManager.StartOpenCloseTransaction())
         {
             foreach (var objectId in objectIds)
             {
-                if (transaction.GetObject(objectId, OpenMode.ForRead) is not Polyline polyline)
+                var entity = transaction.GetObject(objectId, OpenMode.ForRead);
+                ReadItem? item = entity switch
                 {
-                    throw new InvalidOperationException("A seleção contém uma entidade que não é Polyline 2D.");
+                    Polyline polyline => ReadPolyline(objectId, polyline),
+                    BlockReference block => ReadBlock(transaction, objectId, block, definitionExtents, skippedBlocks),
+                    _ => throw new InvalidOperationException(
+                        "A seleção contém uma entidade que não é Polyline 2D nem bloco."),
+                };
+                if (item is null)
+                {
+                    continue;
                 }
 
-                var handle = polyline.Handle.ToString();
-                if (polyline.NumberOfVertices < 2)
+                if (!layerColors.ContainsKey(item.Layer) &&
+                    transaction.GetObject(((Entity)entity).LayerId, OpenMode.ForRead) is LayerTableRecord layer)
                 {
-                    throw new InvalidOperationException($"A Polyline {handle} possui menos de dois vértices.");
+                    layerColors[item.Layer] = LayerColor(layer.Color);
                 }
 
-                RejectCurvedSegments(polyline, handle);
-                if (!layerColors.ContainsKey(polyline.Layer) &&
-                    transaction.GetObject(polyline.LayerId, OpenMode.ForRead) is LayerTableRecord layer)
-                {
-                    layerColors[polyline.Layer] = LayerColor(layer.Color);
-                }
-
-                var vertices = new List<GeoMapCoordinate>(polyline.NumberOfVertices);
-                var projectedTo2D = false;
-                for (var index = 0; index < polyline.NumberOfVertices; index++)
-                {
-                    var point = polyline.GetPoint3dAt(index);
-                    vertices.Add(new GeoMapCoordinate(point.X, point.Y));
-                    projectedTo2D |= Math.Abs(point.Z) > Tolerance;
-                }
-
-                polylines.Add(new ReadPolyline(
-                    objectId,
-                    handle,
-                    ReadFeatureId(polyline),
-                    polyline.Layer,
-                    vertices,
-                    polyline.Closed,
-                    polyline.Elevation,
-                    projectedTo2D));
+                items.Add(item);
             }
+        }
+
+        if (items.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "Nenhuma entidade da seleção pode ir para o GeoMap. Blocos deixados de fora: " +
+                GeoMapBlockRules.Describe(skippedBlocks) + ".");
         }
 
         // Código próprio de cada feição (DEC-ECO-0003): mantém o que existe e resolve cópias/BREAK.
         var assignments = GeoMapFeatureIdentity.Resolve(
-            polylines.Select(item => new GeoMapFeatureIdCandidate(item.Handle, item.ExistingId)).ToArray(),
+            items.Select(item => new GeoMapFeatureIdCandidate(item.Handle, item.ExistingId)).ToArray(),
             Guid.NewGuid);
 
-        var features = new List<GeoMapExportFeature>(polylines.Count);
+        var features = new List<GeoMapExportFeature>(items.Count);
         var pendingWrites = new List<GeoMapFeatureIdWrite>();
-        for (var index = 0; index < polylines.Count; index++)
+        for (var index = 0; index < items.Count; index++)
         {
-            var item = polylines[index];
+            var item = items[index];
             var assignment = assignments[index];
             features.Add(new GeoMapExportFeature(
                 assignment.FeatureId.ToString("D"),
@@ -99,15 +97,147 @@ public static class AutoCadGeoMapPolylineReader
                 item.Vertices,
                 item.Closed,
                 item.Elevation,
-                item.ProjectedTo2D));
+                item.ProjectedTo2D,
+                item.Block));
             if (assignment.MustBeWritten)
             {
                 pendingWrites.Add(new GeoMapFeatureIdWrite(item.Id, assignment));
             }
         }
 
-        return new GeoMapPolylineReadResult(features, pendingWrites, layerColors);
+        return new GeoMapPolylineReadResult(features, pendingWrites, layerColors, skippedBlocks);
     }
+
+    private static ReadItem ReadPolyline(ObjectId objectId, Polyline polyline)
+    {
+        var handle = polyline.Handle.ToString();
+        if (polyline.NumberOfVertices < 2)
+        {
+            throw new InvalidOperationException($"A Polyline {handle} possui menos de dois vértices.");
+        }
+
+        RejectCurvedSegments(polyline, handle);
+        var vertices = new List<GeoMapCoordinate>(polyline.NumberOfVertices);
+        var projectedTo2D = false;
+        for (var index = 0; index < polyline.NumberOfVertices; index++)
+        {
+            var point = polyline.GetPoint3dAt(index);
+            vertices.Add(new GeoMapCoordinate(point.X, point.Y));
+            projectedTo2D |= Math.Abs(point.Z) > Tolerance;
+        }
+
+        return new ReadItem(
+            objectId,
+            handle,
+            ReadFeatureId(polyline),
+            polyline.Layer,
+            vertices,
+            polyline.Closed,
+            polyline.Elevation,
+            projectedTo2D,
+            null);
+    }
+
+    // Bloco como ponto (M4.3c), com as regras da ponte DXF (DEC-029 do GeoMap). Retorna null quando o
+    // bloco fica de fora; o motivo é contado em skipped.
+    private static ReadItem? ReadBlock(
+        Transaction transaction,
+        ObjectId objectId,
+        BlockReference block,
+        Dictionary<ObjectId, GeoMapBlockDefinitionExtents?> definitionExtents,
+        Dictionary<string, int> skipped)
+    {
+        var handle = block.Handle.ToString();
+        if (block is MInsertBlock)
+        {
+            Count(skipped, "MINSERT");
+            return null;
+        }
+
+        var definition = (BlockTableRecord)transaction.GetObject(block.BlockTableRecord, OpenMode.ForRead);
+        if (definition.IsFromExternalReference || definition.IsFromOverlayReference)
+        {
+            Count(skipped, "referência externa (xref)");
+            return null;
+        }
+
+        // Bloco dinâmico: a referência aponta para uma definição anônima (*U…); o nome que diz o que
+        // o elemento é fica na definição dinâmica.
+        var name = block.IsDynamicBlock
+            ? ((BlockTableRecord)transaction.GetObject(block.DynamicBlockTableRecord, OpenMode.ForRead)).Name
+            : definition.Name;
+        var reason = GeoMapBlockRules.SkipReason(block.Layer, name);
+        if (reason is not null)
+        {
+            Count(skipped, reason);
+            return null;
+        }
+
+        if (Math.Abs(block.Normal.Z - 1) > 1e-9)
+        {
+            throw new InvalidOperationException(
+                $"O bloco {handle} não está no plano XY (normal diferente de Z). Exportação cancelada.");
+        }
+
+        if (!definitionExtents.TryGetValue(definition.ObjectId, out var extents))
+        {
+            extents = DefinitionExtents(transaction, definition);
+            definitionExtents[definition.ObjectId] = extents;
+        }
+
+        var rotation = GeoMapBlockRules.RotationDegrees(block.Rotation);
+        var scale = block.ScaleFactors;
+        var insertion = block.Position;
+        var position = GeoMapBlockRules.Resolve(
+            new GeoMapCoordinate(insertion.X, insertion.Y),
+            extents,
+            rotation,
+            scale.X,
+            scale.Y);
+        return new ReadItem(
+            objectId,
+            handle,
+            ReadFeatureId(block),
+            block.Layer,
+            [position.Position],
+            false,
+            insertion.Z,
+            Math.Abs(insertion.Z) > Tolerance,
+            new GeoMapBlockInfo(name, rotation, scale.X, scale.Y, position.FromSymbol));
+    }
+
+    // Extensão do desenho da definição, sem textos e definições de atributo (como a ponte DXF).
+    private static GeoMapBlockDefinitionExtents? DefinitionExtents(Transaction transaction, BlockTableRecord definition)
+    {
+        double? minX = null, minY = null, maxX = null, maxY = null;
+        foreach (ObjectId id in definition)
+        {
+            if (transaction.GetObject(id, OpenMode.ForRead) is not Entity entity ||
+                entity is AttributeDefinition or DBText or MText ||
+                entity.Bounds is not { } bounds)
+            {
+                continue;
+            }
+
+            minX = Math.Min(minX ?? double.MaxValue, bounds.MinPoint.X);
+            minY = Math.Min(minY ?? double.MaxValue, bounds.MinPoint.Y);
+            maxX = Math.Max(maxX ?? double.MinValue, bounds.MaxPoint.X);
+            maxY = Math.Max(maxY ?? double.MinValue, bounds.MaxPoint.Y);
+        }
+
+        return minX is null
+            ? null
+            : new GeoMapBlockDefinitionExtents(
+                definition.Origin.X,
+                definition.Origin.Y,
+                minX.Value,
+                minY!.Value,
+                maxX!.Value,
+                maxY!.Value);
+    }
+
+    private static void Count(Dictionary<string, int> skipped, string reason) =>
+        skipped[reason] = skipped.TryGetValue(reason, out var count) ? count + 1 : 1;
 
     /// <summary>
     /// Grava na XData das entidades os códigos novos ou renovados. Altera o desenho: o usuário
@@ -171,7 +301,7 @@ public static class AutoCadGeoMapPolylineReader
         return null;
     }
 
-    private sealed record ReadPolyline(
+    private sealed record ReadItem(
         ObjectId Id,
         string Handle,
         Guid? ExistingId,
@@ -179,7 +309,8 @@ public static class AutoCadGeoMapPolylineReader
         List<GeoMapCoordinate> Vertices,
         bool Closed,
         double Elevation,
-        bool ProjectedTo2D);
+        bool ProjectedTo2D,
+        GeoMapBlockInfo? Block);
 
     private static Guid? ReadFeatureId(Entity entity)
     {

@@ -6,9 +6,11 @@ namespace GeoAutoEngine.Application.GeoMapExport;
 
 public static class GeoMapExportSerializer
 {
-    // 0.2 só quando a rede tem cor (network.color); sem cor, 0.1, como a ponte DXF (M4.3b).
+    // Versão mínima que aceita o arquivo, como a ponte DXF: 0.3 com pontos de blocos (M4.3c),
+    // 0.2 com cor da rede (M4.3b), senão 0.1.
     public const string ContractVersion = "0.1";
     public const string ContractVersionWithColor = "0.2";
+    public const string ContractVersionWithPoints = "0.3";
     // Produtor oficial do contrato GeoMap (DEC-ECO-0003). Antes: "Civil 3D".
     public const string SourceSystem = "GeoAutoEngine";
     public const int MaximumFeatures = 10_000;
@@ -33,7 +35,7 @@ public static class GeoMapExportSerializer
         Validate(request);
 
         var document = new DocumentDto(
-            request.NetworkColor is null ? ContractVersion : ContractVersionWithColor,
+            ContractVersionFor(request),
             SourceSystem,
             request.SourceCrs,
             request.Units,
@@ -49,8 +51,40 @@ public static class GeoMapExportSerializer
         return JsonSerializer.Serialize(document, SerializerOptions);
     }
 
+    public static string ContractVersionFor(GeoMapExportRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (request.Features.Any(feature => feature.Block is not null))
+        {
+            return ContractVersionWithPoints;
+        }
+
+        return request.NetworkColor is null ? ContractVersion : ContractVersionWithColor;
+    }
+
     private static FeatureDto CreateFeature(GeoMapExportFeature feature)
     {
+        if (feature.Block is { } block)
+        {
+            var position = feature.Vertices[0];
+            return new(
+                feature.SourceId,
+                "BlockReference",
+                feature.SourceLayer,
+                new GeometryDto("Point", new[] { position.X, position.Y }),
+                new BlockPropertiesDto(
+                    feature.CadHandle,
+                    "BlockReference",
+                    block.Name,
+                    block.RotationDegrees,
+                    block.ScaleX,
+                    block.ScaleY,
+                    feature.Elevation,
+                    feature.ProjectedTo2D,
+                    block.PositionFromSymbol));
+        }
+
         var coordinates = feature.Vertices
             .Select(vertex => new[] { vertex.X, vertex.Y })
             .ToList();
@@ -113,24 +147,31 @@ public static class GeoMapExportSerializer
 
         if (request.Features is null || request.Features.Count == 0)
         {
-            throw new InvalidOperationException("Selecione pelo menos uma Polyline válida para exportar.");
+            throw new InvalidOperationException("Selecione pelo menos uma Polyline ou bloco válido para exportar.");
         }
 
         if (request.Features.Count > MaximumFeatures)
         {
-            throw new InvalidOperationException($"O contrato v0.1 aceita no máximo {MaximumFeatures:N0} feições por arquivo.");
+            throw new InvalidOperationException($"O contrato GeoMap aceita no máximo {MaximumFeatures:N0} feições por arquivo.");
         }
 
         var identities = new HashSet<string>(StringComparer.Ordinal);
         foreach (var feature in request.Features)
         {
+            var kind = feature.Block is null ? "Polyline" : "bloco";
             Required(feature.SourceId, 255, "O código da feição");
-            Required(feature.CadHandle, 255, "O handle da Polyline");
-            Required(feature.SourceLayer, 255, "O layer da Polyline");
+            Required(feature.CadHandle, 255, "O handle da feição");
+            Required(feature.SourceLayer, 255, "O layer da feição");
             if (!identities.Add(feature.SourceId))
             {
                 throw new InvalidOperationException(
-                    $"O código {feature.SourceId} (Polyline {feature.CadHandle}) aparece mais de uma vez na seleção.");
+                    $"O código {feature.SourceId} ({kind} {feature.CadHandle}) aparece mais de uma vez na seleção.");
+            }
+
+            if (feature.Block is { } block)
+            {
+                ValidateBlock(feature, block);
+                continue;
             }
 
             if (feature.Vertices is null || feature.Vertices.Count < 2)
@@ -151,6 +192,25 @@ public static class GeoMapExportSerializer
             {
                 throw new InvalidOperationException($"A Polyline {feature.CadHandle} contém coordenadas não finitas.");
             }
+        }
+    }
+
+    private static void ValidateBlock(GeoMapExportFeature feature, GeoMapBlockInfo block)
+    {
+        Required(block.Name, 255, $"O nome do bloco {feature.CadHandle}");
+        if (feature.Vertices is null || feature.Vertices.Count != 1)
+        {
+            throw new InvalidOperationException($"O bloco {feature.CadHandle} precisa ter exatamente uma posição.");
+        }
+
+        if (!IsFinite(feature.Elevation) ||
+            !IsFinite(feature.Vertices[0].X) ||
+            !IsFinite(feature.Vertices[0].Y) ||
+            !IsFinite(block.RotationDegrees) ||
+            !IsFinite(block.ScaleX) ||
+            !IsFinite(block.ScaleY))
+        {
+            throw new InvalidOperationException($"O bloco {feature.CadHandle} contém valores não finitos.");
         }
     }
 
@@ -194,11 +254,13 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("sourceType")] string SourceType,
         [property: JsonPropertyName("sourceLayer")] string SourceLayer,
         [property: JsonPropertyName("geometry")] GeometryDto Geometry,
-        [property: JsonPropertyName("properties")] PropertiesDto Properties);
+        [property: JsonPropertyName("properties")] object Properties);
 
+    // object: LineString usa uma lista de posições e Point uma posição só; o System.Text.Json
+    // serializa o tipo real.
     private sealed record GeometryDto(
         [property: JsonPropertyName("type")] string Type,
-        [property: JsonPropertyName("coordinates")] IReadOnlyList<double[]> Coordinates);
+        [property: JsonPropertyName("coordinates")] object Coordinates);
 
     private sealed record PropertiesDto(
         [property: JsonPropertyName("cadHandle")] string CadHandle,
@@ -207,4 +269,16 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("closed")] bool Closed,
         [property: JsonPropertyName("cadElevation")] double CadElevation,
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D);
+
+    // Mesmas propriedades e ordem da ponte DXF (DEC-029 do GeoMap). Atributos de bloco: M4.3e.
+    private sealed record BlockPropertiesDto(
+        [property: JsonPropertyName("cadHandle")] string CadHandle,
+        [property: JsonPropertyName("cadEntityType")] string CadEntityType,
+        [property: JsonPropertyName("bloco")] string Bloco,
+        [property: JsonPropertyName("rotacao")] double Rotacao,
+        [property: JsonPropertyName("escalaX")] double EscalaX,
+        [property: JsonPropertyName("escalaY")] double EscalaY,
+        [property: JsonPropertyName("cadElevation")] double CadElevation,
+        [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
+        [property: JsonPropertyName("posicaoPeloSimbolo")] bool PosicaoPeloSimbolo);
 }
