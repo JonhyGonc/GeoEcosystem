@@ -7,10 +7,11 @@
 - **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
 - **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** **M4 — caminho oficial DWG → GeoMap.** Começa pelo M4.1: registrar D-03 (já aprovada no roadmap: opção b, exportador do GAE) e decidir D-04 (identidade entre sistemas) com o usuário, em `DEC-ECO-0003`.
+- **M4 — DWG → GeoMap:** 🔄 M4.1 (DEC-ECO-0003) no PR #19. D-04 decidida pelo usuário em 16/11/2026: código próprio por feição. Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
+- **Próximo passo:** merge do PR #19 → M4.2 (GeoMap: `sourceSystem` único) e M4.3a (GAE: `FEATURE_ID` em XData).
 
 ## Pendências do usuário
-1. Decidir D-04 (identidade entre sistemas) quando o agente trouxer as opções (M4.1).
+1. Mesclar o PR #19 (M3 concluído + DEC-ECO-0003).
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
@@ -18,6 +19,7 @@
 - **Versão do GADX:** no fio continua `1`; a especificação vira a revisão 1.1.
 - **Biblioteca do contrato:** só `net8.0` ("somente com a versão de 2026").
 - **Instalação na equipe:** só no fim do projeto, numa rodada única.
+- **Identidade no GeoMap (D-04):** código próprio (GUID) gravado pelo GAE em XData em cada feição exportada.
 
 ## Fatos aprendidos (para não repetir)
 - **Máquina do usuário:** não tem as pastas externas `reference` e `GeoAutoEngine.Legacy` nem o .NET portátil `.dotnet`. Os testes `EXTERNAL` e as suítes `legacy`/`full` do GAE não rodam lá; nunca rodaram.

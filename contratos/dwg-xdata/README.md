@@ -8,6 +8,7 @@ Contrato **implícito**: outras versões do GAE leem o que versões anteriores g
 | `GEOAUTOENGINE` | geradas do fluxo CSV | `CODIGO`, `ORIGEM`, `REGISTRO`, `TIPO`, `SOURCE_FILE`, `SOURCE_LINE` |
 | `GEOAUTOENGINE_VI` | anotações de vídeo-inspeção | `SCHEMA_VERSION`, `REPORT_ID`, `SECTION_ID`, `OCCURRENCE_ID`, `STABLE_KEY` |
 | `GEOAUTOENGINE_VI_COVERAGE_V3` | coberturas (lê também a V2) | — |
+| `GEOAUTOENGINE_FEATURE` *(planejada, M4.3a)* | toda entidade exportada para o GeoMap | `SCHEMA_VERSION` = 1, `FEATURE_ID` (GUID): o `sourceId` no GeoMap ([DEC-ECO-0003](../../decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)) |
 
 ## Dicionários (NOD)
 | Dicionário | Chave | Conteúdo |
