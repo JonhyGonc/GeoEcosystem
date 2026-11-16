@@ -1,0 +1,37 @@
+# Biblioteca compartilhada do contrato GADX (DEC-ECO-0002, M3.3).
+# Também roda quando as fixtures mudam: a biblioteca tem de ler e produzir todas elas.
+name: Contrato GADX — biblioteca compartilhada
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
+      - "libs/GeoEcosystem.Contracts.Inspection.Tests/**"
+      - "contratos/gadx-inspecao/**"
+      - ".github/workflows/libs-contracts-inspection-ci.yml"
+  pull_request:
+    paths:
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
+      - "libs/GeoEcosystem.Contracts.Inspection.Tests/**"
+      - "contratos/gadx-inspecao/**"
+      - ".github/workflows/libs-contracts-inspection-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Testes da biblioteca contra as fixtures
+        run: >-
+          dotnet test libs/GeoEcosystem.Contracts.Inspection.Tests/GeoEcosystem.Contracts.Inspection.Tests.csproj
+          --configuration Release
+          --logger "console;verbosity=normal"

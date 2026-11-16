@@ -21,4 +21,7 @@
   <ItemGroup>
     <None Include="Fixtures\sample.geoadocs.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>

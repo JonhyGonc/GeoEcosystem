@@ -7,11 +7,12 @@
 - **M2 — Monorepo:** M2.1–M2.4 ✅. Os ajustes pós-monorepo (docs das 3 apps e scripts do GAE) entraram no PR #10, mesclado em 16/11/2026 depois do roteiro manual do usuário. Falta só o **M2.5** (usuário): tags e arquivamento.
 - **M3 — Contrato GADX:**
   - M3.1 ✅: especificação normativa GADX 1.1 + `DEC-ECO-0002`, no PR #13, mesclado em 16/11/2026;
-  - M3.2 🔄: fixtures + testes nas duas CIs, no PR do branch `contrato/014-gadx-fixtures`.
+  - M3.2 ✅: fixtures + testes nas duas CIs (PR #14, mesclado em 16/11/2026);
+  - M3.3a 🔄: biblioteca `libs/GeoEcosystem.Contracts.Inspection` (só `net8.0`), sem mudança de comportamento (PR #15). Falta o usuário compilar o plugin 2026 e fazer o teste de sempre.
 
   Acompanhamento: Issue #11; mudança de contrato: Issue #12.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **Próximo passo:** CI verde e merge do PR do M3.2 → **M3.3**: biblioteca `libs/GeoEcosystem.Contracts.Inspection` e servidor com `capabilities` (regras S1–S3). Antes de escrever código, decidir o alvo de compilação da biblioteca.
+- **Próximo passo:** teste manual e merge do PR #15 → M3.3b (payloads das correções na biblioteca) → M3.3c (servidor com `capabilities`, regras S1–S3).
 
 ## Pendências do usuário
 1. Criar as tags no monorepo (o agente não consegue enviar tags). Conferido em 16/11/2026: ainda não existem.
@@ -35,8 +36,10 @@
 - **Clone do monorepo:** fica em `C:\Users\João\Desktop\GeoEcosystem`. O clone antigo do GAE fica em `Documentos\GitHub\GeoAutoEngine`.
 - **Geração do instalador:** o usuário gera o do GAD a partir do monorepo (testado em 16/11/2026).
 - **Sessões do agente:** não têm .NET nem PowerShell; código C# só é verificado pela CI.
+- **SDK na máquina do usuário:** .NET 8 SDK global (ele gerou o instalador do GAD com `dotnet publish`).
 
 ## Notas para o M3.3/M3.4
 - O `Hello` do GeoAutoDocs envia `applicationVersion` = 1.0.0.0 (versão do assembly Infrastructure). Corrigir no M3.4.
-- Alvo de compilação da biblioteca: só o Civil 3D 2026 (.NET 8) é homologado, mas os hosts 2024 (`netstandard2.0`/net48) e 2025 continuam no código.
+- Alvo da biblioteca: **só `net8.0`** (decisão do usuário, 16/11/2026). O host 2024 do GAE não compila mais. `build-release.ps1` precisa de `-Versions 2026`.
+- A CI **não compila** o `GeoAutoEngine.Plugin` nem o `Cad2026` (exigem DLLs da Autodesk). Toda mudança neles precisa de compilação na máquina do usuário.
 - `locationMode`: o GAE compara o nome exato. O enum do GAD tem aliases. Falta o teste de nome canônico (M3.4).

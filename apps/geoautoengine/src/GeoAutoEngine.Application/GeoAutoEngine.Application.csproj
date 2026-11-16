@@ -10,4 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="..\GeoAutoEngine.Domain\GeoAutoEngine.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\libs\GeoEcosystem.Contracts.Inspection\GeoEcosystem.Contracts.Inspection.csproj" />
+    <Using Include="GeoEcosystem.Contracts.Inspection" />
+  </ItemGroup>
 </Project>

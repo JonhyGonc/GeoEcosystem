@@ -40,7 +40,7 @@
 2. **`capabilities`** (lista de texto, opcional) no `Hello` e no `HelloAck`. Primeira capacidade: `corrections`. Regras S1–S3 e C1–C3 na §7 da especificação.
 3. **Transição (S2):** cliente sem `capabilities` é tratado como hoje e pode receber correções. Tornar isso estrito exige nova decisão, quando todas as máquinas tiverem um GAD que declara capacidades.
 4. **Correções = estado completo.** O GAE envia todos os campos de cada ocorrência editada. O GAD interpreta os campos pelo `locationMode` cadastrado e trata campo ausente como "não alterar", só como tolerância (§9.2).
-5. **Biblioteca compartilhada** `libs/GeoEcosystem.Contracts.Inspection` no M3.3, testada contra as fixtures do M3.2. O alvo de compilação (`netstandard2.0` ou `net8.0`) é decidido no M3.3. Como só o Civil 3D 2026 (.NET 8) é homologado, `net8.0` é candidato, mas precisa ser avaliado contra os hosts 2024/2025, que continuam no código.
+5. **Biblioteca compartilhada** `libs/GeoEcosystem.Contracts.Inspection` no M3.3, testada contra as fixtures do M3.2. **Alvo: só `net8.0`** (decisão do usuário em 16/11/2026: "somente com a versão de 2026"). Consequência aceita: o host 2024 do GAE (`netstandard2.0`/`net48`) deixa de compilar. O host 2025 (.NET 8) continua compilável, mas não é homologado.
 
 ## Impacto por aplicação
 | Aplicação | O que muda | Quando |

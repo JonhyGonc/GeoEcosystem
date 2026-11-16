@@ -12,11 +12,13 @@ on:
     paths:
       - "apps/geoautodocs/**"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautodocs-ci.yml"
   pull_request:
     paths:
       - "apps/geoautodocs/**"
       - "contratos/gadx-inspecao/**"
+      - "libs/GeoEcosystem.Contracts.Inspection/**"
       - ".github/workflows/geoautodocs-ci.yml"
   workflow_dispatch:
 
