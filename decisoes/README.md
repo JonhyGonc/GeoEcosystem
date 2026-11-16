@@ -6,6 +6,7 @@ Uma decisão por arquivo: `DEC-ECO-NNNN-<tema>.md`, com contexto, alternativas c
 | ID | Tema | Estado | Data |
 |---|---|---|---|
 | [DEC-ECO-0001](DEC-ECO-0001-monorepo.md) | Repositório único (monorepo) no GeoEcosystem + regra 6 por pasta | Aprovada | 11/11/2026 |
+| [DEC-ECO-0002](DEC-ECO-0002-versionamento-gadx.md) | Versionamento (`capabilities`) e semântica de estado completo do GADX | Proposta (M3.1) | 16/11/2026 |
 
 ## Decisões pendentes (identificadas na Etapa 2)
 Detalhes em [`auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md`](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md#6-decisões-técnicas-a-arbitrar-insumos-da-etapa-4-nenhuma-tomada-aqui).
@@ -13,7 +14,7 @@ Detalhes em [`auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md`](../auditorias/
 | ID | Tema |
 |---|---|
 | D-01 | Linha de base de cada projeto (GAD `main` × fix; ordem de merge das branches do GAE) |
-| D-02 | Dono, especificação e versionamento do contrato GADX |
+| D-02 | → DEC-ECO-0002 |
 | D-03 | Extrator canônico DWG → GeoMap (ponte DXF × GAE) |
 | D-04 | Estratégia de identidade entre sistemas |
 | D-05 | Rastreabilidade e histórico mínimos (origem, esquema, versão de build) |
