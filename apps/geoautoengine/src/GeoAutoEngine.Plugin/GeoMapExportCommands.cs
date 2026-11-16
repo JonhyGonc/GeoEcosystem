@@ -16,7 +16,8 @@ namespace GeoAutoEngine.Plugin;
 
 public sealed class GeoMapExportCommands
 {
-    [CommandMethod("GEOAUTO3GEOMAPEXPORT", CommandFlags.Modal | CommandFlags.NoUndoMarker)]
+    // Sem NoUndoMarker: desde o M4.3a o comando grava os códigos das feições no desenho (DEC-ECO-0003).
+    [CommandMethod("GEOAUTO3GEOMAPEXPORT", CommandFlags.Modal)]
     public void ExportPolylines()
     {
         var document = AutoCadApplication.DocumentManager.MdiActiveDocument;
@@ -34,7 +35,8 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
-            var features = AutoCadGeoMapPolylineReader.Read(document, selection);
+            var read = AutoCadGeoMapPolylineReader.Read(document, selection);
+            var features = read.Features;
             var inferredNetwork = InferNetwork(features);
             var drawingName = Path.GetFileNameWithoutExtension(document.Name);
 
@@ -47,7 +49,7 @@ public sealed class GeoMapExportCommands
                     out var networkExternalId) ||
                 !TryPrompt(document.Editor, "Nome da rede", inferredNetwork.DisplayName, out var networkName) ||
                 !TryPrompt(document.Editor, "Tipo da rede", CanonicalNetworkType(inferredNetwork.NetworkId), out var networkType) ||
-                !TryPrompt(document.Editor, "CRS de origem (ex.: EPSG:31982)", null, out var sourceCrs) ||
+                !TryPromptCrs(document.Editor, out var sourceCrs) ||
                 !TryPrompt(
                     document.Editor,
                     "Unidade (metre, foot, us-survey-foot ou degree)",
@@ -58,7 +60,6 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
-            sourceCrs = NormalizeEpsg(sourceCrs);
             var request = new GeoMapExportRequest(
                 sourceCrs,
                 units.Trim().ToLowerInvariant(),
@@ -87,9 +88,23 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
+            // Os códigos novos são gravados antes do arquivo: se a gravação do arquivo falhar,
+            // os códigos já estão no desenho e a próxima exportação usa os mesmos (DEC-ECO-0003).
+            var written = AutoCadGeoMapPolylineReader.WriteFeatureIds(document, read.PendingWrites);
             File.WriteAllText(dialog.FileName, json, new UTF8Encoding(false));
             document.Editor.WriteMessage(
-                $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n");
+                $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n" +
+                $"GeoAutoEngine: códigos novos={read.AssignedCount}; renovados por cópia/BREAK={read.RenewedCount}; " +
+                $"mantidos={features.Count - written}.\n");
+            if (written > 0)
+            {
+                document.Editor.WriteMessage(
+                    "\nGeoAutoEngine: o desenho recebeu os códigos das Polylines. Salve o DWG para mantê-los.\n");
+            }
+
+            PluginLog.Information(
+                $"Exportação GeoMap: {features.Count} feição(ões); novos={read.AssignedCount}; " +
+                $"renovados={read.RenewedCount}; arquivo={Path.GetFileName(dialog.FileName)}.");
         }
         catch (System.Exception exception) when (exception is not StackOverflowException and not OutOfMemoryException)
         {
@@ -119,8 +134,10 @@ public sealed class GeoMapExportCommands
         string? defaultValue,
         out string value)
     {
-        var suffix = string.IsNullOrWhiteSpace(defaultValue) ? ": " : $" <{defaultValue}>: ";
-        var options = new PromptStringOptions($"\n{label}{suffix}")
+        // Com valor padrão, o próprio AutoCAD mostra " <padrão>: " depois do texto. Antes o texto
+        // também trazia o padrão, e ele aparecia duas vezes na linha de comando.
+        var message = string.IsNullOrWhiteSpace(defaultValue) ? $"\n{label}: " : $"\n{label}";
+        var options = new PromptStringOptions(message)
         {
             AllowSpaces = true,
         };
@@ -134,6 +151,35 @@ public sealed class GeoMapExportCommands
         value = result.StringResult?.Trim() ?? string.Empty;
         return result.Status == PromptStatus.OK;
     }
+
+    // O CRS não tem valor padrão (nunca é adivinhado). Vazio ou fora do formato: pergunta de novo
+    // na hora, em vez de deixar o comando falhar depois de todas as perguntas. Esc cancela.
+    private static bool TryPromptCrs(Editor editor, out string sourceCrs)
+    {
+        while (true)
+        {
+            if (!TryPrompt(editor, "CRS de origem (EPSG, ex.: 31983 ou EPSG:31983)", null, out var value))
+            {
+                sourceCrs = string.Empty;
+                return false;
+            }
+
+            sourceCrs = NormalizeEpsg(value);
+            if (IsEpsg(sourceCrs))
+            {
+                return true;
+            }
+
+            editor.WriteMessage(
+                "\nGeoAutoEngine: informe o EPSG do sistema de coordenadas do desenho, por exemplo 31983 " +
+                "(SIRGAS 2000 / UTM 23S). Esc cancela a exportação.");
+        }
+    }
+
+    private static bool IsEpsg(string value) =>
+        value.StartsWith("EPSG:", StringComparison.Ordinal) &&
+        int.TryParse(value.Substring("EPSG:".Length), NumberStyles.None, CultureInfo.InvariantCulture, out var code) &&
+        code > 0;
 
     private static NetworkCadDefinition InferNetwork(IReadOnlyList<GeoMapExportFeature> features)
     {

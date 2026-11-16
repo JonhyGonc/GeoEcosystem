@@ -1,6 +1,6 @@
 {
   "contractVersion": "0.1",
-  "sourceSystem": "Civil 3D",
+  "sourceSystem": "GeoAutoEngine",
   "sourceCrs": "EPSG:31982",
   "units": "metre",
   "project": {
@@ -15,7 +15,7 @@
   "exportedAt": "2026-09-09T12:00:00.000Z",
   "features": [
     {
-      "sourceId": "2A7F",
+      "sourceId": "7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d",
       "sourceType": "Polyline",
       "sourceLayer": "GF-Rede Pluvial",
       "geometry": {

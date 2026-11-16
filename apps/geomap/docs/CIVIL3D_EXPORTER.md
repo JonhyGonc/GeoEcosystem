@@ -45,7 +45,7 @@ dotnet run --project tools/importer/GeoMap.Importer -- `
 | Segmentos | somente retos; bulges cancelam o arquivo |
 | Aberta | `LineString` na ordem original |
 | Fechada | repete a primeira posição ao final |
-| Identidade | handle em `sourceId` e `cadHandle` |
+| Identidade | código próprio da Polyline (GUID em XData, gravado pelo GeoAutoEngine) em `sourceId`; handle em `cadHandle` ([DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)) |
 | Layer | preservado em `sourceLayer` |
 | Z | saída X/Y; perda declarada em `projectedTo2D` e elevação em `cadElevation` |
 | CRS | obrigatório, no formato EPSG |
