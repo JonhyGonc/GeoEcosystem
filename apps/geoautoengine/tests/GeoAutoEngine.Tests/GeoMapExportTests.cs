@@ -158,6 +158,7 @@ public sealed class GeoMapExportTests
     [Theory]
     [InlineData("polyline-export.geomap.json", "0.1", "valid-geoautoengine-polyline.geomap.json")]
     [InlineData("polyline-export-color.geomap.json", "0.2", "valid-geoautoengine-color.geomap.json")]
+    [InlineData("block-export.geomap.json", "0.3", "valid-geoautoengine-blocks.geomap.json")]
     [Trait("Category", "FAST")]
     public void Samples_AreIdenticalToTheExamplesValidatedByGeoMap(string sample, string version, string example)
     {
@@ -208,6 +209,135 @@ public sealed class GeoMapExportTests
         Assert.True(GeoMapLayerColor.IsValid("#0A0B0C"));
         Assert.False(GeoMapLayerColor.IsValid("#0a0b0c"));
     }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_Blocks_ProducesVersion03PointsAndTheVersionedSample()
+    {
+        var request = CreateRequest(
+            BlockFeature(
+                "3b9a1c7e-5d2f-4e8a-b1c4-6d7e8f9a0b1c",
+                "2B10",
+                new(688100.25, 7086400.75),
+                0,
+                new GeoMapBlockInfo("TE", 90, 1, 1, false)),
+            BlockFeature(
+                "9f8e7d6c-5b4a-4321-8fed-cba987654321",
+                "2B11",
+                new(688112.5, 7086411),
+                1000,
+                new GeoMapBlockInfo("REGISTRO", 0, 2, 2, true))) with
+        {
+            NetworkExternalId = "project-001:aguas_pluviais:blocos",
+            NetworkName = "Águas pluviais (blocos)",
+            NetworkColor = "#FF0000",
+        };
+
+        using var actual = JsonDocument.Parse(GeoMapExportSerializer.Serialize(request));
+        using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            RepositoryRoot(), "samples", "geomap", "block-export.geomap.json")));
+        Assert.Equal(
+            JsonSerializer.Serialize(expected.RootElement),
+            JsonSerializer.Serialize(actual.RootElement));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void ContractVersion_IsTheLowestThatAcceptsTheFile()
+    {
+        var line = CreateRequest(SampleFeature());
+        var block = CreateRequest(BlockFeature(SampleFeatureId, "2B10", new(1, 2), 0, new GeoMapBlockInfo("TE", 0, 1, 1, false)));
+
+        Assert.Equal("0.1", GeoMapExportSerializer.ContractVersionFor(line));
+        Assert.Equal("0.2", GeoMapExportSerializer.ContractVersionFor(line with { NetworkColor = "#000000" }));
+        Assert.Equal("0.3", GeoMapExportSerializer.ContractVersionFor(block));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void Serialize_BlockWithMoreThanOnePosition_IsRejected()
+    {
+        var feature = BlockFeature(SampleFeatureId, "2B10", new(1, 2), 0, new GeoMapBlockInfo("TE", 0, 1, 1, false)) with
+        {
+            Vertices = [new(1, 2), new(3, 4)],
+        };
+
+        var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(CreateRequest(feature)));
+        Assert.Contains("exatamente uma posição", error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("_TG-PONTOS", "TE", "layer de levantamento (_TG*)")]
+    [InlineData("_tg_cotas", "TE", "layer de levantamento (_TG*)")]
+    [InlineData("RD_AGUA", "SIMB_PONTO", "ponto levantado (SIMB_PONTO)")]
+    [InlineData("RD_AGUA", "*U12", "bloco anônimo")]
+    [InlineData("RD_AGUA", " ", "bloco anônimo")]
+    [InlineData("RD_AGUA", "TE", null)]
+    [Trait("Category", "FAST")]
+    public void BlockRules_LeaveSurveyAndAnonymousBlocksOut(string layer, string name, string? reason)
+    {
+        Assert.Equal(reason, GeoMapBlockRules.SkipReason(layer, name));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void BlockRules_KeepTheInsertionPointForOrdinaryBlocks()
+    {
+        var extents = new GeoMapBlockDefinitionExtents(0, 0, -0.5, -0.5, 0.5, 0.5);
+
+        var position = GeoMapBlockRules.Resolve(new(100, 200), extents, 45, 2, 2);
+
+        Assert.Equal(new GeoMapBlockPosition(new(100, 200), false), position);
+        Assert.Equal(new GeoMapBlockPosition(new(100, 200), false), GeoMapBlockRules.Resolve(new(100, 200), null, 0, 1, 1));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void BlockRules_UseTheSymbolCenterWhenTheDrawingIsFarFromTheBase()
+    {
+        // Desenho em coordenadas reais (centro 688100, 7086400) com o ponto base em 0,0, como os tês da DEC-029.
+        var extents = new GeoMapBlockDefinitionExtents(0, 0, 688099, 7086399, 688101, 7086401);
+
+        var plain = GeoMapBlockRules.Resolve(new(0, 0), extents, 0, 1, 1);
+        var rotated = GeoMapBlockRules.Resolve(new(10, 20), extents, 90, 1, 1);
+
+        Assert.True(plain.FromSymbol);
+        Assert.Equal(688100, plain.Position.X, 6);
+        Assert.Equal(7086400, plain.Position.Y, 6);
+        Assert.True(rotated.FromSymbol);
+        Assert.Equal(10 - 7086400, rotated.Position.X, 6);
+        Assert.Equal(20 + 688100, rotated.Position.Y, 6);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
+    public void BlockRules_NameTheBlockNetworkAndFile()
+    {
+        Assert.Equal("obra:aguas_pluviais:blocos", GeoMapBlockRules.BlockNetworkExternalId("obra:aguas_pluviais"));
+        Assert.Equal("Águas pluviais (blocos)", GeoMapBlockRules.BlockNetworkName("Águas pluviais"));
+        Assert.Equal(@"C:\obra\rede-blocos.geomap.json", GeoMapBlockRules.BlockFilePath(@"C:\obra\rede.geomap.json"));
+        Assert.Equal(@"C:\obra\rede-blocos.geomap.json", GeoMapBlockRules.BlockFilePath(@"C:\obra\rede.GEOMAP.JSON"));
+        Assert.Equal("rede.json-blocos.geomap.json", GeoMapBlockRules.BlockFilePath("rede.json"));
+        Assert.Equal(90, GeoMapBlockRules.RotationDegrees(Math.PI / 2));
+        Assert.Equal(
+            "MINSERT=1; bloco anônimo=3",
+            GeoMapBlockRules.Describe(new Dictionary<string, int> { ["bloco anônimo"] = 3, ["MINSERT"] = 1 }));
+    }
+
+    private static GeoMapExportFeature BlockFeature(
+        string id,
+        string handle,
+        GeoMapCoordinate position,
+        double elevation,
+        GeoMapBlockInfo block) => new(
+        id,
+        handle,
+        "GF-Conexoes Pluvial",
+        [position],
+        false,
+        elevation,
+        Math.Abs(elevation) > 1e-10,
+        block);
 
     private static GeoMapExportFeature SampleFeature(string handle = "2A7F", string layer = "GF-Rede Pluvial") => new(
         handle == "2A7F" ? SampleFeatureId : $"00000000-0000-4000-8000-00000000000{handle}",

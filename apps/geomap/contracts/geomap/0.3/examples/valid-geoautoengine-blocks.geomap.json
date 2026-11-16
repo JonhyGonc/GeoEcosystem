@@ -1,0 +1,59 @@
+{
+  "contractVersion": "0.3",
+  "sourceSystem": "GeoAutoEngine",
+  "sourceCrs": "EPSG:31982",
+  "units": "metre",
+  "project": {
+    "externalId": "project-001",
+    "name": "Projeto exemplo"
+  },
+  "network": {
+    "externalId": "project-001:aguas_pluviais:blocos",
+    "name": "Águas pluviais (blocos)",
+    "type": "stormwater",
+    "color": "#FF0000"
+  },
+  "exportedAt": "2026-09-09T12:00:00.000Z",
+  "features": [
+    {
+      "sourceId": "3b9a1c7e-5d2f-4e8a-b1c4-6d7e8f9a0b1c",
+      "sourceType": "BlockReference",
+      "sourceLayer": "GF-Conexoes Pluvial",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [688100.25, 7086400.75]
+      },
+      "properties": {
+        "cadHandle": "2B10",
+        "cadEntityType": "BlockReference",
+        "bloco": "TE",
+        "rotacao": 90,
+        "escalaX": 1,
+        "escalaY": 1,
+        "cadElevation": 0,
+        "projectedTo2D": false,
+        "posicaoPeloSimbolo": false
+      }
+    },
+    {
+      "sourceId": "9f8e7d6c-5b4a-4321-8fed-cba987654321",
+      "sourceType": "BlockReference",
+      "sourceLayer": "GF-Conexoes Pluvial",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [688112.5, 7086411]
+      },
+      "properties": {
+        "cadHandle": "2B11",
+        "cadEntityType": "BlockReference",
+        "bloco": "REGISTRO",
+        "rotacao": 0,
+        "escalaX": 2,
+        "escalaY": 2,
+        "cadElevation": 1000,
+        "projectedTo2D": true,
+        "posicaoPeloSimbolo": true
+      }
+    }
+  ]
+}
