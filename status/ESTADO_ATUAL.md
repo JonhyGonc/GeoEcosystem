@@ -10,6 +10,8 @@
 - **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c ✅: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (PR #24; roteiro aprovado: 487 tês, coordenadas conferidas, reexportação sem códigos novos). M4.5 ✅: botão Importar no site do GeoMap (PR #26; testado pelo usuário no navegador). M4.3d ✅: LINE, ARC e arcos de Polyline, tesselados com no máximo 5 mm (PR #25; testado pelo usuário: rede inteira exportada e conferida no mapa). M4.3e 🔄: seleção por layer, uma rede por layer, diâmetro/material da layer e atributos dos blocos (branch `feat/027-gae-layers-atributos`). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
 - **Próximo passo:** roteiro do M4.3e no Civil 3D e no mapa, e merge → aposentar a ponte DXF (comparação final ponte × GAE).
 
+- **M5 — Anomalias no mapa:** decisões tomadas em 16/11/2026, pelo celular (DEC-ECO-0004; plano em `roadmap/marcos/M5-anomalias-mapa.md`; branch `docs/030-m5-decisoes`). Implementação começa depois da ortofoto (M4.6).
+
 ## Pendências do usuário
 1. Roteiro do M4.3e no Civil 3D e no mapa, e merge.
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
@@ -23,6 +25,7 @@
 - **Blocos no exportador (M4.3c):** uma seleção com linhas e blocos gera dois arquivos, um por rede.
 - **Curvas no exportador (M4.3d):** só LINE, ARC e arcos de Polyline; tesselação com no máximo 5 mm.
 - **Redes por layer (M4.3e):** uma rede por layer, como a ponte; diâmetro e material lidos de `RD_<diâmetro>[_<material>]`.
+- **M5 (DEC-ECO-0004):** posição pelo GAE; pacote `.zip` com pontos e fotos pelo botão do site; intervalo como trecho destacado; vínculo por `occurrenceId` + `FEATURE_ID`.
 - **Importação pelo site (M4.5, DEC-033 do GeoMap):** pedido novo; sempre ligada, sem login, só uso local (risco aceito).
 
 ## Fatos aprendidos (para não repetir)
