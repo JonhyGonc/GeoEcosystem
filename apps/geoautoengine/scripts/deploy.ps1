@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("2024", "2025", "2026")]
     [string]$Version,
@@ -16,6 +16,14 @@ param(
 $ErrorActionPreference = "Stop"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $dotnet = Join-Path $repositoryRoot ".dotnet\dotnet.exe"
+# O .NET portátil (.dotnet) não vem no clone do monorepo. Sem ele, usa o .NET instalado no Windows.
+if (-not (Test-Path -LiteralPath $dotnet -PathType Leaf)) {
+    $globalDotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+    if ($globalDotnet) {
+        $dotnet = $globalDotnet.Source
+        Write-Host "Usando o .NET instalado no Windows: $dotnet"
+    }
+}
 $pluginProject = Join-Path $repositoryRoot "src\GeoAutoEngine.Plugin\GeoAutoEngine.Plugin.csproj"
 $bundleSource = Join-Path $repositoryRoot "artifacts\bundle\GeoAutoEngine.bundle"
 $sourceHost = Join-Path $bundleSource "Contents\$Version"
