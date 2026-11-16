@@ -22,4 +22,5 @@ public sealed record GeoMapExportRequest(
     string NetworkName,
     string NetworkType,
     DateTimeOffset ExportedAt,
-    IReadOnlyList<GeoMapExportFeature> Features);
+    IReadOnlyList<GeoMapExportFeature> Features,
+    string? NetworkColor = null);

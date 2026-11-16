@@ -10,6 +10,8 @@ public sealed class GeoMapContractValidatorTests
     [InlineData("valid-linestring.geomap.json")]
     [InlineData("valid-multilinestring.geomap.json")]
     [InlineData("valid-geoautoengine-polyline.geomap.json")]
+    [InlineData("valid-network-color.geomap.json")]
+    [InlineData("valid-geoautoengine-color.geomap.json")]
     public void Valid_examples_pass(string fileName)
     {
         var result = ValidateExample(fileName);

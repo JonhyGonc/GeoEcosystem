@@ -4,7 +4,7 @@ Status: exportador inicial implementado pela Issue #18.
 
 ## Componente
 
-O exportador faz parte do GeoAutoEngine, aplicativo C# já integrado ao AutoCAD/Civil 3D, que fica em `apps/geoautoengine` neste mesmo monorepo. A implementação entrou pela [PR #3 do repositório antigo do GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine/pull/3), hoje arquivado. O GeoMap não carrega DLLs Autodesk: a integração ocorre exclusivamente pelo contrato JSON v0.1.
+O exportador faz parte do GeoAutoEngine, aplicativo C# já integrado ao AutoCAD/Civil 3D, que fica em `apps/geoautoengine` neste mesmo monorepo. A implementação entrou pela [PR #3 do repositório antigo do GeoAutoEngine](https://github.com/JonhyGonc/GeoAutoEngine/pull/3), hoje arquivado. O GeoMap não carrega DLLs Autodesk: a integração ocorre exclusivamente pelo contrato JSON: v0.2 quando a layer tem cor (`network.color`), v0.1 quando não tem (M4.3b).
 
 ## Instalação
 
@@ -47,6 +47,7 @@ dotnet run --project tools/importer/GeoMap.Importer -- `
 | Fechada | repete a primeira posição ao final |
 | Identidade | código próprio da Polyline (GUID em XData, gravado pelo GeoAutoEngine) em `sourceId`; handle em `cadHandle` ([DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)) |
 | Layer | preservado em `sourceLayer` |
+| Cor | cor da layer com mais Polylines em `network.color` (versão 0.2); sem cor, o arquivo fica na 0.1 |
 | Z | saída X/Y; perda declarada em `projectedTo2D` e elevação em `cadElevation` |
 | CRS | obrigatório, no formato EPSG |
 | Unidade | obrigatória e restrita ao contrato v0.1 |
@@ -56,7 +57,7 @@ Ficam fora desta versão: `Polyline2d`, `Polyline3d`, Feature Line, Pipe Network
 
 ## Validação cruzada
 
-O arquivo `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json` é uma cópia sintética da saída de referência mantida no GeoAutoEngine. Os testes verificam:
+Os arquivos `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json` e `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json` são cópias sintéticas das saídas de referência mantidas no GeoAutoEngine (`apps/geoautoengine/samples/geomap/`). Um teste do GeoAutoEngine confere, na CI, que o serializador gera esses arquivos e que as cópias são idênticas byte a byte. Os testes do GeoMap verificam:
 
 - aceitação pelo validador estrito v0.1;
 - leitura de projeto, rede, handle, layer e propriedades pelo importador;
