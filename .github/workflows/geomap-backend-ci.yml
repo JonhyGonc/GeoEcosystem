@@ -377,7 +377,7 @@ jobs:
       - name: Verify import provenance
         shell: bash
         run: |
-          tests/integration/verify-network-imports.sh "Águas pluviais" 0.1 "Civil 3D" 31982 metre \
+          tests/integration/verify-network-imports.sh "Águas pluviais" 0.1 "GeoAutoEngine" 31982 metre \
             contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json 1 1
           tests/integration/verify-network-imports.sh "Rede com cor do CAD" 0.2 "Civil 3D DXF" 31982 metre \
             contracts/geomap/0.2/examples/valid-network-color.geomap.json 1 1

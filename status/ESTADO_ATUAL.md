@@ -7,11 +7,11 @@
 - **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
 - **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 🔄: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
-- **Próximo passo:** merge do M4.2 → M4.3a (GAE: `FEATURE_ID` em XData, com roteiro no Civil 3D).
+- **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a 🔄: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (branch `feat/022-gae-feature-id`). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
+- **Próximo passo:** roteiro no Civil 3D e merge do M4.3a → M4.3b (cor da layer, contrato 0.2).
 
 ## Pendências do usuário
-1. Mesclar o PR do M4.2 (só GeoMap; sem teste manual).
+1. Roteiro do M4.3a no Civil 3D e merge.
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026

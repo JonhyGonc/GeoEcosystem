@@ -103,7 +103,7 @@ public sealed class GeoMapImportDocumentTests
         Assert.Equal("Águas pluviais", document.Network.Name);
         Assert.Equal("stormwater", document.Network.Type);
         var feature = Assert.Single(document.Features);
-        Assert.Equal("2A7F", feature.SourceId);
+        Assert.Equal("7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d", feature.SourceId);
         Assert.Equal("GF-Rede Pluvial", feature.SourceLayer);
         Assert.Equal("Polyline", feature.SourceType);
         using var properties = JsonDocument.Parse(feature.PropertiesJson);

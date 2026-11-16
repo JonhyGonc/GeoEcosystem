@@ -20,7 +20,7 @@ WITH selected AS (
     JOIN network_features feature ON feature.network_id = network.id
     WHERE project.name = 'Projeto exemplo'
       AND network.name = 'Águas pluviais'
-      AND feature.source_id = '2A7F'
+      AND feature.source_id = '7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d'
 )
 SELECT
     project_id::text || '|' ||
@@ -50,7 +50,7 @@ curl --fail-with-body --silent --show-error \
   > "$details_file"
 jq --exit-status --arg feature_id "$feature_id" '
   .id == $feature_id
-  and .sourceId == "2A7F"
+  and .sourceId == "7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d"
   and .sourceLayer == "GF-Rede Pluvial"
   and .sourceType == "Polyline"
   and .properties.cadHandle == "2A7F"

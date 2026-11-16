@@ -25,7 +25,7 @@ BEGIN
     SELECT id INTO target_feature_id
     FROM network_features
     WHERE network_id = target_network_id
-      AND source_id = '2A7F'
+      AND source_id = '7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d'
       AND source_layer = 'GF-Rede Pluvial'
       AND source_type = 'Polyline'
       AND properties ->> 'cadHandle' = '2A7F'

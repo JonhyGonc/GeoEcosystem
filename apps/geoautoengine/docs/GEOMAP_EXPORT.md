@@ -7,7 +7,8 @@ O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contra
 - entidades `Polyline` 2D (`LWPOLYLINE`), abertas ou fechadas;
 - segmentos retos;
 - até 10.000 Polylines por arquivo e 100.000 posições por feição;
-- preservação de handle, layer, quantidade de vértices, fechamento e elevação CAD;
+- código próprio de cada Polyline (`sourceId`), gravado no desenho (ver "Identidade das feições");
+- preservação de handle (atributo `cadHandle`), layer, quantidade de vértices, fechamento e elevação CAD;
 - coordenadas X/Y no CRS declarado pelo operador;
 - unidades `metre`, `foot`, `us-survey-foot` ou `degree`.
 
@@ -23,6 +24,15 @@ O comando `GEOAUTO3GEOMAPEXPORT` exporta uma rede do desenho ativo para o contra
 6. Informe o EPSG de origem, por exemplo `EPSG:31982`. Também é aceito informar somente `31982`.
 7. Confirme a unidade e escolha o arquivo `*.geomap.json`.
 8. Importe o arquivo pelo importador do GeoMap.
+9. **Salve o DWG** se o comando avisar que o desenho recebeu códigos novos.
+
+## Identidade das feições (desde o M4.3a)
+Cada Polyline exportada ganha um código próprio (GUID) na XData `GEOAUTOENGINE_FEATURE` (`SCHEMA_VERSION=1`, `FEATURE_ID=<guid>`), gravado pelo comando na primeira exportação. Esse código é o `sourceId` no GeoMap. Assim, reexportar a rede depois de mover ou editar as Polylines atualiza as mesmas feições, em vez de criar novas ([DEC-ECO-0003](../../../decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)).
+
+- **Reexportar** sem mudança, ou depois de mover ou editar: o código é mantido.
+- **COPY ou BREAK:** a cópia leva a XData junto. Na exportação, a Polyline de handle mais antigo fica com o código e as outras recebem código novo.
+- O comando informa quantos códigos foram criados, renovados e mantidos. Quando grava códigos, o desenho fica alterado e precisa ser salvo; senão, a próxima exportação cria códigos novos.
+- O `sourceSystem` do arquivo é `GeoAutoEngine` (antes: `Civil 3D`).
 
 O EPSG nunca recebe um valor silencioso: ele deve ser informado em cada exportação. A unidade é sugerida somente quando `INSUNITS` está configurado como metros, pés ou US survey feet.
 

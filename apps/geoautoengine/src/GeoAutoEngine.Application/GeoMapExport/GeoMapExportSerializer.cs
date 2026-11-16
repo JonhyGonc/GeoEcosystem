@@ -7,7 +7,8 @@ namespace GeoAutoEngine.Application.GeoMapExport;
 public static class GeoMapExportSerializer
 {
     public const string ContractVersion = "0.1";
-    public const string SourceSystem = "Civil 3D";
+    // Produtor oficial do contrato GeoMap (DEC-ECO-0003). Antes: "Civil 3D".
+    public const string SourceSystem = "GeoAutoEngine";
     public const int MaximumFeatures = 10_000;
     public const int MaximumVerticesPerFeature = 100_000;
 
@@ -59,7 +60,7 @@ public static class GeoMapExportSerializer
             feature.SourceLayer,
             new GeometryDto("LineString", coordinates),
             new PropertiesDto(
-                feature.SourceId,
+                feature.CadHandle,
                 "Polyline",
                 feature.Vertices.Count,
                 feature.IsClosed,
@@ -113,16 +114,18 @@ public static class GeoMapExportSerializer
         var identities = new HashSet<string>(StringComparer.Ordinal);
         foreach (var feature in request.Features)
         {
-            Required(feature.SourceId, 255, "O handle da Polyline");
+            Required(feature.SourceId, 255, "O código da feição");
+            Required(feature.CadHandle, 255, "O handle da Polyline");
             Required(feature.SourceLayer, 255, "O layer da Polyline");
             if (!identities.Add(feature.SourceId))
             {
-                throw new InvalidOperationException($"O handle {feature.SourceId} aparece mais de uma vez na seleção.");
+                throw new InvalidOperationException(
+                    $"O código {feature.SourceId} (Polyline {feature.CadHandle}) aparece mais de uma vez na seleção.");
             }
 
             if (feature.Vertices is null || feature.Vertices.Count < 2)
             {
-                throw new InvalidOperationException($"A Polyline {feature.SourceId} precisa ter pelo menos dois vértices.");
+                throw new InvalidOperationException($"A Polyline {feature.CadHandle} precisa ter pelo menos dois vértices.");
             }
 
             var exportedVertexCount = feature.Vertices.Count +
@@ -130,13 +133,13 @@ public static class GeoMapExportSerializer
             if (exportedVertexCount > MaximumVerticesPerFeature)
             {
                 throw new InvalidOperationException(
-                    $"A Polyline {feature.SourceId} excede {MaximumVerticesPerFeature:N0} vértices no contrato v0.1.");
+                    $"A Polyline {feature.CadHandle} excede {MaximumVerticesPerFeature:N0} vértices no contrato v0.1.");
             }
 
             if (!IsFinite(feature.Elevation) ||
                 feature.Vertices.Any(vertex => !IsFinite(vertex.X) || !IsFinite(vertex.Y)))
             {
-                throw new InvalidOperationException($"A Polyline {feature.SourceId} contém coordenadas não finitas.");
+                throw new InvalidOperationException($"A Polyline {feature.CadHandle} contém coordenadas não finitas.");
             }
         }
     }

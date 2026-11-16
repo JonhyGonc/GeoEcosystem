@@ -16,7 +16,8 @@ namespace GeoAutoEngine.Plugin;
 
 public sealed class GeoMapExportCommands
 {
-    [CommandMethod("GEOAUTO3GEOMAPEXPORT", CommandFlags.Modal | CommandFlags.NoUndoMarker)]
+    // Sem NoUndoMarker: desde o M4.3a o comando grava os códigos das feições no desenho (DEC-ECO-0003).
+    [CommandMethod("GEOAUTO3GEOMAPEXPORT", CommandFlags.Modal)]
     public void ExportPolylines()
     {
         var document = AutoCadApplication.DocumentManager.MdiActiveDocument;
@@ -34,7 +35,8 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
-            var features = AutoCadGeoMapPolylineReader.Read(document, selection);
+            var read = AutoCadGeoMapPolylineReader.Read(document, selection);
+            var features = read.Features;
             var inferredNetwork = InferNetwork(features);
             var drawingName = Path.GetFileNameWithoutExtension(document.Name);
 
@@ -87,9 +89,23 @@ public sealed class GeoMapExportCommands
                 return;
             }
 
+            // Os códigos novos são gravados antes do arquivo: se a gravação do arquivo falhar,
+            // os códigos já estão no desenho e a próxima exportação usa os mesmos (DEC-ECO-0003).
+            var written = AutoCadGeoMapPolylineReader.WriteFeatureIds(document, read.PendingWrites);
             File.WriteAllText(dialog.FileName, json, new UTF8Encoding(false));
             document.Editor.WriteMessage(
-                $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n");
+                $"\nGeoAutoEngine: {features.Count} Polyline(s) exportada(s) para {dialog.FileName}.\n" +
+                $"GeoAutoEngine: códigos novos={read.AssignedCount}; renovados por cópia/BREAK={read.RenewedCount}; " +
+                $"mantidos={features.Count - written}.\n");
+            if (written > 0)
+            {
+                document.Editor.WriteMessage(
+                    "\nGeoAutoEngine: o desenho recebeu os códigos das Polylines. Salve o DWG para mantê-los.\n");
+            }
+
+            PluginLog.Information(
+                $"Exportação GeoMap: {features.Count} feição(ões); novos={read.AssignedCount}; " +
+                $"renovados={read.RenewedCount}; arquivo={Path.GetFileName(dialog.FileName)}.");
         }
         catch (System.Exception exception) when (exception is not StackOverflowException and not OutOfMemoryException)
         {
