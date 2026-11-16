@@ -1,0 +1,9 @@
+{
+  "application": "GeoAutoDocs",
+  "applicationVersion": "1.2.0",
+  "protocolVersion": 1,
+  "inspectionSchemaVersion": 1,
+  "capabilities": [
+    "corrections"
+  ]
+}

@@ -6,11 +6,13 @@ on:
   pull_request:
     paths:
       - "apps/geoautoengine/**"
+      - "contratos/gadx-inspecao/**"
       - ".github/workflows/geoautoengine-tests.yml"
   push:
     branches: [main]
     paths:
       - "apps/geoautoengine/**"
+      - "contratos/gadx-inspecao/**"
       - ".github/workflows/geoautoengine-tests.yml"
 
 permissions:

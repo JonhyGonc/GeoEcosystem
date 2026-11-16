@@ -1,0 +1,163 @@
+{
+  "schema": "GeoAutoDocs.Inspection",
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-11-16T12:00:00Z",
+  "project": {
+    "projectId": "0e0c0000-0000-4000-8000-000000000001",
+    "name": "Projeto fictício de contrato"
+  },
+  "report": {
+    "reportId": "0e0c0000-0000-4000-8000-000000000002",
+    "reportCode": "FX-001",
+    "name": "Relatório de referência GADX 1.1",
+    "client": "Cliente fictício",
+    "area": "Área de teste",
+    "contract": "CT-FX",
+    "reportDate": "2026-11-16T00:00:00",
+    "totalInvestigatedMeters": 40
+  },
+  "locations": [
+    {
+      "locationId": "0e0c0000-0000-4000-8000-000000000003",
+      "type": "Street",
+      "name": "Rua Fictícia",
+      "order": 0
+    }
+  ],
+  "sections": [
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "locationId": "0e0c0000-0000-4000-8000-000000000003",
+      "name": "Trecho 01",
+      "description": "PV-01 até PV-02",
+      "diameter": 300,
+      "startPoint": "PV-01",
+      "endPoint": "PV-02",
+      "reference": null,
+      "investigatedMeters": 40,
+      "order": 0,
+      "videoReferences": [
+        {
+          "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+          "displayName": "Filmagem 01",
+          "fileName": "trecho-01.mp4",
+          "order": 0,
+          "description": null,
+          "createdAt": "2026-11-16T09:00:00"
+        }
+      ],
+      "occurrences": [
+        {
+          "occurrenceId": "0e0c0000-0000-4000-8000-000000000011",
+          "order": 0,
+          "locationMode": "Point",
+          "meterage": 12.5,
+          "endMeterage": null,
+          "meteragePoints": [],
+          "referencePoint": null,
+          "position": null,
+          "notes": null,
+          "generatedDescription": "Trinca longitudinal a 12,5 m",
+          "manualDescriptionOverride": null,
+          "effectiveDescription": "Trinca longitudinal a 12,5 m",
+          "interruptedRecording": false,
+          "isSevere": false,
+          "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+          "videoTimestamp": "00:01:15",
+          "anomalies": [
+            {
+              "anomalyTypeId": "0e0c0000-0000-4000-8000-000000000021",
+              "name": "Trinca",
+              "position": "UpperGenerator",
+              "orientation": "Longitudinal",
+              "approximateExtension": 0.5,
+              "dimension": null,
+              "condition": "Moderate",
+              "infiltrationCondition": "NotReported",
+              "estimatedPercentage": null,
+              "notes": null,
+              "customText": null,
+              "order": 0
+            }
+          ],
+          "evidence": [
+            {
+              "evidenceId": "0e0c0000-0000-4000-8000-000000000031",
+              "type": "VideoCapture",
+              "captureId": "0e0c0000-0000-4000-8000-000000000032",
+              "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+              "videoTimestamp": "00:01:15",
+              "caption": "Trinca a 12,5 m",
+              "isPrimary": true,
+              "order": 0
+            }
+          ]
+        },
+        {
+          "occurrenceId": "0e0c0000-0000-4000-8000-000000000012",
+          "order": 1,
+          "locationMode": "Range",
+          "meterage": 20,
+          "endMeterage": 25.5,
+          "meteragePoints": [],
+          "referencePoint": null,
+          "position": null,
+          "notes": null,
+          "generatedDescription": "Raízes de 20,0 m a 25,5 m",
+          "manualDescriptionOverride": null,
+          "effectiveDescription": "Raízes de 20,0 m a 25,5 m",
+          "interruptedRecording": false,
+          "isSevere": false,
+          "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+          "videoTimestamp": "00:01:15",
+          "anomalies": [],
+          "evidence": []
+        },
+        {
+          "occurrenceId": "0e0c0000-0000-4000-8000-000000000013",
+          "order": 2,
+          "locationMode": "MultiPoint",
+          "meterage": null,
+          "endMeterage": null,
+          "meteragePoints": [
+            3,
+            6,
+            9
+          ],
+          "referencePoint": null,
+          "position": null,
+          "notes": null,
+          "generatedDescription": "Juntas abertas",
+          "manualDescriptionOverride": null,
+          "effectiveDescription": "Juntas abertas",
+          "interruptedRecording": false,
+          "isSevere": false,
+          "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+          "videoTimestamp": "00:01:15",
+          "anomalies": [],
+          "evidence": []
+        },
+        {
+          "occurrenceId": "0e0c0000-0000-4000-8000-000000000014",
+          "order": 3,
+          "locationMode": "EntireSection",
+          "meterage": null,
+          "endMeterage": null,
+          "meteragePoints": [],
+          "referencePoint": null,
+          "position": null,
+          "notes": null,
+          "generatedDescription": "Sedimentos em todo o trecho",
+          "manualDescriptionOverride": null,
+          "effectiveDescription": "Sedimentos em todo o trecho",
+          "interruptedRecording": false,
+          "isSevere": false,
+          "videoReferenceId": "0e0c0000-0000-4000-8000-000000000005",
+          "videoTimestamp": "00:01:15",
+          "anomalies": [],
+          "evidence": []
+        }
+      ]
+    }
+  ]
+}

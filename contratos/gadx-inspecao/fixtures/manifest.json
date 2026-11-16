@@ -1,0 +1,67 @@
+{
+  "contract": "GADX",
+  "specRevision": "1.1",
+  "wireVersion": 1,
+  "fixtures": [
+    {
+      "name": "hello-1.0",
+      "messageType": 1,
+      "requestId": 1001,
+      "description": "Hello de cliente 1.0 (GAD 1.1.0), sem capabilities"
+    },
+    {
+      "name": "hello-1.1",
+      "messageType": 1,
+      "requestId": 1002,
+      "description": "Hello de cliente 1.1 que aceita correções"
+    },
+    {
+      "name": "hello-1.1-sem-correcoes",
+      "messageType": 1,
+      "requestId": 1003,
+      "description": "Hello de cliente 1.1 sem nenhuma capacidade (regra S1)"
+    },
+    {
+      "name": "hello-ack-1.0",
+      "messageType": 2,
+      "requestId": 1001,
+      "description": "HelloAck de servidor 1.0 (GAE 3.2.0)"
+    },
+    {
+      "name": "hello-ack-1.1",
+      "messageType": 2,
+      "requestId": 1002,
+      "description": "HelloAck de servidor 1.1 que oferece correções"
+    },
+    {
+      "name": "inspection-push",
+      "messageType": 3,
+      "requestId": 1004,
+      "description": "Documento GeoAutoDocs.Inspection v1 com Point, Range, MultiPoint e EntireSection"
+    },
+    {
+      "name": "inspection-ack-success",
+      "messageType": 4,
+      "requestId": 1004,
+      "description": "InspectionAck de sucesso"
+    },
+    {
+      "name": "error-incompatible-version",
+      "messageType": 5,
+      "requestId": 1005,
+      "description": "Error de versão incompatível no handshake"
+    },
+    {
+      "name": "correction-push",
+      "messageType": 6,
+      "requestId": 100001,
+      "description": "CorrectionPush com estado completo: Point, Range e MultiPoint (o MultiPoint traz 2 pontos para uma ocorrência com 3, inválido de propósito)"
+    },
+    {
+      "name": "correction-ack-partial",
+      "messageType": 7,
+      "requestId": 100001,
+      "description": "CorrectionAck Partial: 2 aplicadas, 1 inválida"
+    }
+  ]
+}

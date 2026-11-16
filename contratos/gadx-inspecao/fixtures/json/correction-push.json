@@ -1,0 +1,36 @@
+{
+  "reportId": "0e0c0000-0000-4000-8000-000000000002",
+  "generatedAtUtc": "2026-11-16T12:30:00Z",
+  "corrections": [
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000011",
+      "locationMode": "Point",
+      "meterage": 13,
+      "endMeterage": null,
+      "meteragePoints": [],
+      "description": "Trinca longitudinal a 13,0 m"
+    },
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000012",
+      "locationMode": "Range",
+      "meterage": 20,
+      "endMeterage": 26,
+      "meteragePoints": [],
+      "description": "Raízes de 20,0 m a 26,0 m"
+    },
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000013",
+      "locationMode": "MultiPoint",
+      "meterage": null,
+      "endMeterage": null,
+      "meteragePoints": [
+        3,
+        6
+      ],
+      "description": "Juntas abertas"
+    }
+  ]
+}
