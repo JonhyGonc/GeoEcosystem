@@ -86,7 +86,7 @@ A versão `0.3` mantém tudo da `0.2`, inclusive `network.color` opcional, e pas
 
 O nome do bloco vai em `properties.bloco`, porque ele já descreve o que é o elemento. No NDJSON, a versão declarada na linha 1 vale para todas as feições do arquivo. Exemplo executável: `contracts/geomap/0.3/examples/valid-block-points.geomap.json`.
 
-O exportador do GeoAutoEngine também gera a `0.3` desde o M4.3c: os blocos da seleção vão para uma rede separada, num segundo arquivo, com as mesmas propriedades e regras de posição da ponte. Exemplo executável: `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json`.
+O exportador do GeoAutoEngine também gera a `0.3` desde o M4.3c: os blocos de cada layer vão para uma rede separada, num arquivo próprio, com as mesmas propriedades e regras de posição da ponte. Desde o M4.3e, os atributos (`ATTRIB`) também viram propriedades, e uma layer `RD_<diâmetro>[_<material>]` acrescenta `diametroMm` e `material`; exemplo: `contracts/geomap/0.3/examples/valid-geoautoengine-attributes.geomap.json`. Exemplo executável: `contracts/geomap/0.3/examples/valid-geoautoengine-blocks.geomap.json`.
 
 Os exemplos `valid-geoautoengine-*.geomap.json` (0.1, 0.2 e 0.3; em 0.1, também o de LINE e arcos tesselados, desde o M4.3d) são cópias das amostras em `apps/geoautoengine/samples/geomap/`, geradas pelo serializador do comando `GEOAUTO3GEOMAPEXPORT`. Desde o M4.3b, um teste do GeoAutoEngine confere na CI que o serializador gera essas amostras e que as cópias são idênticas byte a byte. Os testes de contrato do GeoMap validam todos; a CI do backend importa a de 0.1.
 

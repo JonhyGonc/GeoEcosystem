@@ -288,10 +288,40 @@ public static class AutoCadGeoMapPolylineReader
             false,
             insertion.Z,
             Math.Abs(insertion.Z) > Tolerance,
-            new GeoMapBlockInfo(name, rotation, scale.X, scale.Y, position.FromSymbol),
+            new GeoMapBlockInfo(name, rotation, scale.X, scale.Y, position.FromSymbol, BlockAttributes(transaction, block)),
             null,
             GeoMapEntityTypes.Polyline,
             null);
+    }
+
+    // Atributos (ATTRIB) do bloco, tag e valor, como a ponte DXF (M4.3e). Atributo multilinha vai como texto simples.
+    private static List<KeyValuePair<string, string>> BlockAttributes(Transaction transaction, BlockReference block)
+    {
+        var attributes = new List<KeyValuePair<string, string>>();
+        foreach (ObjectId attributeId in block.AttributeCollection)
+        {
+            if (attributeId.IsErased ||
+                transaction.GetObject(attributeId, OpenMode.ForRead) is not AttributeReference attribute ||
+                string.IsNullOrWhiteSpace(attribute.Tag))
+            {
+                continue;
+            }
+
+            string text;
+            if (attribute.IsMTextAttribute)
+            {
+                using var mtext = attribute.MTextAttribute;
+                text = mtext.Text;
+            }
+            else
+            {
+                text = attribute.TextString;
+            }
+
+            attributes.Add(new KeyValuePair<string, string>(attribute.Tag.Trim(), (text ?? string.Empty).Trim()));
+        }
+
+        return attributes;
     }
 
     // Extensão do desenho da definição, sem textos e definições de atributo (como a ponte DXF).
