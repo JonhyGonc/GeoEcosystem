@@ -14,7 +14,7 @@
 | M3.3b | Payloads das correções (mensagens 6/7) unificados na biblioteca | CI verde com as fixtures `correction-*` | 🔄 PR #16 (roteiro OK em 16/11/2026) |
 | M3.3c | Servidor aplica S1–S3 (§7): lê `capabilities` e responde no `HelloAck` | CI verde; roteiro no Civil 3D 2026 com o GAD 1.1.0 | ⏳ |
 | M3.4 | GAD envia `capabilities: ["corrections"]` e `applicationVersion` do produto; teste de que `locationMode` sai com o nome canônico | CI verde; roteiro manual no Civil 3D 2026 | ⏳ |
-| M3.5 | Instalação: GAE primeiro, depois GAD (sem urgência entre os dois, pela regra S2) | Usuário confirma correções funcionando com GAD 1.1.0 e com o GAD novo | ⏳ |
+| M3.5 | ~~Instalação na equipe~~ **adiada para o fim do projeto** (decisão do usuário, 16/11/2026). No M3, só homologação na máquina do usuário | Usuário confirma correções funcionando no Civil 3D 2026 dele, com GAD 1.1.0 e com o GAD novo | ⏳ |
 
 ## Decisões tomadas neste marco
 | Data | Decisão | Quem |
@@ -23,6 +23,7 @@
 | 16/11/2026 | Versão no fio continua `1`; a especificação vira a revisão 1.1 | Agente (DEC-ECO-0002) |
 | 16/11/2026 | Biblioteca só para `net8.0` ("somente com a versão de 2026"); o host 2024 do GAE deixa de compilar | Usuário |
 | 16/11/2026 | M3.3 dividido em 3 PRs (a: mover sem mudar comportamento; b: correções; c: regras do servidor) | Agente |
+| 16/11/2026 | Instalação na equipe só quando o projeto inteiro estiver terminado (a equipe quase não usa o GAD) | Usuário |
 
 ## Pontos em aberto
 - `scripts/build-release.ps1` ainda tenta os 3 hosts por padrão, e o instalador exige os 3. Enquanto isso não for ajustado, use `-Versions 2026` (bundle sem instalador, opção A de `docs/INSTALACAO_EQUIPE.md`).
