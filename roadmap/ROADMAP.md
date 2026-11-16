@@ -7,7 +7,7 @@
 > | M1 — Versão oficial completa | ✅ concluído em 12/11/2026 ([marcos/M1](marcos/M1-versao-oficial.md)) |
 > | M2 — Monorepo | ✅ concluído em 16/11/2026 ([marcos/M2](marcos/M2-monorepo.md)) |
 > | M3 — Contrato GADX | ✅ concluído em 16/11/2026; instalação na equipe adiada para o fim do projeto ([marcos/M3](marcos/M3-contrato-gadx.md)) |
-> | M4 — Exportador GAE → GeoMap | 🔄 M4.1 em revisão ([marcos/M4](marcos/M4-dwg-geomap.md)) |
+> | M4 — Exportador GAE → GeoMap | 🔄 M4.1 a M4.3c concluídos; M4.3d e M4.5 em revisão ([marcos/M4](marcos/M4-dwg-geomap.md)) |
 > | M5 — Anomalias no mapa | ⏳ |
 
 - **Autor:** Chat 00
@@ -159,6 +159,7 @@ GeoEcosystem/
 | M4.1 | Usuário + Chat 00 | Decisão D-03 e D-04 (`DEC-ECO-0003`) | Decisão registrada |
 | M4.2 | Chat 01 | Política única de `sourceSystem` (GM-05). Como o GeoMap ainda não é usado (Q-B), não há migração de dados de produção: os bancos de desenvolvimento podem ser recriados | Teste: reimportar a mesma rede gera o mesmo UUID |
 | M4.3 | Chat 02 | Exportador do GAE com 0.2 (cor), 0.3 (blocos/ATTRIB), LINE e curvas (tesselação), seleção por layer e atributos técnicos; em passos pequenos, um por capacidade | Para cada capacidade: fixture gerada pelo GAE validada pelo validador do GeoMap na CI; comparação com a saída da ponte DXF para o mesmo desenho |
+| M4.5 | Agente | Importar `.geomap.json` pelo site do GeoMap (acrescentado pelo usuário em 16/11/2026, para testar visualmente) | Testes da rota e do botão; CI importa pelo HTTP |
 | M4.4 | Chat 01 | Destino do script privado da 3ª rede (GM-09): versionar ou descartar | Dado reproduzível ou descarte registrado |
 
 **Critério de aceitação:** reimportar a mesma rede pelo caminho oficial não cria projeto duplicado; o teste cruzado roda na CI.

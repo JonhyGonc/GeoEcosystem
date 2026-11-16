@@ -7,11 +7,11 @@
 - **M2 — Monorepo:** ✅ concluído em 16/11/2026: tags `geoautoengine/v3.2.0` e `geoautodocs/v1.1.0` criadas (conferidas no GitHub); repositórios antigos arquivados (confirmado pelo usuário).
 - **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
-- **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c 🔄: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (branch `feat/024-gae-blocos-pontos`). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
-- **Próximo passo:** roteiro no Civil 3D e merge do M4.3c → M4.3d (LINE e curvas).
+- **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c ✅: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (PR #24; roteiro aprovado). M4.3d 🔄: LINE, ARC e arcos de Polyline com tesselação de 5 mm (PR #25, esperando o roteiro no Civil 3D). M4.5 🔄: botão Importar no site do GeoMap (branch `feat/026-geomap-importar-site`), pedido pelo usuário para testar visualmente. Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
+- **Próximo passo:** roteiro do M4.5 no navegador e merge; depois, o roteiro do M4.3d (PR #25) olhando as curvas no mapa → M4.3e.
 
 ## Pendências do usuário
-1. Roteiro do M4.3c no Civil 3D e merge.
+1. Roteiro do M4.5 no navegador e merge; roteiro do M4.3d (PR #25) no Civil 3D e merge.
 2. ~~Instalar na equipe~~ **Adiado** (decisão do usuário, 16/11/2026): só quando o projeto inteiro estiver terminado (depois do M5), numa rodada única com as versões finais. A equipe quase não usa o GeoAutoDocs. Até lá, cada marco é homologado só na máquina do usuário.
 
 ## Decisões da sessão de 16/11/2026
@@ -21,6 +21,8 @@
 - **Instalação na equipe:** só no fim do projeto, numa rodada única.
 - **Identidade no GeoMap (D-04):** código próprio (GUID) gravado pelo GAE em XData em cada feição exportada.
 - **Blocos no exportador (M4.3c):** uma seleção com linhas e blocos gera dois arquivos, um por rede.
+- **Curvas no exportador (M4.3d):** só LINE, ARC e arcos de Polyline; tesselação com no máximo 5 mm.
+- **Importação pelo site (M4.5, DEC-033 do GeoMap):** pedido novo; sempre ligada, sem login, só uso local (risco aceito).
 
 ## Fatos aprendidos (para não repetir)
 - **Máquina do usuário:** não tem as pastas externas `reference` e `GeoAutoEngine.Legacy` nem o .NET portátil `.dotnet`. Os testes `EXTERNAL` e as suítes `legacy`/`full` do GAE não rodam lá; nunca rodaram.

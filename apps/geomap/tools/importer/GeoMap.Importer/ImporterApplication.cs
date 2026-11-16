@@ -74,23 +74,12 @@ public sealed class ImporterApplication(
                     [new(ContractErrorCodes.LimitExceeded, "$", "Document exceeds 50 MiB.")]);
             }
 
+            // Mesmo caminho da importação pelo site (M4.5): validação, leitura, hash e gravação.
             var utf8Json = await File.ReadAllBytesAsync(options.FilePath, cancellationToken);
-            state.Received = GeoMapImportDocument.CountReceivedFeatures(utf8Json);
-            var validation = GeoMapContractValidator.Validate(utf8Json);
-            if (!validation.IsValid)
-            {
-                return await WriteValidationFailureAsync(
-                    output, state.Received, stopwatch, validation.Errors);
-            }
-
-            var document = GeoMapImportDocument.Parse(utf8Json) with
-            {
-                SourceFileSha256 = SourceFileHash.Compute(utf8Json.AsSpan())
-            };
-            var result = await store.ImportAsync(
-                options.ConnectionString, document, cancellationToken);
-            return await WriteSuccessAsync(
-                output, state.Received, result, stopwatch);
+            var outcome = await GeoMapDocumentImporter.ImportAsync(
+                store, options.ConnectionString, utf8Json, cancellationToken);
+            await WriteSummaryAsync(output, outcome.Summary);
+            return outcome.ExitCode;
         }
         catch (OperationCanceledException)
         {
