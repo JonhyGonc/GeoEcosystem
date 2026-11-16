@@ -1,6 +1,6 @@
 # GADX 1.1 + GeoAutoDocs.Inspection v1 — especificação **normativa**
 
-> **Estado:** proposta normativa do passo M3.1 do roadmap ([`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Passa a valer quando o usuário mesclar o PR que a introduz. Até o M3.3, o código **ainda não implementa** o campo `capabilities` (seção 7); todo o resto descreve o que o código já faz em `main@85be834`.
+> **Estado:** normativa, em vigor desde 16/11/2026 (PR #13, [`DEC-ECO-0002`](../../decisoes/DEC-ECO-0002-versionamento-gadx.md)). Até o M3.3, o código **ainda não implementa** o campo `capabilities` (seção 7); todo o resto descreve o que o código já faz em `main@85be834`. Fixtures de referência: [`fixtures/`](fixtures/README.md) (M3.2).
 >
 > As palavras **DEVE**, **NÃO DEVE** e **PODE** são obrigatórias no sentido usual de especificação. Onde o texto diz "hoje", é uma observação sobre o código, não uma regra.
 
@@ -255,7 +255,7 @@ Nenhuma combinação muda o comportamento atual. Instalação recomendada (M3.5)
 - `applicationVersion` do GAD não é a versão do produto (corrigir no M3.4, §5.1).
 
 ## 13. Conformidade
-- **M3.2:** fixtures de referência em `contratos/gadx-inspecao/fixtures/`. Frames binários e JSON de cada mensagem, inclusive `Hello` com e sem `capabilities`, `HelloAck` com e sem `capabilities`, `CorrectionPush` com os modos `Point`, `Range` e `MultiPoint`, e um `CorrectionAck` `Partial`.
+- **M3.2:** fixtures de referência em [`fixtures/`](fixtures/README.md), geradas por `ferramentas/gerar_fixtures.py`. Frames binários e JSON de cada mensagem, inclusive `Hello` com e sem `capabilities`, `HelloAck` com e sem `capabilities`, `CorrectionPush` com os modos `Point`, `Range` e `MultiPoint`, e um `CorrectionAck` `Partial`. Lidas pelos testes `GadxContractFixtureTests` das duas aplicações.
 - **M3.3/M3.4:** a biblioteca `libs/GeoEcosystem.Contracts.Inspection` e os dois lados testados contra as mesmas fixtures na CI.
 
 ## 14. Histórico

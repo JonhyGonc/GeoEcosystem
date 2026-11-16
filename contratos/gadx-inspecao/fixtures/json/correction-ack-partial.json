@@ -1,0 +1,31 @@
+{
+  "accepted": true,
+  "status": "Partial",
+  "message": "2 correção(ões) aplicada(s); 1 item(ns) não foi(ram) localizado(s) ou validado(s).",
+  "requestedCount": 3,
+  "appliedCount": 2,
+  "rejectedCount": 1,
+  "results": [
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000011",
+      "applied": true,
+      "status": "Applied",
+      "message": "Pronta para aplicar."
+    },
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000012",
+      "applied": true,
+      "status": "Applied",
+      "message": "Pronta para aplicar."
+    },
+    {
+      "sectionId": "0e0c0000-0000-4000-8000-000000000004",
+      "occurrenceId": "0e0c0000-0000-4000-8000-000000000013",
+      "applied": false,
+      "status": "Invalid",
+      "message": "A ocorrência multiponto deve manter 3 ponto(s)."
+    }
+  ]
+}

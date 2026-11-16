@@ -11,10 +11,12 @@ on:
     branches: [main]
     paths:
       - "apps/geoautodocs/**"
+      - "contratos/gadx-inspecao/**"
       - ".github/workflows/geoautodocs-ci.yml"
   pull_request:
     paths:
       - "apps/geoautodocs/**"
+      - "contratos/gadx-inspecao/**"
       - ".github/workflows/geoautodocs-ci.yml"
   workflow_dispatch:
 

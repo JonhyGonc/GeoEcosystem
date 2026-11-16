@@ -1,6 +1,6 @@
 # DEC-ECO-0002 — Versionamento e semântica do contrato GADX (D-02, R-09)
 
-- **Estado:** proposta (passa a aprovada com o merge do PR do M3.1 pelo usuário)
+- **Estado:** aprovada — merge do PR #13 pelo usuário em 16/11/2026
 - **Data:** 16/11/2026
 - **Origem:** roadmap aprovado em 11/11/2026, M3 (D-02: opções a + c; R-09: opção i); pergunta ao usuário sobre a transição, respondida em 16/11/2026
 - **Contratos:** CT-02, CT-03, CT-04 ([`contratos/REGISTRO.md`](../contratos/REGISTRO.md))
