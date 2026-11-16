@@ -22,6 +22,8 @@
 
 A ponte continua em uso até o exportador do GAE cobrir o que ela faz (M4.3): cor (0.2), blocos/pontos (0.3), LINE, curvas e seleção por layer.
 
+> **Atualização (16/11/2026):** o M4.3 foi concluído (PRs #22 a #25 e #27) e a ponte foi aposentada (DEC-034 do GeoMap). O usuário dispensou a comparação final no mesmo desenho, porque testou cada passo no Civil 3D e no mapa. O script privado da GM-09 foi descartado (M4.4).
+
 ## D-04 — Identidade de cada feição
 | Opção | Avaliação |
 |---|---|

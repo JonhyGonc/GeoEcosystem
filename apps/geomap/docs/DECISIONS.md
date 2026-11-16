@@ -273,6 +273,14 @@ Isso não contraria a regra de que "a geometria nasce no CAD; o navegador apenas
 
 **Risco aceito pelo usuário:** a API não tem login, e a rota fica sempre ligada. No uso local, isso não é problema. Antes de qualquer hospedagem fora da máquina do usuário (PEND-007), a rota precisa de autenticação ou precisa ser desligada; qualquer pessoa com acesso à API poderia substituir redes.
 
+## DEC-034 — Ponte DXF aposentada
+
+Status: aprovada pelo usuário em 16/11/2026 (M4 do roadmap do GeoEcosystem; D-03 (b) da [DEC-ECO-0003](https://github.com/JonhyGonc/GeoEcosystem/blob/main/decisoes/DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md)).
+
+Encerra a ponte DXF provisória da DEC-024 (`tools/dxf-converter`), seus testes em Python, o DXF sintético da CI e a verificação `verify-dxf-import.sql`. O exportador do GeoAutoEngine passou a cobrir tudo o que ela fazia: cor da layer (0.2), blocos como pontos com a mesma regra de posição e exclusões (0.3), `LINE` e curvas (tesseladas, coisa que a ponte não fazia), uma rede por layer, atributos dos blocos, e diâmetro e material do nome da layer. Cada passo foi testado pelo usuário no Civil 3D e no mapa. O usuário dispensou a comparação final ponte × exportador no mesmo desenho.
+
+O script privado que juntava as camadas `RD_` numa só rede na validação de 10/11/2026 (GM-09) foi descartado, também por decisão do usuário: o caminho reproduzível passa a ser o exportador do GeoAutoEngine com o botão **Importar** do site (DEC-033). Os exemplos `valid-network-color` (0.2) e `valid-block-points` (0.3), com `sourceSystem` `"Civil 3D DXF"`, continuam como exemplos do contrato. O registro da validação com dados reais (`REAL_DATA_VALIDATION.md`) fica como histórico.
+
 ## Decisões pendentes
 
 | ID provisório | Decisão | Momento esperado |
