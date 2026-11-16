@@ -28,8 +28,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
       Database__ConnectionString: "Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # Ortofotos em MBTiles, uma por projeto (DEC-035): <nome do projeto>.mbtiles nesta pasta.
+      Orthophotos__Directory: /data/ortofotos
     ports:
       - "${API_PORT:-8080}:8080"
+    volumes:
+      - "${GEOMAP_ORTHOPHOTO_DIR:-./private-data/ortofotos}:/data/ortofotos:ro"
     depends_on:
       database:
         condition: service_healthy

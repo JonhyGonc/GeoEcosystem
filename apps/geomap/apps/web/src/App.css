@@ -632,3 +632,39 @@
     max-height: calc(42vh - 116px);
   }
 }
+
+/* Ortofoto do projeto (DEC-035) */
+.orthophoto-control {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.orthophoto-control__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #12364a;
+  font-weight: 650;
+}
+
+.orthophoto-control__opacity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: #63808d;
+  font-size: 0.8rem;
+}
+
+.orthophoto-control__hint {
+  margin: 12px 0 0;
+  color: #63808d;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.orthophoto-control__hint--error {
+  color: #a3352a;
+}

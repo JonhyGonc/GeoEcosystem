@@ -20,6 +20,17 @@ O corpo da requisição é o próprio `.geomap.json` (v0.1, v0.2 ou v0.3), com a
 
 A rota não tem autenticação. Ela serve ao uso local e não pode ir para um servidor público sem login (DEC-033). O NDJSON continua só pelo importador do terminal.
 
+## Ortofoto do projeto (DEC-035)
+
+~~~http
+GET /api/projects/{projectId}/orthophoto
+GET /api/projects/{projectId}/orthophoto/tiles/{z}/{x}/{y}
+~~~
+
+A primeira rota responde `available` e `fileName`: o nome do arquivo encontrado ou o nome esperado, `<nome do projeto>.mbtiles`. Quando há arquivo, ela também responde `tileUrl`, `format`, `bounds` (`[oeste, sul, leste, norte]`, em graus), `minZoom` e `maxZoom`. Um projeto que não existe dá 404.
+
+A segunda rota devolve o tile raster XYZ do MBTiles (`image/webp`, `image/jpeg` ou `image/png`, com `Cache-Control: private, max-age=3600`). Ela responde 204 onde a ortofoto não tem imagem, 400 com z fora de 0–24 ou com x/y fora da grade, e 404 sem ortofoto.
+
 ## Catálogo de projetos
 
 ~~~http

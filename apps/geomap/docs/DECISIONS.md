@@ -114,7 +114,7 @@ A escolha vale apenas para desenvolvimento e demonstração interna de baixo tr�
 
 URL, nome, tamanho de tile, limites de zoom e atribuição ficam centralizados em configuração validada. Fontes personalizadas exigem atribuição explícita. IDs `basemap-*` são reservados ao fundo e `geomap-*` às redes, permitindo trocar apenas a fonte base sem remover camadas GeoMap.
 
-Somente raster XYZ está implementado. WMS, WMTS, ortofoto própria e COG permanecem extensões previstas, condicionadas a necessidade, licença e medições futuras.
+Somente raster XYZ está implementado. WMS, WMTS e COG permanecem extensões previstas, condicionadas a necessidade, licença e medições futuras. A ortofoto própria de cada projeto entrou pela DEC-035.
 
 Referências: [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/), [Copyright e licença do OpenStreetMap](https://www.openstreetmap.org/copyright) e [fonte raster no MapLibre](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-raster-tile-source/).
 
@@ -272,6 +272,19 @@ O site ganha o botão **Importar**, que envia um ou mais `.geomap.json` para `PO
 Isso não contraria a regra de que "a geometria nasce no CAD; o navegador apenas visualiza e consulta": o navegador só entrega um arquivo que já foi gerado pelo CAD. Ele não cria nem edita feições.
 
 **Risco aceito pelo usuário:** a API não tem login, e a rota fica sempre ligada. No uso local, isso não é problema. Antes de qualquer hospedagem fora da máquina do usuário (PEND-007), a rota precisa de autenticação ou precisa ser desligada; qualquer pessoa com acesso à API poderia substituir redes.
+
+## DEC-035 — Ortofoto do projeto em MBTiles
+
+Status: aprovada pelo usuário em 16/11/2026 (prioridade antes do M5: "meu chefe quer ver com a orto"; o usuário aceita converter à mão, desde que seja gratuito e fácil de associar ao projeto).
+
+As ortofotos vêm do levantamento de drone da empresa, em ECW ou JPEG2000, com 1 a 10 GB por projeto. O ECW é proprietário: ler ECW no servidor exige licença. Por isso, cada ortofoto é convertida **uma vez**, no PC do usuário, com o GDAL que vem no QGIS (gratuito), para **MBTiles**: tiles raster XYZ prontos num único arquivo SQLite. O GeoMap nunca lê ECW nem JP2.
+
+- **Associação ao projeto:** o arquivo fica numa pasta fora do Git (`GEOMAP_ORTHOPHOTO_DIR`, padrão `private-data/ortofotos`), montada só para leitura na API, com o nome do projeto como aparece no site: `<nome do projeto>.mbtiles`. Caracteres que o Windows não aceita viram `-`. O nome `<id do projeto>.mbtiles` também é aceito. O site mostra o nome exato esperado quando não encontra o arquivo.
+- **API:** `GET /api/projects/{id}/orthophoto` diz se há ortofoto, o zoom mínimo e máximo e os limites. `GET /api/projects/{id}/orthophoto/tiles/{z}/{x}/{y}` lê o tile direto do SQLite (`Microsoft.Data.Sqlite`, modo só leitura; linha TMS invertida para XYZ) e responde 204 onde não há imagem. A busca do arquivo fica em memória por 30 segundos.
+- **Site:** camada raster acima do mapa base e abaixo das redes, com liga/desliga e opacidade. Depois do zoom máximo do arquivo, o MapLibre amplia os últimos tiles.
+- **Alternativa recusada por ora:** COG com um serviço de tiles dinâmico (TiTiler). Ele acrescentaria um serviço Python ao Docker e custaria processamento a cada visualização.
+
+**Pendência:** para o cliente (proprietário) ver a ortofoto, o GeoMap precisa ser hospedado (PEND-007) e ganhar login antes, pela DEC-033. Um MBTiles de vários GB também precisa de um lugar no servidor. Hoje tudo roda só no PC do usuário.
 
 ## Decisões pendentes
 

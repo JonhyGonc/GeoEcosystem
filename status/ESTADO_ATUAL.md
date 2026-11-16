@@ -8,7 +8,7 @@
 - **M3 — Contrato GADX:** ✅ concluído em 16/11/2026 (PRs #13–#18). Especificação GADX 1.1 normativa; fixtures nas CIs; biblioteca `libs/GeoEcosystem.Contracts.Inspection` (`net8.0`) usada pelo GAE e pelo GAD; `capabilities` nos dois lados. Homologado na máquina do usuário (GAD 1.1.0 e GAD novo). Issues #11 e #12 fechadas.
 - **Governança:** um único agente (Emenda 2, 16/11/2026). Processo de PR e templates já atualizados (PR #13).
 - **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c ✅: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (PR #24; roteiro aprovado: 487 tês, coordenadas conferidas, reexportação sem códigos novos). M4.5 ✅: botão Importar no site do GeoMap (PR #26; testado pelo usuário no navegador). M4.3d ✅: LINE, ARC e arcos de Polyline, tesselados com no máximo 5 mm (PR #25; testado pelo usuário: rede inteira exportada e conferida no mapa). M4.3e 🔄: seleção por layer, uma rede por layer, diâmetro/material da layer e atributos dos blocos (branch `feat/027-gae-layers-atributos`). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
-- **Próximo passo:** roteiro do M4.3e no Civil 3D e no mapa, e merge → aposentar a ponte DXF (comparação final ponte × GAE).
+- **Prioridade atual (pedido do usuário, 16/11/2026):** ortofoto do projeto no GeoMap (M4.6, DEC-035; branch `feat/029-geomap-ortofoto`), porque o chefe do usuário quer ver o mapa com a ortofoto. Depois, o M5.
 
 ## Pendências do usuário
 1. Roteiro do M4.3e no Civil 3D e no mapa, e merge.
@@ -23,6 +23,7 @@
 - **Blocos no exportador (M4.3c):** uma seleção com linhas e blocos gera dois arquivos, um por rede.
 - **Curvas no exportador (M4.3d):** só LINE, ARC e arcos de Polyline; tesselação com no máximo 5 mm.
 - **Redes por layer (M4.3e):** uma rede por layer, como a ponte; diâmetro e material lidos de `RD_<diâmetro>[_<material>]`.
+- **Ortofoto (M4.6, DEC-035 do GeoMap):** ortofotos de drone (ECW/JP2, 1–10 GB) convertidas uma vez no QGIS para MBTiles, com o nome do projeto; só no PC do usuário por enquanto, mas o cliente (proprietário) deve ver depois (hospedagem e login pendentes).
 - **Importação pelo site (M4.5, DEC-033 do GeoMap):** pedido novo; sempre ligada, sem login, só uso local (risco aceito).
 
 ## Fatos aprendidos (para não repetir)

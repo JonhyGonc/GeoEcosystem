@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import { ImportPanel } from './ImportPanel'
 import { LayerControl } from './LayerControl'
+import { OrthophotoControl, type OrthophotoState } from './OrthophotoControl'
 import { ProjectSelector } from './ProjectSelector'
 import { SelectionSummary } from './SelectionSummary'
 import {
   fetchFeatureDetails,
   type FeatureDetailsState,
 } from './api/featureDetails'
+import { fetchOrthophoto } from './api/orthophoto'
 import {
   fetchProjectLocation,
   type ProjectLocation,
@@ -34,6 +36,13 @@ import {
   type NetworkStatus,
   type SelectedNetworkFeature,
 } from './map/networkLayer'
+import {
+  installOrthophoto,
+  removeOrthophoto,
+  updateOrthophoto,
+  type OrthophotoDisplay,
+  type OrthophotoMapTarget,
+} from './map/orthophotoLayer'
 import {
   locateProject,
   type ProjectLocatorTarget,
@@ -82,6 +91,16 @@ function App({ configuration = networkConfiguration }: AppProps) {
   // Importação pelo site (M4.5): cada importação recarrega o catálogo e as redes, e abre o projeto importado.
   const [dataRevision, setDataRevision] = useState(0)
   const importedProjectId = useRef<string | null>(null)
+  // Ortofoto do projeto (DEC-035): o arquivo é procurado a cada troca de projeto ou importação.
+  const orthophotoTarget = useRef<OrthophotoMapTarget>(null)
+  const [orthophoto, setOrthophoto] = useState<
+    ({ readonly projectId: string } & { readonly state: OrthophotoState }) | null
+  >(null)
+  const [orthophotoDisplay, setOrthophotoDisplay] = useState<OrthophotoDisplay>({
+    visible: true,
+    opacity: 1,
+  })
+  const orthophotoDisplayRef = useRef(orthophotoDisplay)
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -97,6 +116,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
     })
     mapInstance.current = map as unknown as NetworkMapTarget
     locatorTarget.current = map as unknown as ProjectLocatorTarget
+    orthophotoTarget.current = map as unknown as OrthophotoMapTarget
     const styleSubscription = map.on('style.load', () => {
       setStyleRevision((revision) => revision + 1)
     })
@@ -122,6 +142,7 @@ function App({ configuration = networkConfiguration }: AppProps) {
       layerController.current = null
       mapInstance.current = null
       locatorTarget.current = null
+      orthophotoTarget.current = null
       map.remove()
     }
   }, [])
@@ -189,6 +210,57 @@ function App({ configuration = networkConfiguration }: AppProps) {
 
     return () => abortController.abort()
   }, [configuration, selectedProjectId, dataRevision])
+
+  useEffect(() => {
+    if (configuration.kind !== 'ready' || !selectedProjectId) return
+
+    const projectId = selectedProjectId
+    const abortController = new AbortController()
+    setOrthophoto({ projectId, state: { kind: 'loading' } })
+    void fetchOrthophoto(configuration.value.apiBaseUrl, projectId, abortController.signal)
+      .then((info) => {
+        if (abortController.signal.aborted) return
+        setOrthophoto({ projectId, state: { kind: 'ready', info } })
+      })
+      .catch((error: unknown) => {
+        if (abortController.signal.aborted) return
+        setOrthophoto({
+          projectId,
+          state: {
+            kind: 'error',
+            message: error instanceof Error ? error.message : 'Não foi possível procurar a ortofoto',
+          },
+        })
+      })
+
+    return () => abortController.abort()
+  }, [configuration, selectedProjectId, dataRevision])
+
+  // A ortofoto entra acima do mapa base e abaixo das redes; some ao trocar de projeto.
+  const orthophotoInfo =
+    orthophoto?.projectId === selectedProjectId && orthophoto.state.kind === 'ready'
+      ? orthophoto.state.info
+      : null
+  const orthophotoInstalled = useRef(false)
+  useEffect(() => {
+    const map = orthophotoTarget.current
+    if (styleRevision === 0 || !map) return
+    if (orthophotoInfo?.available) {
+      installOrthophoto(map, orthophotoInfo, orthophotoDisplayRef.current)
+      orthophotoInstalled.current = true
+    } else if (orthophotoInstalled.current) {
+      removeOrthophoto(map)
+      orthophotoInstalled.current = false
+    }
+  }, [orthophotoInfo, styleRevision])
+
+  const changeOrthophotoDisplay = (display: OrthophotoDisplay) => {
+    orthophotoDisplayRef.current = display
+    setOrthophotoDisplay(display)
+    if (orthophotoTarget.current && orthophotoInstalled.current) {
+      updateOrthophoto(orthophotoTarget.current, display)
+    }
+  }
 
   const catalogConfig = useMemo(() => {
     if (configuration.kind !== 'ready' || !selectedProjectId) return null
@@ -356,6 +428,13 @@ function App({ configuration = networkConfiguration }: AppProps) {
             onProjectChange={changeProject}
             onLocate={locateSelectedProject}
             locateDisabledReason={locateDisabledReason(currentLocation)}
+          />
+        )}
+        {orthophoto && orthophoto.projectId === selectedProjectId && (
+          <OrthophotoControl
+            state={orthophoto.state}
+            display={orthophotoDisplay}
+            onDisplayChange={changeOrthophotoDisplay}
           />
         )}
         {configuration.kind === 'ready' && (
