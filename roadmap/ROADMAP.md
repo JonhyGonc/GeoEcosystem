@@ -7,8 +7,8 @@
 > | M1 — Versão oficial completa | ✅ concluído em 12/11/2026 ([marcos/M1](marcos/M1-versao-oficial.md)) |
 > | M2 — Monorepo | ✅ concluído em 16/11/2026 ([marcos/M2](marcos/M2-monorepo.md)) |
 > | M3 — Contrato GADX | ✅ concluído em 16/11/2026; instalação na equipe adiada para o fim do projeto ([marcos/M3](marcos/M3-contrato-gadx.md)) |
-> | M4 — Exportador GAE → GeoMap | ✅ concluído em 16/11/2026; ponte DXF aposentada ([marcos/M4](marcos/M4-dwg-geomap.md)) |
-> | M5 — Anomalias no mapa | ⏳ |
+> | M4 — Exportador GAE → GeoMap | ✅ M4.1 a M4.5 concluídos em 16/11/2026; ponte DXF aposentada; M4.6 (ortofoto, pedido do usuário) em revisão ([marcos/M4](marcos/M4-dwg-geomap.md)) |
+> | M5 — Anomalias no mapa | 🔄 decisões tomadas em 16/11/2026 ([marcos/M5](marcos/M5-anomalias-mapa.md), [DEC-ECO-0004](../decisoes/DEC-ECO-0004-anomalias-no-mapa.md)); a ortofoto (M4.6) vem antes, por prioridade do usuário |
 
 - **Autor:** Chat 00
 - **Data:** 11/11/2026
@@ -175,7 +175,7 @@ GeoEcosystem/
 - O GAD tem a metragem, a descrição e as capturas PNG das ocorrências (evidência `isPrimary`). As imagens ficam em pastas locais do GAD e não trafegam hoje para lugar nenhum.
 - O GeoMap só aceita geometria pelo contrato de importação e não tem armazenamento de imagens nem endpoint de escrita.
 
-**Ainda não decidido** (regra 12; será proposto com alternativas quando o M5 começar):
+**Decidido em 16/11/2026** ([DEC-ECO-0004](../decisoes/DEC-ECO-0004-anomalias-no-mapa.md)): posição calculada pelo GAE; pacote `.zip` com pontos e fotos, importado pelo botão do site (GADX 1.2 com `captureFile` opcional); intervalo como trecho destacado; vínculo pelo `occurrenceId` e pelo `FEATURE_ID` do tubo. Perguntas originais:
 - quem calcula a coordenada;
 - como a anomalia e a imagem chegam ao GeoMap (contrato novo ou versão nova do contrato atual);
 - onde as imagens ficam guardadas;
