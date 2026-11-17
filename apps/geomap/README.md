@@ -158,7 +158,9 @@ Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e L
 
 ### Ortofoto do projeto
 
-Cada projeto pode ter uma ortofoto, mostrada abaixo das redes, com liga/desliga e opacidade (DEC-035). A ortofoto de drone (ECW ou JP2) é convertida **uma vez** para MBTiles com o GDAL que vem no QGIS (gratuito). Abra o **OSGeo4W Shell**, que vem junto com o QGIS, e rode:
+Cada projeto pode ter uma ortofoto, mostrada abaixo das redes, com liga/desliga e opacidade (DEC-035). **O jeito mais simples** é arrastar o arquivo da ortofoto (TIF, ECW ou JP2) para cima de `tools\ortofoto\converter-ortofoto.bat` e digitar o nome do projeto. O script usa o GDAL do QGIS, aproveita a banda de transparência do arquivo (sem borda branca) e grava o `.mbtiles` em `C:\GeoMap\ortofotos`. Os comandos abaixo fazem o mesmo à mão.
+
+A ortofoto de drone (ECW ou JP2) é convertida **uma vez** para MBTiles com o GDAL que vem no QGIS (gratuito). Abra o **OSGeo4W Shell**, que vem junto com o QGIS, e rode:
 
 ~~~bat
 gdal_translate -of MBTILES -co TILE_FORMAT=WEBP -co QUALITY=85 "C:\Ortos\obra.ecw" "C:\GeoMap\ortofotos\Nome do projeto.mbtiles"
