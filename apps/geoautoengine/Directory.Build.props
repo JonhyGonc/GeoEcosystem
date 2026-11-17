@@ -2,11 +2,16 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
+    <!-- O GAE compila com o SDK do .NET 10 (exigido pelo host 2027). C# 12, regras de análise do .NET 8 e
+         auditoria NuGet só dos pacotes diretos mantêm os hosts 2025/2026 iguais aos compilados com o SDK 8. -->
+    <LangVersion>12.0</LangVersion>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <!-- net8.0 continua necessário para os hosts 2025/2026; sem o aviso de fim de suporte virando erro. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevel>8.0</AnalysisLevel>
     <Version>3.2.0</Version>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>
     <FileVersion>3.2.0.0</FileVersion>
@@ -15,13 +20,18 @@
     <AutodeskAutoCAD2024Directory Condition="'$(AutodeskAutoCAD2024Directory)' == ''">$(ProgramFiles)\Autodesk\AutoCAD 2024</AutodeskAutoCAD2024Directory>
     <AutodeskAutoCAD2025Directory Condition="'$(AutodeskAutoCAD2025Directory)' == ''">$(ProgramFiles)\Autodesk\AutoCAD 2025</AutodeskAutoCAD2025Directory>
     <AutodeskAutoCAD2026Directory Condition="'$(AutodeskAutoCAD2026Directory)' == ''">$(ProgramFiles)\Autodesk\AutoCAD 2026</AutodeskAutoCAD2026Directory>
+    <AutodeskAutoCAD2027Directory Condition="'$(AutodeskAutoCAD2027Directory)' == ''">$(ProgramFiles)\Autodesk\AutoCAD 2027</AutodeskAutoCAD2027Directory>
     <AutodeskAutoCADDirectory Condition="'$(AutodeskAutoCADVersion)' == '2024'">$(AutodeskAutoCAD2024Directory)</AutodeskAutoCADDirectory>
     <AutodeskAutoCADDirectory Condition="'$(AutodeskAutoCADVersion)' == '2025'">$(AutodeskAutoCAD2025Directory)</AutodeskAutoCADDirectory>
     <AutodeskAutoCADDirectory Condition="'$(AutodeskAutoCADVersion)' == '2026'">$(AutodeskAutoCAD2026Directory)</AutodeskAutoCADDirectory>
+    <AutodeskAutoCADDirectory Condition="'$(AutodeskAutoCADVersion)' == '2027'">$(AutodeskAutoCAD2027Directory)</AutodeskAutoCADDirectory>
     <AutoCadTargetFramework Condition="'$(AutodeskAutoCADVersion)' == '2024'">net48</AutoCadTargetFramework>
-    <AutoCadTargetFramework Condition="'$(AutodeskAutoCADVersion)' != '2024'">net8.0-windows</AutoCadTargetFramework>
+    <AutoCadTargetFramework Condition="'$(AutodeskAutoCADVersion)' == '2025' or '$(AutodeskAutoCADVersion)' == '2026'">net8.0-windows</AutoCadTargetFramework>
+    <!-- O Civil 3D 2027 (R26.0) só carrega plugins .NET 10. -->
+    <AutoCadTargetFramework Condition="'$(AutodeskAutoCADVersion)' == '2027'">net10.0-windows</AutoCadTargetFramework>
     <DefineConstants Condition="'$(AutodeskAutoCADVersion)' == '2024'">$(DefineConstants);GEOAUTO_CAD_2024</DefineConstants>
     <DefineConstants Condition="'$(AutodeskAutoCADVersion)' == '2025'">$(DefineConstants);GEOAUTO_CAD_2025</DefineConstants>
     <DefineConstants Condition="'$(AutodeskAutoCADVersion)' == '2026'">$(DefineConstants);GEOAUTO_CAD_2026</DefineConstants>
+    <DefineConstants Condition="'$(AutodeskAutoCADVersion)' == '2027'">$(DefineConstants);GEOAUTO_CAD_2027</DefineConstants>
   </PropertyGroup>
 </Project>

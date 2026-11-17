@@ -4,7 +4,7 @@
              Link="Compatibility.GlobalUsings.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(UseAutodeskAutoCAD)' == 'true' and '$(AutodeskAutoCADVersion)' != '2024'">
-    <!-- Autodesk 2025/2026 assemblies target .NET 8 but carry legacy facade metadata. -->
+    <!-- Autodesk 2025/2026 (.NET 8) and 2027 (.NET 10) assemblies carry legacy facade metadata. -->
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
@@ -35,7 +35,7 @@
           BeforeTargets="ResolveReferences"
           Condition="'$(UseAutodeskAutoCAD)' == 'true'">
     <Error Condition="'$(AutodeskAutoCADDirectory)' == ''"
-           Text="Unsupported AutodeskAutoCADVersion '$(AutodeskAutoCADVersion)'. Expected 2024, 2025 or 2026." />
+           Text="Unsupported AutodeskAutoCADVersion '$(AutodeskAutoCADVersion)'. Expected 2024, 2025, 2026 or 2027." />
     <Error Condition="!Exists('$(AutodeskAutoCADDirectory)\AcCoreMgd.dll')"
            Text="AutoCAD $(AutodeskAutoCADVersion) reference not found: $(AutodeskAutoCADDirectory)\AcCoreMgd.dll" />
     <Error Condition="!Exists('$(AutodeskAutoCADDirectory)\AcDbMgd.dll')"

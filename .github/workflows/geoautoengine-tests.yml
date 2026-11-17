@@ -35,7 +35,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          # SDK 10 compila (global.json); o runtime 8 roda os testes (net8.0).
+          dotnet-version: |
+            8.0.x
+            10.0.x
       # Exclui só os testes que dependem de pastas fora do repositório (../reference e
       # ../GeoAutoEngine.Legacy). Veja "Testes que dependem de dados externos" no README.
       - name: Run all tests except EXTERNAL
