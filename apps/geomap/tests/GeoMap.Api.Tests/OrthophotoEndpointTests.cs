@@ -56,6 +56,7 @@ public sealed class OrthophotoEndpointTests : IDisposable
         Assert.Equal(new[] { -39.1, -14.2, -39.0, -14.1 }, root.GetProperty("bounds").EnumerateArray().Select(value => value.GetDouble()));
         Assert.Equal(0, root.GetProperty("minZoom").GetInt32());
         Assert.Equal(1, root.GetProperty("maxZoom").GetInt32());
+        Assert.Matches("^[0-9]+$", root.GetProperty("version").GetString());
     }
 
     [Fact]

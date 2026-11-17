@@ -15,13 +15,15 @@ public sealed class OrthophotoOptions
 }
 
 /// <summary>Ortofoto encontrada para um projeto: o arquivo MBTiles e o que o mapa precisa saber dele.</summary>
+/// <param name="Version">Data da última gravação do arquivo; muda quando a ortofoto é trocada.</param>
 public sealed record OrthophotoFile(
     string Path,
     string FileName,
     string Format,
     double[]? Bounds,
     int MinZoom,
-    int MaxZoom);
+    int MaxZoom,
+    string Version = "");
 
 /// <summary>Nome do projeto pelo id; separado para os testes não precisarem de banco.</summary>
 public interface IProjectNameLookup
@@ -141,7 +143,13 @@ public sealed class OrthophotoStore(IOptions<OrthophotoOptions> options, IProjec
         return null;
     }
 
-    private static OrthophotoFile ReadMetadata(string path, string fileName)
+    private static OrthophotoFile ReadMetadata(string path, string fileName) =>
+        ReadMetadataCore(path, fileName) with
+        {
+            Version = File.GetLastWriteTimeUtc(path).Ticks.ToString(CultureInfo.InvariantCulture),
+        };
+
+    private static OrthophotoFile ReadMetadataCore(string path, string fileName)
     {
         using var connection = OpenConnection(path);
         connection.Open();
