@@ -1,6 +1,7 @@
 using GeoMap.Api;
 using GeoMap.Api.FeatureDetails;
 using GeoMap.Api.Imports;
+using GeoMap.Api.Orthophotos;
 using GeoMap.Api.Networks;
 using GeoMap.Api.Projects;
 using GeoMap.Api.SpatialQueries;
@@ -34,6 +35,11 @@ builder.Services.AddScoped<ProjectExtentQuery>();
 builder.Services.AddScoped<NetworkCatalogQuery>();
 builder.Services.AddScoped<FeatureDetailsQuery>();
 builder.Services.AddSingleton<IGeoMapImportStore, PostgresGeoMapImportStore>();
+builder.Services
+    .AddOptions<OrthophotoOptions>()
+    .Bind(builder.Configuration.GetSection(OrthophotoOptions.SectionName));
+builder.Services.AddSingleton<IProjectNameLookup, PostgresProjectNameLookup>();
+builder.Services.AddSingleton<OrthophotoStore>();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -51,6 +57,7 @@ app.MapProjectCatalogEndpoints();
 app.MapNetworkCatalogEndpoints();
 app.MapFeatureDetailsEndpoints();
 app.MapImportEndpoints();
+app.MapOrthophotoEndpoints();
 
 app.Run();
 

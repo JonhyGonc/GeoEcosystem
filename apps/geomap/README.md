@@ -156,6 +156,20 @@ dotnet run --project tools/importer/GeoMap.DatasetGenerator -- \
 
 Os perfis disponíveis são SMALL, com 1.000 feições, MEDIUM, com 100.000, e LARGE, com 1.000.000. Consulte [tools/importer/README.md](tools/importer/README.md) para uso no PowerShell, tamanho de lote, extensão espacial e medições.
 
+### Ortofoto do projeto
+
+Cada projeto pode ter uma ortofoto, mostrada abaixo das redes, com liga/desliga e opacidade (DEC-035). A ortofoto de drone (ECW ou JP2) é convertida **uma vez** para MBTiles com o GDAL que vem no QGIS (gratuito). Abra o **OSGeo4W Shell**, que vem junto com o QGIS, e rode:
+
+~~~bat
+gdal_translate -of MBTILES -co TILE_FORMAT=WEBP -co QUALITY=85 "C:\Ortos\obra.ecw" "C:\GeoMap\ortofotos\Nome do projeto.mbtiles"
+gdaladdo -r average "C:\GeoMap\ortofotos\Nome do projeto.mbtiles" 2 4 8 16 32 64 128 256
+~~~
+
+- O primeiro comando gera os tiles no zoom máximo e reprojeta para o Web Mercator. O segundo gera os zooms menores, para a ortofoto aparecer de longe.
+- O nome do arquivo é o nome do projeto como aparece no site. Se ele não encontrar o arquivo, o site mostra o nome exato esperado.
+- `WEBP` mantém a transparência das bordas e exige GDAL 3.8 ou mais novo. Sem ele, use `JPEG` (bordas pretas, arquivo menor) ou `PNG` (arquivo maior).
+- Aponte a pasta no `.env` (`GEOMAP_ORTHOPHOTO_DIR=C:/GeoMap/ortofotos`) e rode `docker compose up -d` de novo. A pasta e os arquivos ficam fora do Git.
+
 ### Importar pelo site
 
 Com a API e o site rodando, clique em **Importar arquivos .geomap.json** no quadro do GeoMap e escolha um ou mais arquivos, por exemplo o de linhas e o `-blocos` gerados pelo GeoAutoEngine. Cada arquivo mostra o resultado: as feições importadas ou o erro do validador. No fim, o mapa recarrega e abre o projeto importado. As regras são as mesmas do importador do terminal (DEC-033). O botão é para uso local, porque a API não tem login.

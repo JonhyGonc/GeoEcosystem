@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql" Version="8.0.9" />
+    <!-- Ortofotos em MBTiles (DEC-035). -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
