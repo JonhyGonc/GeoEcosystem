@@ -236,9 +236,10 @@ public static class PipeDepthAssociator
             var nearest = hits.OrderBy(hit => hit.Distance).First();
             return new PointOutcome(
                 PipeDepthPointStatus.NearNotAssociated,
-                string.Create(CultureInfo.InvariantCulture,
-                    $"A linha mais próxima passa a {nearest.Distance / options.DrawingUnitsPerMetre:0.###} m; " +
-                    "fora da tolerância, o ponto não foi associado."),
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "A linha mais próxima passa a {0:0.###} m; fora da tolerância, o ponto não foi associado.",
+                    nearest.Distance / options.DrawingUnitsPerMetre),
                 new[] { lines[nearest.PipeIndex].CadHandle },
                 nearest.Distance,
                 nearest.VertexIndex);
