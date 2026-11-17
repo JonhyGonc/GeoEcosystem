@@ -1,0 +1,90 @@
+{
+  "contractVersion": "0.2",
+  "sourceSystem": "GeoAutoEngine",
+  "sourceCrs": "EPSG:31982",
+  "units": "metre",
+  "project": {
+    "externalId": "project-001",
+    "name": "Projeto exemplo"
+  },
+  "network": {
+    "externalId": "project-001:GF-Rede Pluvial",
+    "name": "GF-Rede Pluvial",
+    "type": "stormwater",
+    "color": "#1F77B4"
+  },
+  "exportedAt": "2026-11-17T12:00:00.000Z",
+  "features": [
+    {
+      "sourceId": "7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5d",
+      "sourceType": "Polyline",
+      "sourceLayer": "GF-Rede Pluvial",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [688100, 7086400],
+          [688110, 7086400],
+          [688120, 7086400]
+        ]
+      },
+      "properties": {
+        "cadHandle": "2A7F",
+        "cadEntityType": "Polyline",
+        "vertexCount": 3,
+        "closed": false,
+        "cadElevation": 0,
+        "projectedTo2D": false,
+        "quantidadeMedicoesProfundidade": 3,
+        "profundidadeInicialM": 1.2,
+        "medicoesProfundidade": [
+          {
+            "ponto": "Pt1",
+            "valorM": 1.2,
+            "vertice": 0,
+            "distanciaInicioM": 0,
+            "codigo": "AP1.20D300",
+            "metodo": "VERTICE"
+          },
+          {
+            "ponto": "Pt2",
+            "valorM": 1.45,
+            "vertice": 1,
+            "distanciaInicioM": 10,
+            "codigo": "AP1.45D300",
+            "metodo": "VERTICE"
+          },
+          {
+            "ponto": "Pt3",
+            "valorM": 1.7,
+            "distanciaInicioM": 15,
+            "codigo": "AP1.70D300",
+            "metodo": "TRECHO"
+          }
+        ],
+        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)"
+      }
+    },
+    {
+      "sourceId": "7c1e4b2a-3d5f-4a6b-9c8d-0e1f2a3b4c5e",
+      "sourceType": "Polyline",
+      "sourceLayer": "GF-Rede Pluvial",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [688120, 7086400],
+          [688120, 7086380]
+        ]
+      },
+      "properties": {
+        "cadHandle": "2A80",
+        "cadEntityType": "Polyline",
+        "vertexCount": 2,
+        "closed": false,
+        "cadElevation": 0,
+        "projectedTo2D": false,
+        "quantidadeMedicoesProfundidade": 0,
+        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)"
+      }
+    }
+  ]
+}

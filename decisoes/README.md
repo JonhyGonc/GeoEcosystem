@@ -9,6 +9,7 @@ Uma decisão por arquivo: `DEC-ECO-NNNN-<tema>.md`, com contexto, alternativas c
 | [DEC-ECO-0002](DEC-ECO-0002-versionamento-gadx.md) | Versionamento (`capabilities`) e semântica de estado completo do GADX | Aprovada (PR #13) | 16/11/2026 |
 | [DEC-ECO-0003](DEC-ECO-0003-caminho-dwg-geomap-e-identidade.md) | Exportador do GAE como caminho oficial DWG → GeoMap; código próprio por feição | Aprovada pelo usuário (registro no PR #19) | 16/11/2026 |
 | [DEC-ECO-0004](DEC-ECO-0004-anomalias-no-mapa.md) | Anomalias da inspeção no mapa: posição pelo GAE, pacote `.zip` com fotos, intervalo como trecho, vínculo por códigos próprios | Aprovada pelo usuário | 16/11/2026 |
+| [DEC-ECO-0005](DEC-ECO-0005-profundidades-pontos-tg.md) | Profundidades das tubulações pelos pontos _TG: associação pelo NODE, diagnóstico, exportação e gravação no DWG | Proposta (itens a aprovar) | 17/11/2026 |
 
 ## Decisões pendentes (identificadas na Etapa 2)
 Detalhes em [`auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md`](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md#6-decisões-técnicas-a-arbitrar-insumos-da-etapa-4-nenhuma-tomada-aqui).

@@ -93,6 +93,17 @@ public static class GeoMapExportSerializer
         var coordinates = positions.Select(position => new[] { position.X, position.Y }).ToList();
         var arcs = feature.Bulges?.Take(feature.IsClosed ? feature.Vertices.Count : feature.Vertices.Count - 1)
             .Count(GeoMapArcTessellation.IsArc) ?? 0;
+        var depths = feature.Depths;
+        var measurements = depths is null || depths.Measurements.Count == 0
+            ? null
+            : depths.Measurements.Select(measurement => new DepthMeasurementDto(
+                measurement.Point,
+                measurement.DepthMetres,
+                measurement.Vertex,
+                measurement.StationMetres,
+                measurement.Code,
+                measurement.Method,
+                measurement.Shared ? true : null)).ToArray();
         object properties = feature.EntityType == GeoMapEntityTypes.Line
             ? new LinePropertiesDto(
                 feature.CadHandle,
@@ -102,7 +113,12 @@ public static class GeoMapExportSerializer
                 feature.EndElevation ?? feature.Elevation,
                 feature.ProjectedTo2D,
                 layerAttributes.DiameterMm,
-                layerAttributes.Material)
+                layerAttributes.Material,
+                depths?.Measurements.Count,
+                depths?.StartMetres,
+                depths?.EndMetres,
+                measurements,
+                depths is null ? null : DepthSource)
             : new PropertiesDto(
                 feature.CadHandle,
                 feature.EntityType,
@@ -112,7 +128,16 @@ public static class GeoMapExportSerializer
                 feature.ProjectedTo2D,
                 arcs == 0 ? null : arcs,
                 layerAttributes.DiameterMm,
-                layerAttributes.Material);
+                layerAttributes.Material,
+                depths?.Measurements.Count,
+                depths?.StartMetres,
+                depths?.EndMetres,
+                measurements,
+                depths is null ? null : DepthSource);
+        if (depths is not null)
+        {
+            CheckPropertiesSize(feature, properties, depths.Measurements.Count);
+        }
 
         return new(
             feature.SourceId,
@@ -120,6 +145,27 @@ public static class GeoMapExportSerializer
             feature.SourceLayer,
             new GeometryDto("LineString", coordinates),
             properties);
+    }
+
+    // Profundidades (pontos _TG): só o conteúdo de properties muda, e o contrato aceita isso sem versão nova.
+    // Provisório até as medições ficarem gravadas no DWG (entrega 2).
+    internal const string DepthSource = "levantamento _TG (associação automática; provisória até a gravação no DWG)";
+
+    // O GeoMap recusa properties com mais de 64 KiB, medidos no texto do arquivo (com a indentação). Uma linha
+    // com medições demais para do jeito explícito, em vez de perder medições.
+    private const int MaximumPropertiesBytes = 64 * 1024;
+    private const int PropertiesIndentInFile = 6;
+
+    private static void CheckPropertiesSize(GeoMapExportFeature feature, object properties, int measurements)
+    {
+        var text = JsonSerializer.Serialize(properties, properties.GetType(), SerializerOptions);
+        var bytes = System.Text.Encoding.UTF8.GetByteCount(text) + (text.Count(character => character == '\n') * PropertiesIndentInFile);
+        if (bytes > MaximumPropertiesBytes)
+        {
+            throw new InvalidOperationException(
+                $"A {feature.EntityType} {feature.CadHandle} tem {measurements} medições de profundidade, mais do que " +
+                "cabe numa feição do GeoMap (64 KiB). Nada foi gravado. Divida a linha (BREAK) e exporte de novo.");
+        }
     }
 
     private static void Validate(GeoMapExportRequest request)
@@ -378,7 +424,12 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
         [property: JsonPropertyName("arcosTesselados"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArcosTesselados,
         [property: JsonPropertyName(DiameterProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? DiametroMm,
-        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material);
+        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material,
+        [property: JsonPropertyName("quantidadeMedicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadeMedicoesProfundidade,
+        [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
+        [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
+        [property: JsonPropertyName("medicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DepthMeasurementDto>? MedicoesProfundidade,
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
 
     // LINE: as mesmas propriedades da ponte DXF, com a elevação de cada ponta (M4.3d).
     private sealed record LinePropertiesDto(
@@ -389,5 +440,20 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("cadEndElevation")] double CadEndElevation,
         [property: JsonPropertyName("projectedTo2D")] bool ProjectedTo2D,
         [property: JsonPropertyName(DiameterProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? DiametroMm,
-        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material);
+        [property: JsonPropertyName(MaterialProperty), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Material,
+        [property: JsonPropertyName("quantidadeMedicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadeMedicoesProfundidade,
+        [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
+        [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
+        [property: JsonPropertyName("medicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DepthMeasurementDto>? MedicoesProfundidade,
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
+
+    // Uma medição de profundidade (pontos _TG): ponto, valor, onde está na linha e o código original.
+    private sealed record DepthMeasurementDto(
+        [property: JsonPropertyName("ponto")] string Ponto,
+        [property: JsonPropertyName("valorM")] double ValorM,
+        [property: JsonPropertyName("vertice"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? Vertice,
+        [property: JsonPropertyName("distanciaInicioM")] double DistanciaInicioM,
+        [property: JsonPropertyName("codigo")] string Codigo,
+        [property: JsonPropertyName("metodo")] string Metodo,
+        [property: JsonPropertyName("compartilhada"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Compartilhada);
 }

@@ -89,6 +89,7 @@ public sealed class ArchitectureTests
         {
                 "GEOAUTO3ADDCSV",
                 "GEOAUTO3COMMITCSV",
+                "GEOAUTO3DEPTHSCAN",
                 "GEOAUTO3GEOMAPEXPORT",
                 "GEOAUTO3IMPORT",
                 "GEOAUTO3PALETTE",

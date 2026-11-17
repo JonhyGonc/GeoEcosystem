@@ -10,6 +10,10 @@ public readonly record struct GeoMapCoordinate(double X, double Y);
 /// </param>
 /// <param name="EntityType">Tipo da entidade no CAD: <c>Polyline</c>, <c>Line</c> ou <c>Arc</c> (M4.3d).</param>
 /// <param name="EndElevation">Elevação do ponto final de uma LINE; a do ponto inicial fica em <paramref name="Elevation"/>.</param>
+/// <param name="Depths">
+/// Profundidades dos pontos <c>_TG</c> associadas à linha (<see cref="PipeDepthExport"/>); <c>null</c> quando a
+/// associação não foi feita na exportação.
+/// </param>
 public sealed record GeoMapExportFeature(
     string SourceId,
     string CadHandle,
@@ -21,7 +25,31 @@ public sealed record GeoMapExportFeature(
     GeoMapBlockInfo? Block = null,
     IReadOnlyList<double>? Bulges = null,
     string EntityType = GeoMapEntityTypes.Polyline,
-    double? EndElevation = null);
+    double? EndElevation = null,
+    GeoMapPipeDepths? Depths = null);
+
+/// <summary>Profundidades de uma linha para o GeoMap, em metros, como foram medidas (sem média nem interpolação).</summary>
+/// <param name="StartMetres">Profundidade no primeiro vértice, quando medida.</param>
+/// <param name="EndMetres">Profundidade no último vértice, quando medida.</param>
+public sealed record GeoMapPipeDepths(
+    double? StartMetres,
+    double? EndMetres,
+    IReadOnlyList<GeoMapDepthMeasurement> Measurements);
+
+/// <param name="Point">Nome do ponto do levantamento (atributo PONTO).</param>
+/// <param name="Vertex">Índice do vértice (a partir de 0) quando o ponto está num vértice.</param>
+/// <param name="StationMetres">Distância ao longo da linha, desde o primeiro vértice.</param>
+/// <param name="Code">Descrição original do ponto (atributo DESC).</param>
+/// <param name="Method"><see cref="PipeDepthMethods"/>.</param>
+/// <param name="Shared">O ponto está na ponta de duas linhas que se continuam e vale para as duas.</param>
+public sealed record GeoMapDepthMeasurement(
+    string Point,
+    double DepthMetres,
+    int? Vertex,
+    double StationMetres,
+    string Code,
+    string Method,
+    bool Shared);
 
 /// <summary>Tipos de linha exportados; o valor vai em <c>sourceType</c> e <c>cadEntityType</c>.</summary>
 public static class GeoMapEntityTypes

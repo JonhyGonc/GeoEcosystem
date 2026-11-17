@@ -89,6 +89,17 @@ O contrato GeoMap só tem linhas retas. Por isso cada arco vira uma sequência d
 - Uma Polyline ou ARC espelhado (normal -Z) é aceito, e o sentido do arco é corrigido. Um arco fora do plano XY cancela a exportação.
 - LINE e ARC também ganham o código próprio (`FEATURE_ID`).
 
+## Profundidades dos pontos _TG (desde o M7.1, provisório)
+Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md).
+
+- `GEOAUTO3DEPTHSCAN` analisa as tubulações escolhidas (por layer ou por objeto) contra todos os blocos das layers `_TG*` e mostra um resumo. **Não grava nada no desenho.** No fim, oferece salvar o diagnóstico em CSV.
+- `GEOAUTO3GEOMAPEXPORT` pergunta "Levar as profundidades dos N pontos _TG?". Com Sim, cada linha recebe `quantidadeMedicoesProfundidade`, `profundidadeInicialM`, `profundidadeFinalM`, `medicoesProfundidade` e `profundidadeOrigem`. O diagnóstico é salvo ao lado dos arquivos (`<nome>-profundidades-diagnostico.csv`).
+- A posição de cada ponto é o ponto (DBPoint) de dentro do bloco, onde o OSNAP NODE prende. O ponto vale para a linha num vértice ou sobre um trecho, até 1 mm; de 1 mm a 10 cm, ele é só relatado.
+- Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
+- Valores: como estão no código, em metros, sem média nem interpolação.
+- Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
+- **Provisório:** até a entrega 2 (M7.2), as medições não ficam gravadas no DWG. Ao reexportar, responda Sim às profundidades para não apagá-las do mapa.
+
 ## Política geométrica
 
 Polylines abertas são exportadas como `LineString` com os vértices na ordem original. Em Polylines fechadas, a primeira posição é repetida no final para representar o fechamento. A coordenada Z não faz parte do contrato v0.1; a propriedade `projectedTo2D` registra quando os pontos CAD possuíam elevação diferente de zero, e `cadElevation` preserva a elevação original como metadado.
