@@ -185,23 +185,9 @@ O progresso de cada lote aparece como JSON em stderr. O leitor não carrega o ar
 
 ### Exportar Polylines diretamente do Civil 3D
 
-O GeoAutoEngine adiciona o comando `GEOAUTO3GEOMAPEXPORT` ao Civil 3D 2024, 2025 e 2026. O comando seleciona `LWPOLYLINE`, exige CRS e unidade explícitos e grava um arquivo `*.geomap.json` aceito pelo importador acima.
+O GeoAutoEngine adiciona o comando `GEOAUTO3GEOMAPEXPORT` ao Civil 3D 2026. Ele é o único caminho oficial do DWG para o GeoMap (a ponte DXF provisória foi aposentada, DEC-034): seleciona por layer (`LWPOLYLINE`, `LINE`, `ARC` e blocos), gera uma rede por layer com a cor dela, exige CRS e unidade explícitos e grava arquivos `*.geomap.json` aceitos pelo importador e pelo botão **Importar** do site.
 
 Consulte [a integração com o Civil 3D](docs/CIVIL3D_EXPORTER.md) para instalação, escopo e fluxo completo. Um arquivo de referência produzido pelo mesmo serializador está em `contracts/geomap/0.1/examples/valid-geoautoengine-polyline.geomap.json` e percorre validador, banco, catálogo, atributos e MVT na CI.
-
-### Converter um DXF para validação real
-
-A ponte provisória usada antes do exportador definitivo continua disponível para
-reproduzir a validação por DXF ASCII e converte as camadas para o mesmo contrato (v0.1; v0.2 quando a layer tem cor; v0.3 para os blocos):
-
-~~~bash
-python3 tools/dxf-converter/geomap_dxf.py --help
-~~~
-
-Ela lê apenas o Model Space, exige CRS e unidade explícitos e não descarta Z ou
-curvas silenciosamente. Arquivos CAD e saídas reais permanecem fora do Git. Veja
-[a ferramenta](tools/dxf-converter/README.md) e o
-[registro sanitizado da primeira validação](docs/REAL_DATA_VALIDATION.md).
 
 ### Consultar feições por região
 
@@ -260,7 +246,6 @@ database/migrations/                modelo espacial e rollback versionados
 tools/importer/GeoMap.DatasetGenerator/ gerador e carga de datasets de escala
 tools/importer/GeoMap.Contract/        validador do contrato de importação (v0.1 a v0.3)
 tools/importer/GeoMap.Importer/        importador transacional do contrato (v0.1 a v0.3)
-tools/dxf-converter/                    ponte DXF provisória da validação real
 tests/GeoMap.Api.Tests/             testes de inicialização
 tests/GeoMap.DatasetGenerator.Tests/ testes determinísticos do gerador
 tests/GeoMap.Importer.Tests/        testes do parser, CLI e identidade

@@ -84,25 +84,11 @@ Para grandes volumes, o mesmo modelo lógico v0.1 possui transporte `.geomap.ndj
 
 ### Civil 3D Exporter
 
-O exportador é hospedado no aplicativo C# GeoAutoEngine, instalado como bundle do Civil 3D 2024, 2025 e 2026. O comando `GEOAUTO3GEOMAPEXPORT` extrai `LWPOLYLINE` abertas ou fechadas, preserva handle e layer e produz o contrato GeoMap v0.1. CRS e unidade são confirmados pelo operador; nenhum tipo Autodesk atravessa o arquivo de integração.
+O exportador é hospedado no aplicativo C# GeoAutoEngine, instalado como bundle do Civil 3D 2026. O comando `GEOAUTO3GEOMAPEXPORT` seleciona por layer `LWPOLYLINE`, `LINE`, `ARC` e blocos e gera uma rede por layer, com a cor da layer (contratos v0.1 a v0.3). Os arcos viram trechos retos com no máximo 5 mm de diferença, e os blocos viram pontos numa rede separada. Diâmetro e material saem do nome da layer `RD_<diâmetro>[_<material>]`, e os atributos dos blocos viram propriedades. Cada feição leva um código próprio (GUID) gravado no desenho, para que a reimportação atualize em vez de duplicar. CRS e unidade são confirmados pelo operador; nenhum tipo Autodesk atravessa o arquivo de integração. O detalhe está em `apps/geoautoengine/docs/GEOMAP_EXPORT.md`.
 
-A versão inicial aceita somente segmentos retos. Polylines fechadas repetem a primeira posição no final da `LineString`; bulges e entidades fora do escopo interrompem a exportação com diagnóstico. A projeção de Z para X/Y fica registrada em `properties.projectedTo2D` e a elevação original em `properties.cadElevation`.
+O código Autodesk permanece no GeoAutoEngine (`apps/geoautoengine`). O GeoMap mantém o contrato neutro, os exemplos gerados pelo exportador (testados byte a byte contra as amostras do GeoAutoEngine) e o teste ponta a ponta pelo importador, PostGIS e MVT.
 
-O código Autodesk permanece no repositório GeoAutoEngine. Este repositório mantém o contrato neutro, a fixture de referência e o teste ponta a ponta pelo importador, PostGIS e MVT.
-
-Para a validação real anterior ao exportador definitivo, existe uma ponte DXF
-ASCII isolada em `tools/dxf-converter`. Ela lê somente `LINE` e `LWPOLYLINE` do
-Model Space e produz o mesmo contrato v0.1 consumido pelo importador. O uso
-exige camada, CRS, unidade e metadados explícitos. Elevações só podem ser
-projetadas em XY com autorização pela opção `--project-to-2d` e permanecem nos
-atributos. Curvas, extrusões e tipos lineares ainda não suportados interrompem a
-conversão para evitar alteração silenciosa da geometria. Com `--blocks`, a ponte
-converte as inserções de bloco da layer em pontos (contrato v0.3), que o
-frontend desenha como círculos na cor da layer (DEC-029).
-
-Essa ponte não referencia bibliotecas Autodesk, não substitui o exportador da
-Issue #18 e não altera os limites entre importador, banco, API e frontend. DWG,
-DXF e saídas reais permanecem fora do controle de versão.
+A ponte DXF provisória (`tools/dxf-converter`, DEC-024) foi usada na primeira validação com dados reais e foi aposentada quando o exportador passou a cobrir o que ela fazia (DEC-034).
 
 ## Fluxo de visualização
 
