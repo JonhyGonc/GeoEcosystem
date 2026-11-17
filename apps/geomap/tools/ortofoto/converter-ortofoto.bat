@@ -44,7 +44,7 @@ if errorlevel 1 (
   set "MOTIVO=Achei o QGIS, mas nao o GDAL dentro dele."
   goto falha
 )
-set GDAL_FILENAME_IS_UTF8=NO
+set "GDAL_FILENAME_IS_UTF8="
 echo       %OK% %QGISROOT%
 echo.
 
@@ -71,11 +71,25 @@ echo.
 rem ---------------------------------------------------------------- 3
 echo %ESC%[1m[3/7] Lendo a ortofoto...%ESC%[0m
 set "INFO=%TEMP%\geomap-ortofoto-info.txt"
-gdalinfo "%ENTRADA%" > "%INFO%" 2>&1
-if errorlevel 1 (
-  set "MOTIVO=O GDAL nao conseguiu abrir a ortofoto. Confira se o QGIS abre esse arquivo."
-  goto falha
-)
+rem Caminhos com acento (ex.: C:\Users\Joao com til) confundem o GDAL. Tenta 3 jeitos.
+set "ABRIR=%ENTRADA%"
+gdalinfo "%ABRIR%" > "%INFO%" 2>&1
+if not errorlevel 1 goto aberta
+echo       Tentando de novo pelo nome curto do Windows (sem acento)...
+for %%I in ("%ENTRADA%") do set "ABRIR=%%~sI"
+gdalinfo "%ABRIR%" > "%INFO%" 2>&1
+if not errorlevel 1 goto aberta
+echo       Tentando de novo com outra leitura de acentos...
+set "ABRIR=%ENTRADA%"
+set GDAL_FILENAME_IS_UTF8=NO
+gdalinfo "%ABRIR%" > "%INFO%" 2>&1
+if not errorlevel 1 goto aberta
+echo       Mensagem do GDAL:
+type "%INFO%"
+set "MOTIVO=O GDAL nao conseguiu abrir a ortofoto. Mova o arquivo para C:\GeoMap (pasta sem acento) e tente de novo."
+goto falha
+:aberta
+echo       %OK% Arquivo aberto.
 set "BANDAS=-b 1 -b 2 -b 3"
 find "Band 4" "%INFO%" >nul
 if errorlevel 1 goto tresbandas
@@ -131,7 +145,7 @@ rem ---------------------------------------------------------------- 6
 echo %ESC%[1m[6/7] Gerando as imagens no zoom maximo...%ESC%[0m
 echo       Pode levar varios minutos. O progresso aparece abaixo: 0...10...20... ate 100.
 echo       Inicio: %time:~0,8%
-gdal_translate -of MBTILES -co TILE_FORMAT=PNG %BANDAS% "%ENTRADA%" "%SAIDA%"
+gdal_translate -of MBTILES -co TILE_FORMAT=PNG %BANDAS% "%ABRIR%" "%SAIDA%"
 if errorlevel 1 (
   set "MOTIVO=A geracao das imagens falhou. Veja a mensagem acima."
   goto falha
