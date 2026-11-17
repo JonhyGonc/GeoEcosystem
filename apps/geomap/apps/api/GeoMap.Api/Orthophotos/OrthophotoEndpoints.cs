@@ -38,7 +38,7 @@ public static class OrthophotoEndpoints
 
         if (lookup.File is not { } file)
         {
-            return Results.Ok(new OrthophotoResponse(false, lookup.ExpectedFileName, null, null, null, null, null));
+            return Results.Ok(new OrthophotoResponse(false, lookup.ExpectedFileName, null, null, null, null, null, null));
         }
 
         return Results.Ok(new OrthophotoResponse(
@@ -48,7 +48,8 @@ public static class OrthophotoEndpoints
             file.Format,
             file.Bounds,
             file.MinZoom,
-            file.MaxZoom));
+            file.MaxZoom,
+            file.Version));
     }
 
     private static async Task<IResult> GetTileAsync(
@@ -87,7 +88,8 @@ public static class OrthophotoEndpoints
 
 /// <summary>
 /// <c>available</c> diz se o arquivo foi encontrado; <c>fileName</c> é o nome que o arquivo tem (ou deve ter) na
-/// pasta das ortofotos; <c>bounds</c> = [oeste, sul, leste, norte] em graus.
+/// pasta das ortofotos; <c>bounds</c> = [oeste, sul, leste, norte] em graus; <c>version</c> muda quando o arquivo é
+/// trocado, e o site a põe na URL dos tiles para o navegador não mostrar a ortofoto antiga guardada no cache.
 /// </summary>
 public sealed record OrthophotoResponse(
     bool Available,
@@ -96,4 +98,5 @@ public sealed record OrthophotoResponse(
     string? Format,
     double[]? Bounds,
     int? MinZoom,
-    int? MaxZoom);
+    int? MaxZoom,
+    string? Version);

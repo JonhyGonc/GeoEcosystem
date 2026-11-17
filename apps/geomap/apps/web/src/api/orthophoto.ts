@@ -45,10 +45,13 @@ export async function fetchOrthophoto(
 
   const minZoom = zoom(payload.minZoom, 0)
   const maxZoom = Math.max(minZoom, zoom(payload.maxZoom, 22))
+  // A versão muda quando o arquivo é trocado: o navegador busca os tiles novos em vez dos guardados no cache.
+  const version = typeof payload.version === 'string' && payload.version !== '' ? payload.version : null
+  const tileUrl = buildOrthophotoTileUrl(apiBaseUrl, projectId)
   return {
     available: true,
     fileName: payload.fileName,
-    tileUrl: buildOrthophotoTileUrl(apiBaseUrl, projectId),
+    tileUrl: version ? `${tileUrl}?v=${encodeURIComponent(version)}` : tileUrl,
     bounds: bounds(payload.bounds),
     minZoom,
     maxZoom,

@@ -23,12 +23,13 @@ describe('fetchOrthophoto', () => {
       bounds: [-39.1, -14.2, -39.0, -14.1],
       minZoom: 12,
       maxZoom: 21,
+      version: '638700000000000000',
     })
 
     await expect(fetchOrthophoto('/api', projectId)).resolves.toEqual({
       available: true,
       fileName: 'Obra.mbtiles',
-      tileUrl: `/api/projects/${projectId}/orthophoto/tiles/{z}/{x}/{y}`,
+      tileUrl: `/api/projects/${projectId}/orthophoto/tiles/{z}/{x}/{y}?v=638700000000000000`,
       bounds: [-39.1, -14.2, -39.0, -14.1],
       minZoom: 12,
       maxZoom: 21,
