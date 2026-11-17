@@ -66,13 +66,13 @@ A versão `0.2` é idêntica à `0.1`, com um único acréscimo: o campo opciona
 "network": { "externalId": "rd-50-pvc", "name": "RD_50_PVC", "type": "water", "color": "#FF7F00" }
 ~~~
 
-A ponte DXF lê a cor na tabela LAYER: o true color (código 420) tem prioridade sobre o índice ACI (código 62). O ACI 7, que é branco ou preto conforme o fundo, vira preto, porque o mapa base é claro. Quando a layer tem cor, a ponte gera `0.2`; quando não tem, gera `0.1`. Exemplo executável: `contracts/geomap/0.2/examples/valid-network-color.geomap.json`.
+A cor é a da layer: o true color tem prioridade sobre o índice ACI. O ACI 7, que é branco ou preto conforme o fundo, vira preto, porque o mapa base é claro. Quando a layer tem cor, o produtor gera `0.2`; quando não tem, gera `0.1`. A regra veio da ponte DXF provisória (aposentada, DEC-034), e o exportador do GeoAutoEngine a mantém. Exemplo executável: `contracts/geomap/0.2/examples/valid-network-color.geomap.json`.
 
 O exportador do GeoAutoEngine (`GEOAUTO3GEOMAPEXPORT`) segue a mesma regra desde o M4.3b, usando a cor da layer com mais Polylines na seleção. Exemplo executável: `contracts/geomap/0.2/examples/valid-geoautoengine-color.geomap.json`.
 
 ## Versão 0.3: pontos de blocos
 
-A versão `0.3` mantém tudo da `0.2`, inclusive `network.color` opcional, e passa a aceitar geometrias `Point` (uma posição `[x, y]`) e `MultiPoint` (ao menos uma posição). Ela existe para os blocos do CAD (tês, registros, caps, poços de visita, postes), que são inserções pontuais. Versões `0.1` e `0.2` continuam rejeitando pontos com `GMC_GEOMETRY_TYPE_UNSUPPORTED`. Uma mesma rede `0.3` pode misturar linhas e pontos, mas a ponte DXF gera os blocos de cada layer como uma rede separada.
+A versão `0.3` mantém tudo da `0.2`, inclusive `network.color` opcional, e passa a aceitar geometrias `Point` (uma posição `[x, y]`) e `MultiPoint` (ao menos uma posição). Ela existe para os blocos do CAD (tês, registros, caps, poços de visita, postes), que são inserções pontuais. Versões `0.1` e `0.2` continuam rejeitando pontos com `GMC_GEOMETRY_TYPE_UNSUPPORTED`. Uma mesma rede `0.3` pode misturar linhas e pontos, mas o exportador gera os blocos de cada layer como uma rede separada (DEC-029).
 
 ~~~json
 {

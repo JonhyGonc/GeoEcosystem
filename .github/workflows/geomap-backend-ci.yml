@@ -35,9 +35,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test provisional DXF bridge
-        run: python3 -m unittest discover -s tests/dxf-converter -p 'test_*.py' -v
-
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
@@ -282,36 +279,6 @@ jobs:
             'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
             < tests/integration/verify-block-points-import.sql
 
-      - name: Convert and verify synthetic DXF bridge
-        shell: bash
-        env:
-          GEOMAP_DB_CONNECTION_STRING: Host=localhost;Port=5432;Database=geomap;Username=geomap;Password=change-me-local-only
-        run: |
-          python3 tools/dxf-converter/geomap_dxf.py \
-            --input tests/fixtures/dxf/synthetic-network.dxf \
-            --output /tmp/geomap-issue-17-dxf.geomap.json \
-            --layer TEST-NETWORK \
-            --source-crs EPSG:31982 \
-            --units metre \
-            --project-external-id dxf-fixture-project \
-            --project-name "DXF Fixture Project" \
-            --network-external-id dxf-fixture-network \
-            --network-name "DXF Fixture Network" \
-            --network-type stormwater \
-            --exported-at 2026-09-09T09:00:00Z \
-            --project-to-2d
-
-          dotnet run \
-            --project tools/importer/GeoMap.Importer/GeoMap.Importer.csproj \
-            --configuration Release \
-            --no-build \
-            -- \
-            --file /tmp/geomap-issue-17-dxf.geomap.json
-
-          docker compose exec -T database sh -ec \
-            'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
-            < tests/integration/verify-dxf-import.sql
-
       - name: Import and verify GeoMap SMALL contract
         shell: bash
         env:
@@ -383,8 +350,6 @@ jobs:
             contracts/geomap/0.2/examples/valid-network-color.geomap.json 1 1
           tests/integration/verify-network-imports.sh "Conexões (blocos)" 0.3 "Civil 3D DXF" 31982 metre \
             contracts/geomap/0.3/examples/valid-block-points.geomap.json 1 2
-          tests/integration/verify-network-imports.sh "DXF Fixture Network" 0.1 "Civil 3D DXF" 31982 metre \
-            /tmp/geomap-issue-17-dxf.geomap.json 1 2
           # SMALL: importação e reimportação válidas; a importação inválida não deixa linha.
           tests/integration/verify-network-imports.sh "Drenagem Issue 15 SMALL" 0.1 "GeoMap integration test" 31982 metre \
             /tmp/geomap-issue-15-small.geomap.json 2 1000

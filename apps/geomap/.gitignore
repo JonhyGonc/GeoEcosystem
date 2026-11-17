@@ -25,8 +25,6 @@ coverage/
 # Private CAD validation data
 *.dwg
 *.dxf
-!tests/fixtures/dxf/
-!tests/fixtures/dxf/*.dxf
 private-data/
 validation-output/
 
