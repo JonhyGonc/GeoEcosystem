@@ -118,7 +118,8 @@ public static class GeoMapExportSerializer
                 depths?.StartMetres,
                 depths?.EndMetres,
                 measurements,
-                depths is null ? null : DepthSource)
+                depths is null ? null : DepthSource,
+                depths is null ? null : DepthReference)
             : new PropertiesDto(
                 feature.CadHandle,
                 feature.EntityType,
@@ -133,7 +134,8 @@ public static class GeoMapExportSerializer
                 depths?.StartMetres,
                 depths?.EndMetres,
                 measurements,
-                depths is null ? null : DepthSource);
+                depths is null ? null : DepthSource,
+                depths is null ? null : DepthReference);
         if (depths is not null)
         {
             CheckPropertiesSize(feature, properties, depths.Measurements.Count);
@@ -150,6 +152,9 @@ public static class GeoMapExportSerializer
     // Profundidades (pontos _TG): só o conteúdo de properties muda, e o contrato aceita isso sem versão nova.
     // Provisório até as medições ficarem gravadas no DWG (entrega 2).
     internal const string DepthSource = "levantamento _TG (associação automática; provisória até a gravação no DWG)";
+
+    // Convenção confirmada pelo usuário em 17/11/2026 (DEC-ECO-0005): o valor do código vai até a geratriz superior.
+    internal const string DepthReference = "geratriz superior";
 
     // O GeoMap recusa properties com mais de 64 KiB, medidos no texto do arquivo (com a indentação). Uma linha
     // com medições demais para do jeito explícito, em vez de perder medições.
@@ -429,7 +434,8 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
         [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
         [property: JsonPropertyName("medicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DepthMeasurementDto>? MedicoesProfundidade,
-        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem,
+        [property: JsonPropertyName("profundidadeReferencia"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeReferencia);
 
     // LINE: as mesmas propriedades da ponte DXF, com a elevação de cada ponta (M4.3d).
     private sealed record LinePropertiesDto(
@@ -445,7 +451,8 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
         [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
         [property: JsonPropertyName("medicoesProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DepthMeasurementDto>? MedicoesProfundidade,
-        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem,
+        [property: JsonPropertyName("profundidadeReferencia"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeReferencia);
 
     // Uma medição de profundidade (pontos _TG): ponto, valor, onde está na linha e o código original.
     private sealed record DepthMeasurementDto(

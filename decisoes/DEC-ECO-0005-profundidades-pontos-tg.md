@@ -1,6 +1,6 @@
 # DEC-ECO-0005 — Profundidades das tubulações pelos pontos do levantamento (_TG)
 
-- **Estado:** proposta (17/11/2026). A entrega 1 está no PR #34 com os valores recomendados abaixo; os itens marcados **(a aprovar)** esperam a resposta do usuário.
+- **Estado:** aprovada pelo usuário em 17/11/2026 nos itens 2, 4, 8 (respostas abaixo); o limite de 10 m (item 5) segue como proposta. Passa a valer com o merge do PR #34.
 - **Origem:** pedido emergencial do usuário em 17/11/2026: um projeto grande precisa das profundidades das tubulações no GeoMap, sem cadastro linha por linha.
 - **Contratos:** CT-01 (GeoMap Import). Só o conteúdo de `properties` muda, o que o contrato aceita sem versão nova (`IMPORT_CONTRACT.md`, "Somente o conteúdo interno de properties é extensível sem nova versão").
 
@@ -19,25 +19,25 @@
 
 ## Decisão proposta
 1. **Leitura:** o código (DESC) é lido pelo interpretador que já existe. Só a "informação da rede" com profundidade vale como profundidade da tubulação. Profundidade de caixa ou PV (`CXAP1.50`), código desconhecido e valor fora do intervalo vão para o diagnóstico. A COTA nunca é lida como profundidade.
-2. **Valor:** a profundidade vai como está no código, em metros, sem conversão, média ou interpolação. **(a aprovar)** A referência física (geratriz superior ou outra) não é deduzida: fica como "valor do levantamento" até o usuário confirmar a convenção.
+2. **Valor:** a profundidade vai como está no código, em metros, sem conversão, média ou interpolação. **Referência: geratriz superior** (do terreno até o topo do tubo), confirmada pelo usuário em 17/11/2026; vai na exportação em `profundidadeReferencia`.
 3. **Posição do ponto:** o ponto (DBPoint) de dentro do bloco, levado para o desenho pela transformação do bloco. A inserção do bloco só é usada quando o bloco não tem ponto, e isso aparece no resumo.
 4. **Associação:**
-   - o ponto vale para a linha quando está num vértice ou sobre um trecho (reto ou em arco) **até 1 mm** **(a aprovar)**;
+   - o ponto vale para a linha quando está num vértice ou sobre um trecho (reto ou em arco) **até 1 mm** (aprovado pelo usuário: só o desenhado com NODE);
    - de 1 mm a 10 cm, o ponto é relatado como "perto, não associado";
    - a rede do código precisa bater com a rede da layer, quando as duas são conhecidas;
    - o diâmetro do código escolhe a linha certa quando há mais de uma;
-   - **(a aprovar)** um ponto na ponta de duas linhas que se continuam vale para as duas; três ou mais linhas, ou ponta de uma e meio de outra, é ambíguo e não é associado;
+   - um ponto na ponta de duas linhas que se continuam vale para as duas (aprovado pelo usuário); três ou mais linhas, ou ponta de uma e meio de outra, é ambíguo e não é associado;
    - pontos repetidos no mesmo lugar com o mesmo valor valem uma vez; valores diferentes no mesmo lugar são conflito e nenhum é associado.
 5. **Profundidade válida:** maior que 0 e até 10 m **(a aprovar)**.
 6. **Exportação:** `GEOAUTO3GEOMAPEXPORT` pergunta se leva as profundidades. Cada linha analisada recebe nas `properties`:
    - `quantidadeMedicoesProfundidade`;
    - `profundidadeInicialM` e `profundidadeFinalM`, quando há medição no primeiro ou no último vértice;
    - `medicoesProfundidade`: lista com ponto, valor, vértice, distância desde o início, código original e método;
-   - `profundidadeOrigem`.
+   - `profundidadeOrigem` e `profundidadeReferencia` ("geratriz superior").
 
    Uma linha com medições demais para os 64 KiB do GeoMap faz a exportação parar com aviso, em vez de perder medições.
 7. **Diagnóstico:** `GEOAUTO3DEPTHSCAN` analisa sem gravar nada no desenho e salva um CSV (`;` e vírgula decimal) com uma linha por ponto e por tubulação. A exportação salva o mesmo CSV ao lado dos arquivos.
-8. **Persistência no DWG (entrega 2):** **(a aprovar)** proposta de gravar as medições num Extension Dictionary/XRecord próprio (`GEOAUTOENGINE_DEPTHS`) em cada linha. Assim o `FEATURE_ID` (XData `GEOAUTOENGINE_FEATURE`) e as associações da vídeo-inspeção (`GEOAUTOENGINE_VI`) não são tocados. Até a entrega 2, as profundidades no GeoMap são provisórias: reexportar sem elas as apaga do mapa.
+8. **Persistência no DWG (entrega 2):** aprovado pelo usuário: gravar as medições num Extension Dictionary/XRecord próprio (`GEOAUTOENGINE_DEPTHS`) em cada linha. Assim o `FEATURE_ID` (XData `GEOAUTOENGINE_FEATURE`) e as associações da vídeo-inspeção (`GEOAUTOENGINE_VI`) não são tocados. Até a entrega 2, as profundidades no GeoMap são provisórias: reexportar sem elas as apaga do mapa.
 
 ## Impacto
 - **GAE:** novas classes na camada Application (testadas na CI), leitor dos pontos no Cad2026, comando `GEOAUTO3DEPTHSCAN` e pergunta nova na exportação.

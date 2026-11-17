@@ -96,7 +96,7 @@ Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-p
 - `GEOAUTO3GEOMAPEXPORT` pergunta "Levar as profundidades dos N pontos _TG?". Com Sim, cada linha recebe `quantidadeMedicoesProfundidade`, `profundidadeInicialM`, `profundidadeFinalM`, `medicoesProfundidade` e `profundidadeOrigem`. O diagnóstico é salvo ao lado dos arquivos (`<nome>-profundidades-diagnostico.csv`).
 - A posição de cada ponto é o ponto (DBPoint) de dentro do bloco, onde o OSNAP NODE prende. O ponto vale para a linha num vértice ou sobre um trecho, até 1 mm; de 1 mm a 10 cm, ele é só relatado.
 - Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
-- Valores: como estão no código, em metros, sem média nem interpolação.
+- Valores: como estão no código, em metros, até a geratriz superior (`profundidadeReferencia`), sem média nem interpolação.
 - Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
 - **Provisório:** até a entrega 2 (M7.2), as medições não ficam gravadas no DWG. Ao reexportar, responda Sim às profundidades para não apagá-las do mapa.
 

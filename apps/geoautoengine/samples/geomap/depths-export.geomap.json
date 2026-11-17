@@ -61,7 +61,8 @@
             "metodo": "TRECHO"
           }
         ],
-        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)"
+        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)",
+        "profundidadeReferencia": "geratriz superior"
       }
     },
     {
@@ -83,7 +84,8 @@
         "cadElevation": 0,
         "projectedTo2D": false,
         "quantidadeMedicoesProfundidade": 0,
-        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)"
+        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)",
+        "profundidadeReferencia": "geratriz superior"
       }
     }
   ]
