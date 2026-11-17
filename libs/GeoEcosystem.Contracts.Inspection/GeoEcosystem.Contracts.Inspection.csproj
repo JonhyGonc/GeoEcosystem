@@ -1,15 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Contrato GADX + GeoAutoDocs.Inspection compartilhado pelo GeoAutoEngine e pelo GeoAutoDocs
        (DEC-ECO-0002, M3.3). Especificação: contratos/gadx-inspecao/SPEC.md.
-       Só .NET 8: decisão do usuário em 16/11/2026 (apenas o Civil 3D 2026 é suportado). -->
+       Só .NET 8: decisão do usuário em 16/11/2026 (a troca para .NET 10 é o M6.2).
+       O GAE compila esta biblioteca com o SDK do .NET 10 (M6.1). C# 12 e as regras de análise do .NET 8
+       ficam fixos para o resultado ser o mesmo nos dois SDKs. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevel>8.0</AnalysisLevel>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>GeoEcosystem.Contracts.Inspection</RootNamespace>
     <Version>1.1.0</Version>

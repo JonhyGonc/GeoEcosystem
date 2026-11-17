@@ -1,6 +1,6 @@
 # GeoAutoEngine 3
 
-Plugin nativo em .NET para Civil 3D 2024, 2025 e 2026.
+Plugin nativo em .NET para Civil 3D 2024, 2025, 2026 e 2027.
 
 > **Monorepo.** O GeoAutoEngine vive na pasta `apps/geoautoengine` do repositório [GeoEcosystem](https://github.com/JonhyGonc/GeoEcosystem), junto com o GeoAutoDocs e o GeoMap. Todos os comandos deste README rodam **a partir de `apps/geoautoengine`**. A CI fica na raiz do monorepo, em `.github/workflows/geoautoengine-*.yml`. As tags de versão têm o prefixo da aplicação (`geoautoengine/v3.2.0`). O repositório antigo `JonhyGonc/GeoAutoEngine` está arquivado; números de Issues e PRs antigos se referem a ele, e Issues novas vão para o GeoEcosystem.
 
@@ -9,6 +9,9 @@ Plugin nativo em .NET para Civil 3D 2024, 2025 e 2026.
 | 2024 | R24.3 | .NET Framework 4.8 |
 | 2025 | R25.0 | .NET 8 |
 | 2026 | R25.1 | .NET 8 |
+| 2027 | R26.0 | .NET 10 |
+
+Para compilar é preciso o **SDK do .NET 10** (o `global.json` pede a versão 10). Ele compila todos os hosts; o 2025 e o 2026 continuam .NET 8. O `Instalar GeoAutoEngine 3.cmd` instala em todo Civil 3D 2026 e 2027 que encontrar no computador.
 
 O bundle traz um host por versão. O estado da validação de cada uma (build e smoke no CAD) está em [COMPATIBILITY.md](COMPATIBILITY.md).
 

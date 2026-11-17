@@ -13,3 +13,4 @@ Origem: [Etapa 2](../auditorias/2026-11-etapa1/ETAPA_2_CONSOLIDACAO.md#7-riscos-
 | R-07 | Duplicação de projetos no GeoMap por `sourceSystem` (GM-05) | Baixa | Latente | O GeoMap ainda não é usado (11/11/2026); tratado em M3.2. |
 | R-08 | Nenhum teste cruzado entre repositórios (F-11) | Média | Aberto | Depende de D-06. |
 | R-09 | Semântica divergente do payload de correções (GAD-14, H-03) | Média | Aberto | Em uso na máquina do usuário (GAE com 6/7 + GAD fix). |
+| R-10 | Host do Civil 3D 2027 (.NET 10) sem compilação nem teste até o usuário instalar o 2027 (M6) | Média | Aberto | A CI não compila o plugin. Mudanças do .NET 10 (avisos novos tratados como erro, APIs removidas) só aparecem na máquina do usuário. Roteiro no 2027 antes de instalar na equipe. |

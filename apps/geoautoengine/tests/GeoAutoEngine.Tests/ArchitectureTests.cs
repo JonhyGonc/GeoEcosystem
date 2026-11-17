@@ -68,7 +68,7 @@ public sealed class ArchitectureTests
 
     [Fact]
     [Trait("Category", "REGRESSION")]
-    public void BundleManifest_TargetsAutoCadReleases243250And251()
+    public void BundleManifest_TargetsAutoCadReleases243250251And260()
     {
         var manifest = XDocument.Load(Path.Combine(
             RepositoryRoot,
@@ -76,7 +76,7 @@ public sealed class ArchitectureTests
             "GeoAutoEngine.bundle",
             "PackageContents.xml"));
         Assert.Equal(
-            ["R24.3", "R25.0", "R25.1"],
+            ["R24.3", "R25.0", "R25.1", "R26.0"],
             manifest.Descendants("RuntimeRequirements")
                 .Select(requirement => requirement.Attribute("SeriesMin")!.Value));
         Assert.All(

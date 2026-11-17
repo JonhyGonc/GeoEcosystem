@@ -1,6 +1,6 @@
 # Estado atual
 
-**Atualizado em:** 16/11/2026 (fim da sessão da tarde), pelo agente (Claude). Atualize ao fim de cada sessão.
+**Atualizado em:** 17/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
 
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
@@ -10,7 +10,8 @@
 - **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c ✅: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (PR #24; roteiro aprovado: 487 tês, coordenadas conferidas, reexportação sem códigos novos). M4.5 ✅: botão Importar no site do GeoMap (PR #26; testado pelo usuário no navegador). M4.3d ✅: LINE, ARC e arcos de Polyline, tesselados com no máximo 5 mm (PR #25; testado pelo usuário: rede inteira exportada e conferida no mapa). M4.3e ✅: seleção por layer, uma rede por layer, diâmetro/material da layer e atributos dos blocos (PR #27; testado pelo usuário). M4.4 ✅: script privado descartado. Ponte DXF aposentada (DEC-034 do GeoMap, PR #28). M4.6 🔄: ortofoto do projeto (DEC-035 do GeoMap, PR #29). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
 - **Prioridade atual (pedido do usuário, 16/11/2026):** ortofoto do projeto no GeoMap (M4.6, DEC-035 do GeoMap; PR #29), porque o chefe do usuário quer ver o mapa com a ortofoto. Depois, o M5.
 - **M5 — Anomalias no mapa:** decisões tomadas em 16/11/2026, pelo celular (DEC-ECO-0004, PR #31; plano em `roadmap/marcos/M5-anomalias-mapa.md`; Issue #30). Implementação começa depois da ortofoto (M4.6).
-- **Próximo passo:** ortofoto (M4.6, PR #29): roteiro com uma ortofoto real no PC do usuário e merge → M5.2 (GADX 1.2 com `captureFile`).
+- **M6 — GAE no Civil 3D 2027** (pedido do usuário, 17/11/2026: a empresa vai migrar): host 2027 (.NET 10) ao lado do 2026, num instalador só (PR #33; plano em `roadmap/marcos/M6-civil3d-2027.md`). Vem antes do M5. O usuário ainda não tem o Civil 3D 2027 instalado.
+- **Próximo passo:** merge do PR #32 (conversor da ortofoto, testado pelo usuário em 17/11/2026) → roteiro do PR #33 no 2026 e, quando instalar, no 2027 → M6.2 (GAD e biblioteca no .NET 10) → M5.2 (GADX 1.2 com `captureFile`).
 
 ## Pendências do usuário
 1. Merge do PR #28 (aposenta a ponte DXF); roteiro da ortofoto (PR #29) com uma ortofoto real.
@@ -41,12 +42,9 @@
 - **GeoMap na máquina do usuário (16/11/2026):** Docker Desktop e Node funcionando. Sobe com `docker compose up -d --build` e as migrations em `apps\geomap`; o site roda com `npm ci` e `npm run dev` em `apps\geomap\apps\web` (não em `apps\geomap`). Importa pelo botão do site.
 
 ## Assuntos em aberto (fora do roadmap, para decidir depois)
-- **Civil 3D 2027 e .NET 10** (perguntado pelo usuário em 16/11/2026; "depois vemos isso"):
-  - o Civil 3D 2027 exige plugins .NET 10, recompilados contra as DLLs do 2027 (série R26.0), então o GAE precisaria de um host 2027;
-  - o GAD e o GeoMap não dependem da versão do Civil 3D;
-  - o .NET 8 perdeu o suporte da Microsoft em 10/11/2026: vale migrar o GAD e a biblioteca do contrato para .NET 10;
-  - a Autodesk também passa o Civil 3D 2026 para .NET 10 pela atualização 2026.1.2. O plugin atual funcionou na máquina do usuário em 16/11/2026.
+- ~~Civil 3D 2027 e .NET 10~~ → virou o **M6** (decisão do usuário, 17/11/2026). A Autodesk também passa o Civil 3D 2026 para .NET 10 pela atualização 2026.1.2; o host 2026 (.NET 8) funcionou na máquina do usuário em 16/11/2026.
 
 ## Notas técnicas
 - Alvo da biblioteca: **só `net8.0`** (decisão do usuário, 16/11/2026). O host 2024 do GAE não compila mais. `build-release.ps1` precisa de `-Versions 2026`.
 - A CI **não compila** o `GeoAutoEngine.Plugin` nem o `Cad2026` (exigem DLLs da Autodesk). Toda mudança neles precisa de compilação na máquina do usuário.
+- **SDK do GAE (M6.1):** o `global.json` do GAE pede o SDK do .NET 10 (necessário para o host 2027). O usuário precisa instalar o ".NET 10 SDK (x64)". O host 2026 continua .NET 8, com C# 12 e regras de análise do .NET 8 fixadas.

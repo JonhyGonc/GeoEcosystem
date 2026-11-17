@@ -1,6 +1,6 @@
 ﻿param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("2024", "2025", "2026")]
+    [ValidateSet("2024", "2025", "2026", "2027")]
     [string]$Version,
 
     [ValidateSet("Debug", "Release")]
@@ -10,7 +10,8 @@
 
     [string]$AutoCAD2024Directory = "$env:ProgramFiles\Autodesk\AutoCAD 2024",
     [string]$AutoCAD2025Directory = "$env:ProgramFiles\Autodesk\AutoCAD 2025",
-    [string]$AutoCAD2026Directory = "$env:ProgramFiles\Autodesk\AutoCAD 2026"
+    [string]$AutoCAD2026Directory = "$env:ProgramFiles\Autodesk\AutoCAD 2026",
+    [string]$AutoCAD2027Directory = "$env:ProgramFiles\Autodesk\AutoCAD 2027"
 )
 
 $ErrorActionPreference = "Stop"
@@ -48,6 +49,12 @@ foreach ($requiredFile in @($dotnet, $pluginProject)) {
     }
 }
 
+# O global.json pede o SDK do .NET 10 (o host 2027 só compila com ele; os outros continuam iguais).
+$sdks = @(& $dotnet --list-sdks 2>$null)
+if (-not ($sdks | Where-Object { $_ -match '^10\.' })) {
+    throw "Falta o SDK do .NET 10. Baixe e instale o '.NET 10 SDK (x64)' em https://dotnet.microsoft.com/download/dotnet/10.0 e rode de novo."
+}
+
 $env:DOTNET_CLI_HOME = Join-Path $repositoryRoot ".dotnet_cli_home"
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
 $env:DOTNET_NOLOGO = "1"
@@ -57,7 +64,8 @@ if (-not $SkipBuild) {
         "-p:AutodeskAutoCADVersion=$Version",
         "-p:AutodeskAutoCAD2024Directory=$AutoCAD2024Directory",
         "-p:AutodeskAutoCAD2025Directory=$AutoCAD2025Directory",
-        "-p:AutodeskAutoCAD2026Directory=$AutoCAD2026Directory"
+        "-p:AutodeskAutoCAD2026Directory=$AutoCAD2026Directory",
+        "-p:AutodeskAutoCAD2027Directory=$AutoCAD2027Directory"
     )
     & $dotnet restore $pluginProject --nologo @properties
     if ($LASTEXITCODE -ne 0) { throw "Restore do host $Version falhou: $LASTEXITCODE" }

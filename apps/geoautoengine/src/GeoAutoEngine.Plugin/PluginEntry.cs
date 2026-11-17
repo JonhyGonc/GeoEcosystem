@@ -58,6 +58,8 @@ public sealed class PluginEntry : IExtensionApplication
         "2024";
 #elif GEOAUTO_CAD_2025
         "2025";
+#elif GEOAUTO_CAD_2027
+        "2027";
 #else
         "2026";
 #endif
