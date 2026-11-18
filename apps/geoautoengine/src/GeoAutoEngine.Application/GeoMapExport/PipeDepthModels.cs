@@ -92,6 +92,9 @@ public enum SurveyDepthKind
 
     /// <summary>DESC vazio.</summary>
     NoCode,
+
+    /// <summary>Código que a análise ignora de propósito (ex.: <c>G</c>, <c>PT</c>): fora das contagens e do CSV.</summary>
+    Ignored,
 }
 
 /// <param name="DepthMetres">Profundidade como está no código, em metros, sem conversão.</param>
@@ -122,6 +125,7 @@ public static class PipeDepthPointStatus
     public const string UnknownCode = "CODIGO_DESCONHECIDO";
     public const string InvalidDepth = "PROFUNDIDADE_INVALIDA";
     public const string NoCode = "SEM_CODIGO";
+    public const string Ignored = "IGNORADO";
 }
 
 /// <summary>Como a medição foi associada à linha.</summary>

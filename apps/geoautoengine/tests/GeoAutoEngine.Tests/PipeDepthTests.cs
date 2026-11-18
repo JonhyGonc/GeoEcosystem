@@ -39,6 +39,13 @@ public sealed class PipeDepthTests
     [InlineData("XYZ123", SurveyDepthKind.UnknownCode)]
     [InlineData("AP12.5", SurveyDepthKind.InvalidDepth)]
     [InlineData("AP0", SurveyDepthKind.InvalidDepth)]
+    [InlineData("G", SurveyDepthKind.Ignored)]
+    [InlineData("g 2", SurveyDepthKind.Ignored)]
+    [InlineData("PT", SurveyDepthKind.Ignored)]
+    [InlineData("PT1", SurveyDepthKind.Ignored)]
+    [InlineData("PT-3", SurveyDepthKind.Ignored)]
+    [InlineData("GUIA", SurveyDepthKind.NoDepth)]
+    [InlineData("PTIL", SurveyDepthKind.NoDepth)]
     [InlineData("", SurveyDepthKind.NoCode)]
     [InlineData("   ", SurveyDepthKind.NoCode)]
     [Trait("Category", "FAST")]
@@ -363,11 +370,12 @@ public sealed class PipeDepthTests
     {
         var analysis = Analyze(
             [Line("L1", (0, 0), (10, 0)), Line("L2", (0, 10), (10, 10))],
-            [Point("P1", "AP1.20", 0, 0), Point("P;2", "ES\"1\"", 50, 50)]);
+            [Point("P1", "AP1.20", 0, 0), Point("P;2", "ES\"1\"", 50, 50), Point("P3", "PT", 5, 0)]);
 
         var lines = PipeDepthReport.DiagnosticCsv(analysis).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(5, lines.Length);
+        Assert.DoesNotContain(lines, line => line.Contains("IGNORADO", StringComparison.Ordinal));
         Assert.StartsWith("tipo;estado;ponto;", lines[0], StringComparison.Ordinal);
         Assert.StartsWith("PONTO;ASSOCIADO;P1;", lines[1], StringComparison.Ordinal);
         Assert.Contains(";1,2;", lines[1], StringComparison.Ordinal);

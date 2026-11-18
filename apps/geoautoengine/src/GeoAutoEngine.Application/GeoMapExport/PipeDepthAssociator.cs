@@ -62,6 +62,9 @@ public static class PipeDepthAssociator
                     outcomes[index] = new PointOutcome(PipeDepthPointStatus.UnknownCode,
                         "Código que o interpretador do levantamento não conhece.");
                     break;
+                case SurveyDepthKind.Ignored:
+                    outcomes[index] = new PointOutcome(PipeDepthPointStatus.Ignored, string.Empty);
+                    break;
                 case SurveyDepthKind.InvalidDepth:
                     outcomes[index] = new PointOutcome(PipeDepthPointStatus.InvalidDepth, string.Create(
                         CultureInfo.InvariantCulture,

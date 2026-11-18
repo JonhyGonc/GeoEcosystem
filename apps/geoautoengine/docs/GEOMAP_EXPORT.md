@@ -97,6 +97,7 @@ Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-p
 - A posição de cada ponto é o ponto (DBPoint) de dentro do bloco, onde o OSNAP NODE prende. O ponto vale para a linha num vértice ou sobre um trecho, até 1 mm; de 1 mm a 10 cm, ele é só relatado.
 - Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
 - Valores: como estão no código, em metros, até a geratriz superior, sem interpolação. A média é só um resumo para o mapa.
+- Ignorados de propósito: `G` e `PT` (também `G1`, `PT-2`…, mas não `GUIA`, `GAS` ou `PTIL`). Não aparecem no CSV; o resumo mostra só a quantidade.
 - Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
 - **Gravação no desenho (M7.2):** depois do resumo, o `GEOAUTO3DEPTHSCAN` mostra o que vai gravar e pergunta `[Gravar/Diagnostico/Sair]`.
   - As profundidades ficam na tabela Object Data `GEO_PROFUNDIDADE` de cada linha, que aparece na paleta Propriedades (Ctrl+1).

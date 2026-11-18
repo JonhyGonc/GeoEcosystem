@@ -15,6 +15,12 @@ public sealed class SurveyDepthClassifier
     private const string NetworkInformation = "Informação da rede";
     private const string UnknownRule = "DESCONHECIDO";
 
+    /// <summary>
+    /// Códigos que a análise de profundidades ignora (pedido do usuário, 18/11/2026), sozinhos ou seguidos de
+    /// número/sufixo (<c>G1</c>, <c>PT-2</c>), mas não como começo de outra palavra (<c>GUIA</c>, <c>GAS</c>, <c>PTIL</c>).
+    /// </summary>
+    public static readonly IReadOnlyList<string> IgnoredCodes = ["G", "PT"];
+
     private readonly SurveyCodeNormalizer _normalizer = new();
     private readonly SurveyCodeInterpreter _interpreter = new();
 
@@ -25,6 +31,11 @@ public sealed class SurveyDepthClassifier
         if (normalized.Length == 0)
         {
             return new SurveyDepthReading(SurveyDepthKind.NoCode, null, null, null, null, "VAZIO", normalized);
+        }
+
+        if (IsIgnored(normalized))
+        {
+            return new SurveyDepthReading(SurveyDepthKind.Ignored, null, null, null, null, "IGNORADO", normalized);
         }
 
         SurveyInterpretation interpretation;
@@ -61,4 +72,8 @@ public sealed class SurveyDepthClassifier
         return new SurveyDepthReading(
             kind, depth, network, interpretation.Diameter, interpretation.Material, interpretation.Rule, normalized);
     }
+
+    private static bool IsIgnored(string normalized) => IgnoredCodes.Any(code =>
+        normalized.StartsWith(code, StringComparison.Ordinal) &&
+        (normalized.Length == code.Length || !char.IsLetter(normalized[code.Length])));
 }

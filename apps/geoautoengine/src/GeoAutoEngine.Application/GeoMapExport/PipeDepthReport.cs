@@ -29,6 +29,7 @@ public static class PipeDepthReport
             "GEOAUTOENGINE — ANÁLISE DE PROFUNDIDADES",
             Line("Tubulações analisadas", analysis.Pipes.Count),
             Line("Pontos _TG lidos", analysis.Points.Count),
+            Line("  ignorados (" + string.Join(", ", SurveyDepthClassifier.IgnoredCodes) + ")", analysis.CountPoints(PipeDepthPointStatus.Ignored)),
             Line("Pontos com profundidade de tubulação", analysis.PipeDepthPoints),
             Line("  associados a uma linha", analysis.CountPoints(PipeDepthPointStatus.Associated)),
             Line("  na ponta de duas linhas (vale para as duas)", analysis.CountPoints(PipeDepthPointStatus.Shared)),
@@ -56,7 +57,7 @@ public static class PipeDepthReport
         var unitsPerMetre = analysis.Options.DrawingUnitsPerMetre;
         var builder = new StringBuilder();
         builder.Append(string.Join(";", Header)).Append("\r\n");
-        foreach (var result in analysis.Points)
+        foreach (var result in analysis.Points.Where(point => point.Status != PipeDepthPointStatus.Ignored))
         {
             var point = result.Point;
             Row(

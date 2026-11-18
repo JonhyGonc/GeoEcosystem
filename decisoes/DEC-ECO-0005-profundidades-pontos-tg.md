@@ -18,7 +18,7 @@
   Os pontos entre 1 mm e 10 cm não formam um grupo separado (vão de 5 mm a 10 cm, espalhados). Nesses desenhos, parte das linhas não foi desenhada com o NODE.
 
 ## Decisão proposta
-1. **Leitura:** o código (DESC) é lido pelo interpretador que já existe. Só a "informação da rede" com profundidade vale como profundidade da tubulação. Profundidade de caixa ou PV (`CXAP1.50`), código desconhecido e valor fora do intervalo vão para o diagnóstico. A COTA nunca é lida como profundidade.
+1. **Leitura:** o código (DESC) é lido pelo interpretador que já existe. Só a "informação da rede" com profundidade vale como profundidade da tubulação. Profundidade de caixa ou PV (`CXAP1.50`), código desconhecido e valor fora do intervalo vão para o diagnóstico. A COTA nunca é lida como profundidade. Os códigos `G` e `PT` (também com número, como `G1` e `PT-2`) são ignorados: ficam fora das contagens e do CSV, e o resumo mostra só quantos foram (pedido do usuário, 18/11/2026).
 2. **Valor:** a profundidade vai como está no código, em metros, sem conversão, média ou interpolação. **Referência: geratriz superior** (do terreno até o topo do tubo), confirmada pelo usuário em 17/11/2026; registrada aqui e na documentação do exportador.
 3. **Posição do ponto:** o ponto (DBPoint) de dentro do bloco, levado para o desenho pela transformação do bloco. A inserção do bloco só é usada quando o bloco não tem ponto, e isso aparece no resumo.
 4. **Associação:**
