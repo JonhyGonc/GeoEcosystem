@@ -152,6 +152,13 @@ public static class AutoCadPipeDepthStore
     private static PipeDepthFields? ReadFields(OdTable table, ObjectId objectId)
     {
         using var records = table.GetObjectTableRecords(0, objectId, MapOpenMode.OpenForRead, false);
+
+        // No Map 3D, percorrer uma lista vazia dá erro (MapException em Current): conferir a quantidade antes.
+        if (records.Count == 0)
+        {
+            return null;
+        }
+
         foreach (OdRecord record in records)
         {
             var values = Values(table, record);
@@ -172,11 +179,15 @@ public static class AutoCadPipeDepthStore
     {
         using (var records = table.GetObjectTableRecords(0, objectId, MapOpenMode.OpenForWrite, false))
         {
-            foreach (OdRecord record in records)
+            // Lista vazia: não percorrer (dá erro no Map 3D); a linha ainda não tem registro e ele é criado abaixo.
+            if (records.Count > 0)
             {
-                Assign(table, record, fields);
-                records.UpdateRecord(record);
-                return;
+                foreach (OdRecord record in records)
+                {
+                    Assign(table, record, fields);
+                    records.UpdateRecord(record);
+                    return;
+                }
             }
         }
 
