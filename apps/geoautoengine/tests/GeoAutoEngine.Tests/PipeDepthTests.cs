@@ -172,6 +172,37 @@ public sealed class PipeDepthTests
 
     [Fact]
     [Trait("Category", "FAST")]
+    public void SecondPointOfAFieldPair_IsRecognisedAndNotCountedTwice()
+    {
+        // A linha passa pelo P1; o P2 foi marcado 5 cm ao lado (par de sinalização). O P3 está ao lado do P4,
+        // mas com outro valor; o P5 está perto da linha sem ninguém ao lado.
+        var analysis = Analyze(
+            [Line("L1", (0, 0), (10, 0), (20, 0), (30, 0))],
+            [
+                Point("P1", "AP0.40", 10, 0),
+                Point("P2", "AP0.40", 10.03, 0.04),
+                Point("P4", "AP0.50", 20, 0),
+                Point("P3", "AP0.90", 20.03, 0.04),
+                Point("P5", "AP0.70", 25, 0.05),
+            ]);
+
+        Assert.Equal(
+            new[]
+            {
+                PipeDepthPointStatus.Associated,
+                PipeDepthPointStatus.PairedSignal,
+                PipeDepthPointStatus.Associated,
+                PipeDepthPointStatus.NearNotAssociated,
+                PipeDepthPointStatus.NearNotAssociated,
+            },
+            analysis.Points.Select(point => point.Status));
+        Assert.Contains("P1", analysis.Points[1].Observation, StringComparison.Ordinal);
+        Assert.Contains("P4", analysis.Points[3].Observation, StringComparison.Ordinal);
+        Assert.Equal(new[] { 0.4, 0.5 }, analysis.ByHandle["L1"].Measurements.Select(measurement => measurement.DepthMetres));
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
     public void CotaIsNeverReadAsDepth()
     {
         var analysis = Analyze([Line("L1", (0, 0), (10, 0))], [Point("P1", "GUIA", 0, 0, elevation: "8.522")]);
@@ -331,7 +362,7 @@ public sealed class PipeDepthTests
 
     [Theory]
     [InlineData("GF-02-EP01-18-530.26-001.raw.json", 38, 271, 96, 52, 2, 0, 32, 10, 23)]
-    [InlineData("GF-02-EP01-22-530.26-001.raw.json", 110, 374, 279, 126, 15, 1, 119, 18, 62)]
+    [InlineData("GF-02-EP01-22-530.26-001.raw.json", 110, 374, 279, 126, 15, 1, 118, 18, 62)]
     [Trait("Category", "FAST")]
     public void RealAuditDrawings_GiveTheCheckedCountsAndEveryAssociationIsOnTheLine(
         string file,

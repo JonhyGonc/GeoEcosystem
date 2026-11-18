@@ -23,7 +23,7 @@
 3. **Posição do ponto:** o ponto (DBPoint) de dentro do bloco, levado para o desenho pela transformação do bloco. A inserção do bloco só é usada quando o bloco não tem ponto, e isso aparece no resumo.
 4. **Associação:**
    - o ponto vale para a linha quando está num vértice ou sobre um trecho (reto ou em arco) **até 1 mm** (aprovado pelo usuário: só o desenhado com NODE);
-   - de 1 mm a 10 cm, o ponto é relatado como "perto, não associado";
+   - de 1 mm a 10 cm, o ponto é relatado como "perto, não associado". Exceção: o **par de sinalização** (a equipe de campo marca dois pontos a cerca de 5 cm para indicar o caminho da rede, e o desenho passa só por um; explicação do usuário em 18/11/2026). Se, a até 10 cm, houver um irmão já associado à mesma linha com o mesmo valor, o ponto vira `PAR_SINALIZACAO`: não é problema e não entra na média. Com outro valor, segue para revisão;
    - a rede do código precisa bater com a rede da layer, quando as duas são conhecidas;
    - o diâmetro do código escolhe a linha certa quando há mais de uma;
    - um ponto na ponta de duas linhas que se continuam vale para as duas (aprovado pelo usuário); três ou mais linhas, ou ponta de uma e meio de outra, é ambíguo e não é associado;

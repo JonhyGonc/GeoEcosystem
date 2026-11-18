@@ -115,6 +115,12 @@ public static class PipeDepthPointStatus
     public const string Shared = "ASSOCIADO_COMPARTILHADO";
     public const string NoPipe = "SEM_TUBULACAO";
     public const string NearNotAssociated = "PROXIMO_NAO_ASSOCIADO";
+
+    /// <summary>
+    /// Segundo ponto do par que a equipe de campo marca para sinalizar o caminho da rede: está ao lado de um ponto
+    /// já associado à mesma linha, com o mesmo valor. Não é problema e não entra na média.
+    /// </summary>
+    public const string PairedSignal = "PAR_SINALIZACAO";
     public const string Ambiguous = "AMBIGUO";
     public const string NetworkConflict = "CONFLITO_REDE";
     public const string DiameterConflict = "CONFLITO_DIAMETRO";

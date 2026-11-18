@@ -133,6 +133,8 @@ public static class PipeDepthAssociator
                 points[pointIndex], readings[pointIndex], pointHits ?? new List<PipeHit>(), lines, options, measurements);
         }
 
+        MarkSignalPairs(points, readings, depthPoints, grid, options, outcomes);
+
         var pipeResults = lines
             .Select((line, index) => new PipeDepthPipeResult(
                 line,
@@ -217,6 +219,66 @@ public static class PipeDepthAssociator
         }
 
         return active;
+    }
+
+    // A equipe de campo marca dois pontos lado a lado (cerca de 5 cm) para sinalizar o caminho da rede, e o
+    // desenho passa só por um deles (pedido do usuário, 18/11/2026). O ponto que ficou "perto" e tem, a até 10 cm,
+    // um irmão já associado à mesma linha com o mesmo valor é o par: não é problema. Com outro valor, segue para
+    // revisão, dizendo qual é o irmão.
+    private static void MarkSignalPairs(
+        IReadOnlyList<SurveyPointInput> points,
+        SurveyDepthReading[] readings,
+        List<int> depthPoints,
+        PointGrid grid,
+        PipeDepthOptions options,
+        PointOutcome[] outcomes)
+    {
+        foreach (var index in depthPoints)
+        {
+            var outcome = outcomes[index];
+            if (outcome.Status != PipeDepthPointStatus.NearNotAssociated || outcome.PipeHandles is not { Count: > 0 } near)
+            {
+                continue;
+            }
+
+            var twin = grid.Near(points[index].Node)
+                .Where(other => other != index &&
+                    outcomes[other].Status is PipeDepthPointStatus.Associated or PipeDepthPointStatus.Shared &&
+                    outcomes[other].PipeHandles is { } handles && handles.Contains(near[0], StringComparer.Ordinal))
+                .Select(other => (Index: other, Distance: Distance(points[index].Node, points[other].Node)))
+                .Where(candidate => candidate.Distance <= options.NearRadius)
+                .OrderBy(candidate => candidate.Distance)
+                .Select(candidate => (int?)candidate.Index)
+                .FirstOrDefault();
+            if (twin is not { } twinIndex)
+            {
+                continue;
+            }
+
+            var centimetres = Distance(points[index].Node, points[twinIndex].Node) / options.DrawingUnitsPerMetre * 100;
+            var sameValue =
+                Math.Abs(readings[index].DepthMetres!.Value - readings[twinIndex].DepthMetres!.Value) <= SameDepthMetres &&
+                readings[index].Network == readings[twinIndex].Network;
+            outcomes[index] = sameValue
+                ? outcome with
+                {
+                    Status = PipeDepthPointStatus.PairedSignal,
+                    Observation = string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Par do ponto {0} ({1:0} cm ao lado); a profundidade já está na linha.",
+                        points[twinIndex].Name,
+                        centimetres),
+                }
+                : outcome with
+                {
+                    Observation = outcome.Observation + string.Format(
+                        CultureInfo.InvariantCulture,
+                        " Ao lado ({0:0} cm) do ponto {1}, associado com outro valor ({2}).",
+                        centimetres,
+                        points[twinIndex].Name,
+                        points[twinIndex].Description),
+                };
+        }
     }
 
     private static PointOutcome Decide(
