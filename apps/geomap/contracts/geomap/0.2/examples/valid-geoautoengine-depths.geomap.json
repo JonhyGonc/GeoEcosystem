@@ -34,35 +34,8 @@
         "closed": false,
         "cadElevation": 0,
         "projectedTo2D": false,
-        "quantidadeMedicoesProfundidade": 3,
         "profundidadeInicialM": 1.2,
-        "medicoesProfundidade": [
-          {
-            "ponto": "Pt1",
-            "valorM": 1.2,
-            "vertice": 0,
-            "distanciaInicioM": 0,
-            "codigo": "AP1.20D300",
-            "metodo": "VERTICE"
-          },
-          {
-            "ponto": "Pt2",
-            "valorM": 1.45,
-            "vertice": 1,
-            "distanciaInicioM": 10,
-            "codigo": "AP1.45D300",
-            "metodo": "VERTICE"
-          },
-          {
-            "ponto": "Pt3",
-            "valorM": 1.7,
-            "distanciaInicioM": 15,
-            "codigo": "AP1.70D300",
-            "metodo": "TRECHO"
-          }
-        ],
-        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)",
-        "profundidadeReferencia": "geratriz superior"
+        "profundidadesM": [1.2, 1.45, 1.7]
       }
     },
     {
@@ -82,10 +55,7 @@
         "vertexCount": 2,
         "closed": false,
         "cadElevation": 0,
-        "projectedTo2D": false,
-        "quantidadeMedicoesProfundidade": 0,
-        "profundidadeOrigem": "levantamento _TG (associação automática; provisória até a gravação no DWG)",
-        "profundidadeReferencia": "geratriz superior"
+        "projectedTo2D": false
       }
     }
   ]

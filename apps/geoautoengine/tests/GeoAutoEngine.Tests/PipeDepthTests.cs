@@ -415,7 +415,7 @@ public sealed class PipeDepthTests
     [Trait("Category", "FAST")]
     public void Export_StopsInsteadOfDroppingMeasurementsThatDoNotFitInGeoMap()
     {
-        var vertices = Enumerable.Range(0, 1_000).Select(index => ((double)index, 0d)).ToArray();
+        var vertices = Enumerable.Range(0, 10_000).Select(index => ((double)index, 0d)).ToArray();
         var line = Line("L1", vertices);
         var points = vertices.Select((vertex, index) => Point($"P{index}", "AP1.20D300", vertex.Item1, vertex.Item2)).ToArray();
         var analysis = PipeDepthAssociator.Analyze([line], points, Metres);
@@ -424,7 +424,7 @@ public sealed class PipeDepthTests
             PipeDepthExport.Attach([line], analysis));
 
         var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(request));
-        Assert.Contains("1000 medições", error.Message, StringComparison.Ordinal);
+        Assert.Contains("10000 medições", error.Message, StringComparison.Ordinal);
     }
 
     private static PipeDepthAnalysis Analyze(

@@ -19,7 +19,7 @@
 
 ## Decisão proposta
 1. **Leitura:** o código (DESC) é lido pelo interpretador que já existe. Só a "informação da rede" com profundidade vale como profundidade da tubulação. Profundidade de caixa ou PV (`CXAP1.50`), código desconhecido e valor fora do intervalo vão para o diagnóstico. A COTA nunca é lida como profundidade.
-2. **Valor:** a profundidade vai como está no código, em metros, sem conversão, média ou interpolação. **Referência: geratriz superior** (do terreno até o topo do tubo), confirmada pelo usuário em 17/11/2026; vai na exportação em `profundidadeReferencia`.
+2. **Valor:** a profundidade vai como está no código, em metros, sem conversão, média ou interpolação. **Referência: geratriz superior** (do terreno até o topo do tubo), confirmada pelo usuário em 17/11/2026; registrada aqui e na documentação do exportador.
 3. **Posição do ponto:** o ponto (DBPoint) de dentro do bloco, levado para o desenho pela transformação do bloco. A inserção do bloco só é usada quando o bloco não tem ponto, e isso aparece no resumo.
 4. **Associação:**
    - o ponto vale para a linha quando está num vértice ou sobre um trecho (reto ou em arco) **até 1 mm** (aprovado pelo usuário: só o desenhado com NODE);
@@ -29,11 +29,11 @@
    - um ponto na ponta de duas linhas que se continuam vale para as duas (aprovado pelo usuário); três ou mais linhas, ou ponta de uma e meio de outra, é ambíguo e não é associado;
    - pontos repetidos no mesmo lugar com o mesmo valor valem uma vez; valores diferentes no mesmo lugar são conflito e nenhum é associado.
 5. **Profundidade válida:** maior que 0 e até 10 m **(a aprovar)**.
-6. **Exportação:** `GEOAUTO3GEOMAPEXPORT` pergunta se leva as profundidades. Cada linha analisada recebe nas `properties`:
-   - `quantidadeMedicoesProfundidade`;
+6. **Exportação:** `GEOAUTO3GEOMAPEXPORT` pergunta se leva as profundidades. **Só as profundidades vão para o mapa** (pedido do usuário em 18/11/2026, depois de ver a lista detalhada no site). Cada linha com medição recebe nas `properties`:
    - `profundidadeInicialM` e `profundidadeFinalM`, quando há medição no primeiro ou no último vértice;
-   - `medicoesProfundidade`: lista com ponto, valor, vértice, distância desde o início, código original e método;
-   - `profundidadeOrigem` e `profundidadeReferencia` ("geratriz superior").
+   - `profundidadesM`: os valores, em ordem ao longo da linha.
+
+   O ponto, o código, o vértice e a distância de cada valor ficam no CSV de diagnóstico.
 
    Uma linha com medições demais para os 64 KiB do GeoMap faz a exportação parar com aviso, em vez de perder medições.
 7. **Diagnóstico:** `GEOAUTO3DEPTHSCAN` analisa sem gravar nada no desenho e salva um CSV (`;` e vírgula decimal) com uma linha por ponto e por tubulação. A exportação salva o mesmo CSV ao lado dos arquivos.
