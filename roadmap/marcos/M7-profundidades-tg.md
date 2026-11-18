@@ -10,7 +10,7 @@
 | Passo | Entrega | Verificação | Estado |
 |---|---|---|---|
 | M7.1 | Entrega 1: leitura dos pontos `_TG`, interpretação pelo interpretador existente, associação pelo NODE (vértice e trecho), conflitos, diagnóstico CSV (`GEOAUTO3DEPTHSCAN`) e exportação provisória (`GEOAUTO3GEOMAPEXPORT`) | CI: casos sintéticos, 25.000 linhas × 50.000 pontos, dois desenhos reais da auditoria com contagens conferidas por outra implementação, amostra validada pelo GeoMap. Usuário: roteiro numa cópia de uma amostra do projeto real e valores no mapa | 🔄 |
-| M7.2 | Entrega 2: profundidades gravadas nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável; cópia escondida em XRecord), correção manual protegida (`ORIGEM`), atualização sem duplicar, exportação lendo do desenho | Testes da regra de gravação na CI; roteiro: gravar, editar à mão, reexecutar, salvar, reabrir, reexportar; GUIDs preservados | 🔄 no PR #34 |
+| M7.2 | Entrega 2: profundidades gravadas nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável; cópia escondida em XRecord), correção manual protegida (`ORIGEM`), atualização sem duplicar, exportação lendo do desenho | Testes da regra de gravação na CI; gravação conferida pelo usuário no projeto real em 18/11/2026; faltam: editar à mão + reexecutar, reabrir, reexportar | 🔄 no PR #34 |
 
 **Critério de aceitação:** numa amostra representativa do projeto real, as profundidades associadas conferem com as descrições dos pontos (conferência manual); cobertura, ambíguos, ausentes e divergências contados no diagnóstico; os valores aparecem no GeoMap.
 
