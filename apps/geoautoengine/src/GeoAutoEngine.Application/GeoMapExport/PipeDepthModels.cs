@@ -152,20 +152,17 @@ public sealed record PipeDepthMeasurement(
     string Method,
     bool Shared);
 
-/// <summary>As medições de uma linha, em ordem ao longo dela.</summary>
+/// <summary>As medições de uma linha, em ordem ao longo dela (no sentido em que foi desenhada).</summary>
 public sealed record PipeDepthPipeResult(GeoMapExportFeature Pipe, IReadOnlyList<PipeDepthMeasurement> Measurements)
 {
-    /// <summary>Profundidade no primeiro vértice, quando há exatamente uma medição nele.</summary>
-    public double? StartDepthMetres => DepthAtVertex(0);
+    /// <summary>
+    /// A primeira profundidade registrada ao longo da linha, esteja ela em qualquer vértice ou trecho
+    /// (pedido do usuário, 18/11/2026). Sem medição, <c>null</c>.
+    /// </summary>
+    public double? StartDepthMetres => Measurements.Count == 0 ? null : Measurements[0].DepthMetres;
 
-    /// <summary>Profundidade no último vértice de uma linha aberta, quando há exatamente uma medição nele.</summary>
-    public double? EndDepthMetres => Pipe.IsClosed ? null : DepthAtVertex(Pipe.Vertices.Count - 1);
-
-    private double? DepthAtVertex(int index)
-    {
-        var atVertex = Measurements.Where(measurement => measurement.VertexIndex == index).ToArray();
-        return atVertex.Length == 1 ? atVertex[0].DepthMetres : null;
-    }
+    /// <summary>A última profundidade registrada ao longo da linha; com um ponto só, igual à inicial.</summary>
+    public double? EndDepthMetres => Measurements.Count == 0 ? null : Measurements[Measurements.Count - 1].DepthMetres;
 }
 
 /// <summary>O resultado de um ponto, para o resumo e o diagnóstico.</summary>

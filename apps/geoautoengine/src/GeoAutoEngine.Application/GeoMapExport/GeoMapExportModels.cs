@@ -30,8 +30,8 @@ public sealed record GeoMapExportFeature(
 
 /// <summary>Resumo das profundidades de uma linha para o GeoMap, em metros (até a geratriz superior).</summary>
 /// <param name="AverageMetres">Média simples das profundidades dos pontos da linha.</param>
-/// <param name="StartMetres">Profundidade no primeiro vértice, quando medida.</param>
-/// <param name="EndMetres">Profundidade no último vértice, quando medida.</param>
+/// <param name="StartMetres">Primeira profundidade registrada ao longo da linha.</param>
+/// <param name="EndMetres">Última profundidade registrada ao longo da linha.</param>
 /// <param name="PointCount">Quantos pontos entraram na média.</param>
 /// <param name="Origin">
 /// <see cref="PipeDepthOrigins.Automatic"/> ou <see cref="PipeDepthOrigins.Manual"/> quando os valores vêm do

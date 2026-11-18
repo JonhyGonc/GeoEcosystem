@@ -36,6 +36,7 @@
         "projectedTo2D": false,
         "profundidadeMediaM": 1.45,
         "profundidadeInicialM": 1.2,
+        "profundidadeFinalM": 1.7,
         "quantidadePontosProfundidade": 3
       }
     },

@@ -91,6 +91,20 @@ public sealed class PipeDepthTests
 
     [Fact]
     [Trait("Category", "FAST")]
+    public void StartAndEnd_AreTheFirstAndLastRecordedDepthsWhereverTheyAre()
+    {
+        // Pontos no segundo e no penúltimo vértice; nada nas pontas da linha.
+        var analysis = Analyze(
+            [Line("L1", (0, 0), (10, 0), (20, 0), (30, 0), (40, 0))],
+            [Point("P2", "AP0.72", 30, 0), Point("P1", "AP0.68", 10, 0)]);
+
+        var pipe = analysis.ByHandle["L1"];
+        Assert.Equal(0.68, pipe.StartDepthMetres);
+        Assert.Equal(0.72, pipe.EndDepthMetres);
+    }
+
+    [Fact]
+    [Trait("Category", "FAST")]
     public void PointInTheMiddleOfAStraightSegment_IsAssociatedWithItsPosition()
     {
         var analysis = Analyze([Line("L1", (0, 0), (10, 0), (10, 10))], [Point("P1", "AP0.90", 10, 4)]);
@@ -100,7 +114,8 @@ public sealed class PipeDepthTests
         Assert.Null(measurement.VertexIndex);
         Assert.Equal(1, measurement.SegmentIndex);
         Assert.Equal(14, measurement.Station, 9);
-        Assert.Null(analysis.ByHandle["L1"].StartDepthMetres);
+        Assert.Equal(0.9, analysis.ByHandle["L1"].StartDepthMetres);
+        Assert.Equal(0.9, analysis.ByHandle["L1"].EndDepthMetres);
     }
 
     [Fact]

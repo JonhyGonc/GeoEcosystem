@@ -139,8 +139,8 @@ public static class AutoCadPipeDepthStore
             var definitions = project.MapUtility.NewODFieldDefinitions();
             // Nomes e descrições curtos e sem acento; armazenamento como nos exemplos da Autodesk (último argumento true).
             definitions.Add(AverageField, "Profundidade media", MapDataType.Real, 0);
-            definitions.Add(StartField, "Profundidade inicial", MapDataType.Character, 1);
-            definitions.Add(EndField, "Profundidade final", MapDataType.Character, 2);
+            definitions.Add(StartField, "Primeira profundidade", MapDataType.Character, 1);
+            definitions.Add(EndField, "Ultima profundidade", MapDataType.Character, 2);
             definitions.Add(PointsField, "Pontos na media", MapDataType.Character, 3);
             definitions.Add(OriginField, "Origem do valor", MapDataType.Character, 4);
             tables.Add(TableName, definitions, "Profundidades GeoAutoEngine", true);

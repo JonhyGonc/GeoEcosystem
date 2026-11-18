@@ -31,7 +31,7 @@
 5. **Profundidade válida:** maior que 0 e até 10 m **(a aprovar)**.
 6. **Exportação:** `GEOAUTO3GEOMAPEXPORT` pergunta se leva as profundidades. No mapa vai um **resumo** (pedidos do usuário em 18/11/2026, depois de ver a lista detalhada no site). Cada linha com medição recebe nas `properties`:
    - `profundidadeMediaM`: média simples das profundidades dos pontos da linha, arredondada ao centímetro;
-   - `profundidadeInicialM` e `profundidadeFinalM`, quando há medição no primeiro ou no último vértice;
+   - `profundidadeInicialM` e `profundidadeFinalM`: a primeira e a última profundidade registradas ao longo da linha, no sentido em que ela foi desenhada, estejam ou não nas pontas (pedido do usuário, 18/11/2026). Com um ponto só, as duas são iguais;
    - `quantidadePontosProfundidade`: quantos pontos entraram na média.
 
    O pedido original evitava a média "como se fosse a profundidade real". Por isso ela vai com esse nome, junto com as pontas e a quantidade de pontos. Os valores de cada ponto (ponto, código, vértice e distância) ficam no CSV de diagnóstico e, na entrega 2, no DWG.

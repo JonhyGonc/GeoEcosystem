@@ -21,6 +21,7 @@
 | 17/11/2026 | Tolerância de 1 mm (só NODE); ponta de duas linhas vale para as duas; profundidade até a geratriz superior; gravação no DWG em XRecord próprio | Usuário |
 | 18/11/2026 | No mapa, um resumo: média dos pontos, profundidade inicial e final e quantidade de pontos; o valor de cada ponto fica no CSV | Usuário |
 | 18/11/2026 | Entrega 2 com Object Data visível na paleta, edição manual protegida e campo ORIGEM | Usuário |
+| 18/11/2026 | Profundidade inicial/final = primeira/última registrada ao longo da linha, mesmo fora das pontas | Usuário |
 
 ## Pontos de atenção
 - A CI não compila o leitor CAD nem os comandos: só o roteiro no Civil 3D os prova.
