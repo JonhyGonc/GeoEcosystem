@@ -93,10 +93,10 @@ O contrato GeoMap só tem linhas retas. Por isso cada arco vira uma sequência d
 Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md).
 
 - `GEOAUTO3DEPTHSCAN` analisa as tubulações escolhidas (por layer ou por objeto) contra todos os blocos das layers `_TG*` e mostra um resumo. **Não grava nada no desenho.** No fim, oferece salvar o diagnóstico em CSV.
-- `GEOAUTO3GEOMAPEXPORT` pergunta "Levar as profundidades dos N pontos _TG?". Com Sim, cada linha com medição recebe só as profundidades: `profundidadeInicialM`, `profundidadeFinalM` e `profundidadesM` (valores em ordem ao longo da linha). O ponto, o código e o vértice de cada valor ficam no CSV. O diagnóstico é salvo ao lado dos arquivos (`<nome>-profundidades-diagnostico.csv`).
+- `GEOAUTO3GEOMAPEXPORT` pergunta "Levar as profundidades dos N pontos _TG?". Com Sim, cada linha com medição recebe um resumo: `profundidadeMediaM` (média simples dos pontos, ao centímetro), `profundidadeInicialM`, `profundidadeFinalM` e `quantidadePontosProfundidade`. O valor de cada ponto, com código e vértice, fica no CSV. O diagnóstico é salvo ao lado dos arquivos (`<nome>-profundidades-diagnostico.csv`).
 - A posição de cada ponto é o ponto (DBPoint) de dentro do bloco, onde o OSNAP NODE prende. O ponto vale para a linha num vértice ou sobre um trecho, até 1 mm; de 1 mm a 10 cm, ele é só relatado.
 - Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
-- Valores: como estão no código, em metros, até a geratriz superior, sem média nem interpolação.
+- Valores: como estão no código, em metros, até a geratriz superior, sem interpolação. A média é só um resumo para o mapa.
 - Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
 - **Provisório:** até a entrega 2 (M7.2), as medições não ficam gravadas no DWG. Ao reexportar, responda Sim às profundidades para não apagá-las do mapa.
 

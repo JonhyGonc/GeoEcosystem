@@ -19,7 +19,7 @@
 |---|---|---|
 | 17/11/2026 | Prioridade emergencial, implementação autorizada (merge continua com o usuário) | Usuário |
 | 17/11/2026 | Tolerância de 1 mm (só NODE); ponta de duas linhas vale para as duas; profundidade até a geratriz superior; gravação no DWG em XRecord próprio | Usuário |
-| 18/11/2026 | No mapa, só as profundidades (`profundidadeInicialM`, `profundidadeFinalM`, `profundidadesM`); o detalhe fica no CSV | Usuário |
+| 18/11/2026 | No mapa, um resumo: média dos pontos, profundidade inicial e final e quantidade de pontos; o valor de cada ponto fica no CSV | Usuário |
 
 ## Pontos de atenção
 - A CI não compila o leitor CAD nem os comandos: só o roteiro no Civil 3D os prova.

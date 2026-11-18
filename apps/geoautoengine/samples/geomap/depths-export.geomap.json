@@ -34,8 +34,9 @@
         "closed": false,
         "cadElevation": 0,
         "projectedTo2D": false,
+        "profundidadeMediaM": 1.45,
         "profundidadeInicialM": 1.2,
-        "profundidadesM": [1.2, 1.45, 1.7]
+        "quantidadePontosProfundidade": 3
       }
     },
     {

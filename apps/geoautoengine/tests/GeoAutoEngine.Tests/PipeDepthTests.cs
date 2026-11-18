@@ -413,18 +413,23 @@ public sealed class PipeDepthTests
 
     [Fact]
     [Trait("Category", "FAST")]
-    public void Export_StopsInsteadOfDroppingMeasurementsThatDoNotFitInGeoMap()
+    public void Export_AverageIsRoundedToTheCentimetreAndCountsThePoints()
     {
-        var vertices = Enumerable.Range(0, 10_000).Select(index => ((double)index, 0d)).ToArray();
-        var line = Line("L1", vertices);
-        var points = vertices.Select((vertex, index) => Point($"P{index}", "AP1.20D300", vertex.Item1, vertex.Item2)).ToArray();
-        var analysis = PipeDepthAssociator.Analyze([line], points, Metres);
+        var line = Line("L1", (0, 0), (10, 0), (20, 0));
+        var analysis = PipeDepthAssociator.Analyze(
+            [line],
+            [Point("P1", "AP1.00", 0, 0), Point("P2", "AP1.00", 10, 0), Point("P3", "AP1.01", 20, 0)],
+            Metres);
         var request = new GeoMapExportRequest(
             "EPSG:31982", "metre", "p", "p", "p:n", "n", "stormwater", DateTimeOffset.UnixEpoch,
             PipeDepthExport.Attach([line], analysis));
 
-        var error = Assert.Throws<InvalidOperationException>(() => GeoMapExportSerializer.Serialize(request));
-        Assert.Contains("10000 medições", error.Message, StringComparison.Ordinal);
+        using var document = JsonDocument.Parse(GeoMapExportSerializer.Serialize(request));
+        var properties = document.RootElement.GetProperty("features")[0].GetProperty("properties");
+        Assert.Equal(1.0, properties.GetProperty("profundidadeMediaM").GetDouble());
+        Assert.Equal(1.0, properties.GetProperty("profundidadeInicialM").GetDouble());
+        Assert.Equal(1.01, properties.GetProperty("profundidadeFinalM").GetDouble());
+        Assert.Equal(3, properties.GetProperty("quantidadePontosProfundidade").GetInt32());
     }
 
     private static PipeDepthAnalysis Analyze(
