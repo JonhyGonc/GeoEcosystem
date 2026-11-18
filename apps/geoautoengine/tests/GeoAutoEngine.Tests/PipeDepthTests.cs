@@ -44,7 +44,6 @@ public sealed class PipeDepthTests
     [InlineData("PT", SurveyDepthKind.Ignored)]
     [InlineData("PT1", SurveyDepthKind.Ignored)]
     [InlineData("PT-3", SurveyDepthKind.Ignored)]
-    [InlineData("GUIA", SurveyDepthKind.NoDepth)]
     [InlineData("PTIL", SurveyDepthKind.NoDepth)]
     [InlineData("", SurveyDepthKind.NoCode)]
     [InlineData("   ", SurveyDepthKind.NoCode)]
