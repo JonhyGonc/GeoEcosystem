@@ -87,7 +87,7 @@ public static class AutoCadPipeDepthStore
             return 0;
         }
 
-        using var table = EnsureTable();
+        using var table = Step("ao criar a tabela " + TableName, EnsureTable);
         using var transaction = database.TransactionManager.StartTransaction();
         var written = 0;
         foreach (var item in writes)
@@ -98,10 +98,10 @@ public static class AutoCadPipeDepthStore
             }
 
             // Primeiro os campos (o Map abre a linha sozinho), depois a cópia escondida.
-            WriteFields(table, objectId, item.Fields!);
-            if (item.Snapshot is not null)
+            Step($"ao gravar os campos na linha {item.Handle}", () => WriteFields(table, objectId, item.Fields!));
+            if (item.Snapshot is { } snapshot)
             {
-                WriteSnapshot(transaction, objectId, item.Snapshot);
+                Step($"ao gravar a cópia escondida na linha {item.Handle}", () => WriteSnapshot(transaction, objectId, snapshot));
             }
 
             written++;
@@ -111,6 +111,25 @@ public static class AutoCadPipeDepthStore
         return written;
     }
 
+    // Diz em que passo a gravação parou: o erro do Map 3D (MapException) não traz detalhe nenhum.
+    private static T Step<T>(string step, Func<T> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (System.Exception exception) when (exception is not InvalidOperationException)
+        {
+            throw new InvalidOperationException($"Falhou {step}: {exception.GetType().Name} {exception.Message}", exception);
+        }
+    }
+
+    private static void Step(string step, Action action) => Step(step, () =>
+    {
+        action();
+        return true;
+    });
+
     private static OdTable EnsureTable()
     {
         var project = HostMapApplicationServices.Application.ActiveProject;
@@ -118,12 +137,13 @@ public static class AutoCadPipeDepthStore
         if (!tables.IsTableDefined(TableName))
         {
             var definitions = project.MapUtility.NewODFieldDefinitions();
-            definitions.Add(AverageField, "Profundidade média dos pontos _TG (m, geratriz superior)", MapDataType.Real, 0);
-            definitions.Add(StartField, "Profundidade no primeiro vértice (m)", MapDataType.Character, 1);
-            definitions.Add(EndField, "Profundidade no último vértice (m)", MapDataType.Character, 2);
-            definitions.Add(PointsField, "Pontos _TG na média", MapDataType.Character, 3);
-            definitions.Add(OriginField, "AUTOMATICA, MANUAL, SEM_MEDICAO ou RECALCULAR", MapDataType.Character, 4);
-            tables.Add(TableName, definitions, "Profundidades das tubulações (GeoAutoEngine)", false);
+            // Nomes e descrições curtos e sem acento; armazenamento como nos exemplos da Autodesk (último argumento true).
+            definitions.Add(AverageField, "Profundidade media", MapDataType.Real, 0);
+            definitions.Add(StartField, "Profundidade inicial", MapDataType.Character, 1);
+            definitions.Add(EndField, "Profundidade final", MapDataType.Character, 2);
+            definitions.Add(PointsField, "Pontos na media", MapDataType.Character, 3);
+            definitions.Add(OriginField, "Origem do valor", MapDataType.Character, 4);
+            tables.Add(TableName, definitions, "Profundidades GeoAutoEngine", true);
         }
 
         return tables[TableName];
