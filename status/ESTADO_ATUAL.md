@@ -1,6 +1,6 @@
 # Estado atual
 
-**Atualizado em:** 17/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
+**Atualizado em:** 18/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
 
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
@@ -10,9 +10,9 @@
 - **M4 — DWG → GeoMap:** M4.1 ✅ (DEC-ECO-0003, PR #19). M4.2 ✅: identidade do projeto no GeoMap independente do `sourceSystem` (DEC-032 do GeoMap, PR #21). M4.3a ✅: o GAE grava o código próprio (`FEATURE_ID`) em cada Polyline exportada (PR #22; roteiro no Civil 3D aprovado pelo usuário: reexportar, MOVE, COPY e BREAK). M4.3b ✅: o exportador leva a cor da layer (`network.color`, contrato 0.2), com teste cruzado na CI (PR #23; roteiro aprovado pelo usuário). M4.3c ✅: blocos como pontos (contrato 0.3), numa rede e num arquivo separados (PR #24; roteiro aprovado: 487 tês, coordenadas conferidas, reexportação sem códigos novos). M4.5 ✅: botão Importar no site do GeoMap (PR #26; testado pelo usuário no navegador). M4.3d ✅: LINE, ARC e arcos de Polyline, tesselados com no máximo 5 mm (PR #25; testado pelo usuário: rede inteira exportada e conferida no mapa). M4.3e ✅: seleção por layer, uma rede por layer, diâmetro/material da layer e atributos dos blocos (PR #27; testado pelo usuário). M4.4 ✅: script privado descartado. Ponte DXF aposentada (DEC-034 do GeoMap, PR #28). M4.6 🔄: ortofoto do projeto (DEC-035 do GeoMap, PR #29). Acompanhamento: Issue #20; plano: `roadmap/marcos/M4-dwg-geomap.md`.
 - **Prioridade atual (pedido do usuário, 16/11/2026):** ortofoto do projeto no GeoMap (M4.6, DEC-035 do GeoMap; PR #29), porque o chefe do usuário quer ver o mapa com a ortofoto. Depois, o M5.
 - **M5 — Anomalias no mapa:** decisões tomadas em 16/11/2026, pelo celular (DEC-ECO-0004, PR #31; plano em `roadmap/marcos/M5-anomalias-mapa.md`; Issue #30). Implementação começa depois da ortofoto (M4.6).
-- **Prioridade emergencial (pedido do usuário, 17/11/2026): M7 — profundidades das tubulações pelos pontos `_TG`.** Entrega 1 no PR #34 (associação pelo NODE, diagnóstico `GEOAUTO3DEPTHSCAN`, exportação provisória). DEC-ECO-0005 aprovada em 17/11/2026: tolerância de 1 mm (só NODE), ponta de duas linhas vale para as duas, geratriz superior, gravação no DWG em XRecord próprio; o limite de 10 m segue proposto. Plano: `roadmap/marcos/M7-profundidades-tg.md`.
+- **Prioridade emergencial (pedido do usuário, 17/11/2026): M7 — profundidades das tubulações pelos pontos `_TG`.** Entregas 1 e 2 no PR #34: associação pelo NODE, diagnóstico `GEOAUTO3DEPTHSCAN`, gravação nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável, com `ORIGEM` AUTOMATICA/MANUAL) e exportação do que está gravado (média, pontas e quantidade de pontos). DEC-ECO-0005 aprovada (17 e 18/11/2026); o limite de 10 m segue proposto. A importação da entrega 1 no site foi feita pelo usuário em 18/11/2026. Plano: `roadmap/marcos/M7-profundidades-tg.md`.
 - **Prontos para o usuário:** PR #32 (conversor da ortofoto, testado em 17/11/2026) e PR #33 (Civil 3D 2027, M6).
-- **Próximo passo:** roteiro do PR #34 numa cópia de uma amostra do projeto real → M7.2 (gravação no DWG) → M5.2.
+- **Próximo passo:** roteiro do PR #34 no Civil 3D (gravar, corrigir à mão, reexecutar, reabrir, exportar) numa cópia de uma amostra do projeto real → merge → M5.2.
 
 ## Pendências do usuário
 1. Merge do PR #28 (aposenta a ponte DXF); roteiro da ortofoto (PR #29) com uma ortofoto real.

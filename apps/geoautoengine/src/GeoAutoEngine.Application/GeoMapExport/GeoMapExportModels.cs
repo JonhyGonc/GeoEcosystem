@@ -28,28 +28,21 @@ public sealed record GeoMapExportFeature(
     double? EndElevation = null,
     GeoMapPipeDepths? Depths = null);
 
-/// <summary>Profundidades de uma linha para o GeoMap, em metros, como foram medidas (sem média nem interpolação).</summary>
+/// <summary>Resumo das profundidades de uma linha para o GeoMap, em metros (até a geratriz superior).</summary>
+/// <param name="AverageMetres">Média simples das profundidades dos pontos da linha.</param>
 /// <param name="StartMetres">Profundidade no primeiro vértice, quando medida.</param>
 /// <param name="EndMetres">Profundidade no último vértice, quando medida.</param>
+/// <param name="PointCount">Quantos pontos entraram na média.</param>
+/// <param name="Origin">
+/// <see cref="PipeDepthOrigins.Automatic"/> ou <see cref="PipeDepthOrigins.Manual"/> quando os valores vêm do
+/// desenho; <c>null</c> na associação feita na hora da exportação (provisória).
+/// </param>
 public sealed record GeoMapPipeDepths(
+    double AverageMetres,
     double? StartMetres,
     double? EndMetres,
-    IReadOnlyList<GeoMapDepthMeasurement> Measurements);
-
-/// <param name="Point">Nome do ponto do levantamento (atributo PONTO).</param>
-/// <param name="Vertex">Índice do vértice (a partir de 0) quando o ponto está num vértice.</param>
-/// <param name="StationMetres">Distância ao longo da linha, desde o primeiro vértice.</param>
-/// <param name="Code">Descrição original do ponto (atributo DESC).</param>
-/// <param name="Method"><see cref="PipeDepthMethods"/>.</param>
-/// <param name="Shared">O ponto está na ponta de duas linhas que se continuam e vale para as duas.</param>
-public sealed record GeoMapDepthMeasurement(
-    string Point,
-    double DepthMetres,
-    int? Vertex,
-    double StationMetres,
-    string Code,
-    string Method,
-    bool Shared);
+    int PointCount,
+    string? Origin = null);
 
 /// <summary>Tipos de linha exportados; o valor vai em <c>sourceType</c> e <c>cadEntityType</c>.</summary>
 public static class GeoMapEntityTypes

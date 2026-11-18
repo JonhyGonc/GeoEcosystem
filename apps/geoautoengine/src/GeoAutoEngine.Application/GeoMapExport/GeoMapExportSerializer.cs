@@ -94,13 +94,10 @@ public static class GeoMapExportSerializer
         var arcs = feature.Bulges?.Take(feature.IsClosed ? feature.Vertices.Count : feature.Vertices.Count - 1)
             .Count(GeoMapArcTessellation.IsArc) ?? 0;
         var depths = feature.Depths;
-        // Média simples das profundidades dos pontos da linha, com quantos pontos entraram nela (pedido do usuário,
-        // 18/11/2026). É um resumo para o mapa: os valores de cada ponto ficam no CSV de diagnóstico.
-        var hasDepths = depths is not null && depths.Measurements.Count > 0;
-        double? averageDepth = hasDepths
-            ? Math.Round(depths!.Measurements.Average(measurement => measurement.DepthMetres), 2, MidpointRounding.AwayFromZero)
-            : null;
-        int? depthCount = hasDepths ? depths!.Measurements.Count : null;
+        // Resumo para o mapa (pedido do usuário, 18/11/2026): média simples dos pontos, pontas e quantidade de
+        // pontos. Os valores de cada ponto ficam no CSV de diagnóstico e na cópia escondida no DWG.
+        double? averageDepth = depths?.AverageMetres;
+        int? depthCount = depths?.PointCount;
         object properties = feature.EntityType == GeoMapEntityTypes.Line
             ? new LinePropertiesDto(
                 feature.CadHandle,
@@ -114,7 +111,8 @@ public static class GeoMapExportSerializer
                 averageDepth,
                 depths?.StartMetres,
                 depths?.EndMetres,
-                depthCount)
+                depthCount,
+                depths?.Origin)
             : new PropertiesDto(
                 feature.CadHandle,
                 feature.EntityType,
@@ -128,7 +126,8 @@ public static class GeoMapExportSerializer
                 averageDepth,
                 depths?.StartMetres,
                 depths?.EndMetres,
-                depthCount);
+                depthCount,
+                depths?.Origin);
         return new(
             feature.SourceId,
             feature.EntityType,
@@ -399,7 +398,8 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("profundidadeMediaM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeMediaM,
         [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
         [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
-        [property: JsonPropertyName("quantidadePontosProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadePontosProfundidade);
+        [property: JsonPropertyName("quantidadePontosProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadePontosProfundidade,
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
 
     // LINE: as mesmas propriedades da ponte DXF, com a elevação de cada ponta (M4.3d).
     private sealed record LinePropertiesDto(
@@ -414,5 +414,6 @@ public static class GeoMapExportSerializer
         [property: JsonPropertyName("profundidadeMediaM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeMediaM,
         [property: JsonPropertyName("profundidadeInicialM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeInicialM,
         [property: JsonPropertyName("profundidadeFinalM"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ProfundidadeFinalM,
-        [property: JsonPropertyName("quantidadePontosProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadePontosProfundidade);
+        [property: JsonPropertyName("quantidadePontosProfundidade"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? QuantidadePontosProfundidade,
+        [property: JsonPropertyName("profundidadeOrigem"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ProfundidadeOrigem);
 }

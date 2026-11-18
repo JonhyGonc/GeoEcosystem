@@ -13,4 +13,19 @@
   <ItemGroup>
     <Using Include="GeoEcosystem.Contracts.Inspection" />
   </ItemGroup>
+  <!-- Object Data do Map 3D (incluído no Civil 3D): profundidades visíveis na paleta Propriedades (M7.2). -->
+  <PropertyGroup>
+    <ManagedMapApiPath Condition="'$(ManagedMapApiPath)' == '' and Exists('$(AutodeskAutoCADDirectory)\Map\ManagedMapApi.dll')">$(AutodeskAutoCADDirectory)\Map\ManagedMapApi.dll</ManagedMapApiPath>
+    <ManagedMapApiPath Condition="'$(ManagedMapApiPath)' == '' and Exists('$(AutodeskAutoCADDirectory)\ManagedMapApi.dll')">$(AutodeskAutoCADDirectory)\ManagedMapApi.dll</ManagedMapApiPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ManagedMapApi">
+      <HintPath>$(ManagedMapApiPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <Target Name="CheckManagedMapApi" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(ManagedMapApiPath)' == ''"
+           Text="ManagedMapApi.dll (Map 3D, incluído no Civil 3D) não encontrado em $(AutodeskAutoCADDirectory)\Map nem em $(AutodeskAutoCADDirectory). Informe o caminho com -p:ManagedMapApiPath=..." />
+  </Target>
 </Project>

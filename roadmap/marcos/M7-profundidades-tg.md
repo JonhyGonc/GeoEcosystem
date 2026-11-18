@@ -10,7 +10,7 @@
 | Passo | Entrega | Verificação | Estado |
 |---|---|---|---|
 | M7.1 | Entrega 1: leitura dos pontos `_TG`, interpretação pelo interpretador existente, associação pelo NODE (vértice e trecho), conflitos, diagnóstico CSV (`GEOAUTO3DEPTHSCAN`) e exportação provisória (`GEOAUTO3GEOMAPEXPORT`) | CI: casos sintéticos, 25.000 linhas × 50.000 pontos, dois desenhos reais da auditoria com contagens conferidas por outra implementação, amostra validada pelo GeoMap. Usuário: roteiro numa cópia de uma amostra do projeto real e valores no mapa | 🔄 |
-| M7.2 | Entrega 2: gravação das medições no DWG (XRecord `GEOAUTOENGINE_DEPTHS`), atualização sem duplicar, preservação ao fechar e reabrir, exportação lendo do desenho | Testes da camada Application; roteiro: gravar, salvar, reabrir, reexportar; GUIDs preservados | ⏳ |
+| M7.2 | Entrega 2: profundidades gravadas nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável; cópia escondida em XRecord), correção manual protegida (`ORIGEM`), atualização sem duplicar, exportação lendo do desenho | Testes da regra de gravação na CI; roteiro: gravar, editar à mão, reexecutar, salvar, reabrir, reexportar; GUIDs preservados | 🔄 no PR #34 |
 
 **Critério de aceitação:** numa amostra representativa do projeto real, as profundidades associadas conferem com as descrições dos pontos (conferência manual); cobertura, ambíguos, ausentes e divergências contados no diagnóstico; os valores aparecem no GeoMap.
 
@@ -20,6 +20,7 @@
 | 17/11/2026 | Prioridade emergencial, implementação autorizada (merge continua com o usuário) | Usuário |
 | 17/11/2026 | Tolerância de 1 mm (só NODE); ponta de duas linhas vale para as duas; profundidade até a geratriz superior; gravação no DWG em XRecord próprio | Usuário |
 | 18/11/2026 | No mapa, um resumo: média dos pontos, profundidade inicial e final e quantidade de pontos; o valor de cada ponto fica no CSV | Usuário |
+| 18/11/2026 | Entrega 2 com Object Data visível na paleta, edição manual protegida e campo ORIGEM | Usuário |
 
 ## Pontos de atenção
 - A CI não compila o leitor CAD nem os comandos: só o roteiro no Civil 3D os prova.

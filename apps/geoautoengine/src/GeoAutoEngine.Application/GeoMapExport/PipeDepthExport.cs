@@ -1,11 +1,11 @@
 namespace GeoAutoEngine.Application.GeoMapExport;
 
-/// <summary>Coloca nas linhas exportadas as profundidades associadas por <see cref="PipeDepthAssociator"/>.</summary>
+/// <summary>Coloca nas linhas exportadas o resumo das profundidades.</summary>
 public static class PipeDepthExport
 {
     /// <summary>
-    /// Cada linha analisada recebe as suas profundidades, inclusive nenhuma (para o mapa mostrar que a linha foi
-    /// analisada e não tem medição). Blocos e linhas fora da análise ficam como estão.
+    /// Associação feita na hora da exportação (provisória, nada gravado no desenho): cada linha com medição recebe
+    /// o resumo. Blocos e linhas sem medição ficam como estão.
     /// </summary>
     public static IReadOnlyList<GeoMapExportFeature> Attach(
         IReadOnlyList<GeoMapExportFeature> features,
@@ -21,25 +21,49 @@ public static class PipeDepthExport
             throw new ArgumentNullException(nameof(analysis));
         }
 
-        var unitsPerMetre = analysis.Options.DrawingUnitsPerMetre;
         return features
-            .Select(feature => feature.Block is null && analysis.ByHandle.TryGetValue(feature.CadHandle, out var result)
-                ? feature with { Depths = ToDepths(result, unitsPerMetre) }
-                : feature)
+            .Select(feature => feature.Block is null &&
+                analysis.ByHandle.TryGetValue(feature.CadHandle, out var result) &&
+                PipeDepthSummary.From(result) is { } summary
+                    ? feature with { Depths = ToDepths(summary, null) }
+                    : feature)
             .ToArray();
     }
 
-    private static GeoMapPipeDepths ToDepths(PipeDepthPipeResult result, double unitsPerMetre) => new(
-        result.StartDepthMetres,
-        result.EndDepthMetres,
-        result.Measurements
-            .Select(measurement => new GeoMapDepthMeasurement(
-                measurement.PointName,
-                measurement.DepthMetres,
-                measurement.VertexIndex,
-                Math.Round(measurement.Station / unitsPerMetre, 3),
-                measurement.OriginalCode,
-                measurement.Method,
-                measurement.Shared))
-            .ToArray());
+    /// <summary>
+    /// Profundidades gravadas no desenho (tabela Object Data), inclusive as corrigidas à mão. Linhas sem medição
+    /// (SEM_MEDICAO) ou com valores ilegíveis ficam sem profundidade.
+    /// </summary>
+    public static IReadOnlyList<GeoMapExportFeature> FromStored(
+        IReadOnlyList<GeoMapExportFeature> features,
+        IReadOnlyDictionary<string, PipeDepthFields> stored)
+    {
+        if (features is null)
+        {
+            throw new ArgumentNullException(nameof(features));
+        }
+
+        if (stored is null)
+        {
+            throw new ArgumentNullException(nameof(stored));
+        }
+
+        return features
+            .Select(feature => feature.Block is null &&
+                stored.TryGetValue(feature.CadHandle, out var fields) &&
+                fields.ToSummary() is { } summary
+                    ? feature with { Depths = ToDepths(summary, OriginForMap(fields)) }
+                    : feature)
+            .ToArray();
+    }
+
+    private static string OriginForMap(PipeDepthFields fields) =>
+        fields.NormalizedOrigin == PipeDepthOrigins.Manual ? PipeDepthOrigins.Manual : PipeDepthOrigins.Automatic;
+
+    private static GeoMapPipeDepths ToDepths(PipeDepthSummary summary, string? origin) => new(
+        summary.AverageMetres,
+        summary.StartMetres,
+        summary.EndMetres,
+        summary.PointCount,
+        origin);
 }

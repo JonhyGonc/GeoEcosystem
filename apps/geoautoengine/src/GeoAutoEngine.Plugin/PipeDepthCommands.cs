@@ -12,16 +12,18 @@ using AutoCadApplication = Autodesk.AutoCAD.ApplicationServices.Core.Application
 namespace GeoAutoEngine.Plugin;
 
 /// <summary>
-/// Profundidades das tubulações a partir dos pontos do levantamento (<c>_TG</c>), entrega 1:
-/// <c>GEOAUTO3DEPTHSCAN</c> só analisa (nada é gravado no desenho) e salva o diagnóstico em CSV;
-/// <c>GEOAUTO3GEOMAPEXPORT</c> pergunta se leva as profundidades para o GeoMap.
+/// Profundidades das tubulações a partir dos pontos do levantamento (<c>_TG</c>), M7:
+/// <c>GEOAUTO3DEPTHSCAN</c> analisa, mostra o resumo, salva o diagnóstico em CSV e, com confirmação, grava as
+/// profundidades nas linhas (tabela Object Data GEO_PROFUNDIDADE, visível na paleta Propriedades);
+/// <c>GEOAUTO3GEOMAPEXPORT</c> leva ao GeoMap o que está gravado (inclusive o corrigido à mão).
 /// </summary>
 public sealed partial class GeoMapExportCommands
 {
     private const string LineTypes = "LWPOLYLINE,LINE,ARC";
     private const string SurveyLayers = GeoMapBlockRules.SurveyLayerPrefix + "*";
 
-    [CommandMethod("GEOAUTO3DEPTHSCAN", CommandFlags.Modal | CommandFlags.NoUndoMarker)]
+    // Sem NoUndoMarker: desde o M7.2 o comando pode gravar no desenho, e U desfaz a gravação inteira.
+    [CommandMethod("GEOAUTO3DEPTHSCAN", CommandFlags.Modal)]
     public void ScanDepths()
     {
         var document = AutoCadApplication.DocumentManager.MdiActiveDocument;
@@ -58,59 +60,147 @@ public sealed partial class GeoMapExportCommands
                 return;
             }
 
-            editor.WriteMessage("\nGeoAutoEngine: nada foi gravado no desenho. Para levar ao GeoMap, use GEOAUTO3GEOMAPEXPORT.\n");
-            var save = new PromptKeywordOptions("\nSalvar o diagnóstico em CSV?")
+            var plan = TryPlanWrite(document.Database, editor, analysis);
+            if (plan is not null)
             {
-                AllowNone = true,
-            };
-            save.Keywords.Add("Sim");
-            save.Keywords.Add("Nao");
-            save.Keywords.Default = "Sim";
-            var answer = editor.GetKeywords(save);
-            if (answer.Status is not (PromptStatus.OK or PromptStatus.None) || answer.StringResult == "Nao")
-            {
-                return;
+                editor.WriteMessage("\n" + string.Join("\n", plan.SummaryLines()) + "\n");
             }
 
-            using var dialog = new SaveFileDialog
+            while (true)
             {
-                AddExtension = true,
-                DefaultExt = "csv",
-                FileName = Path.GetFileNameWithoutExtension(document.Name) + "-profundidades-diagnostico.csv",
-                Filter = "CSV (*.csv)|*.csv",
-                RestoreDirectory = true,
-                Title = "Salvar o diagnóstico das profundidades",
-            };
-            if (dialog.ShowDialog() != DialogResult.OK)
-            {
+                var canWrite = plan is not null && plan.Writes.Count > 0;
+                var options = new PromptKeywordOptions(canWrite
+                    ? "\nGravar as profundidades nas linhas?"
+                    : "\nNada a gravar. Salvar o diagnóstico em CSV?")
+                {
+                    AllowNone = true,
+                };
+                if (canWrite)
+                {
+                    options.Keywords.Add("Gravar");
+                }
+
+                options.Keywords.Add("Diagnostico");
+                options.Keywords.Add("Sair");
+                options.Keywords.Default = canWrite ? "Gravar" : "Diagnostico";
+                var answer = editor.GetKeywords(options);
+                var choice = answer.Status == PromptStatus.OK ? answer.StringResult : answer.Status == PromptStatus.None ? options.Keywords.Default : "Sair";
+                if (choice == "Diagnostico")
+                {
+                    SaveDiagnostic(document, analysis);
+                    continue;
+                }
+
+                if (choice == "Gravar" && canWrite)
+                {
+                    var written = AutoCadPipeDepthStore.Write(document.Database, plan!);
+                    editor.WriteMessage(
+                        $"\nGeoAutoEngine: profundidades gravadas em {written} linha(s) (tabela {AutoCadPipeDepthStore.TableName}). " +
+                        "Veja na paleta Propriedades (Ctrl+1). Para desfazer, use U.\n");
+                    PluginLog.Information($"Profundidades gravadas em {written} linha(s).");
+                    return;
+                }
+
+                editor.WriteMessage("\nGeoAutoEngine: nada foi gravado no desenho.\n");
                 return;
             }
-
-            File.WriteAllText(dialog.FileName, PipeDepthReport.DiagnosticCsv(analysis), new UTF8Encoding(true));
-            editor.WriteMessage($"\nGeoAutoEngine: diagnóstico das profundidades -> {dialog.FileName}\n");
         }
         catch (System.Exception exception) when (exception is not StackOverflowException and not OutOfMemoryException)
         {
             PluginLog.Error("Análise de profundidades", exception);
-            editor.WriteMessage($"\nGeoAutoEngine: não foi possível analisar as profundidades. {exception.Message}\n");
+            editor.WriteMessage(
+                $"\nGeoAutoEngine: não foi possível concluir as profundidades. {exception.Message}" +
+                "\nSe parte já tinha sido gravada, use U para desfazer o comando inteiro.\n");
         }
     }
 
-    // Na exportação: pergunta se leva as profundidades. False quando o usuário cancela (Esc); depths fica null
-    // quando não há o que associar ou o usuário responde Não.
-    private static bool TryAnalyzeDepthsForExport(
+    // Plano de gravação, ou null quando o Object Data do Map 3D não está disponível (só o diagnóstico funciona).
+    private static PipeDepthWritePlan? TryPlanWrite(Database database, Editor editor, PipeDepthAnalysis analysis)
+    {
+        try
+        {
+            var stored = AutoCadPipeDepthStore.Read(database, analysis.Pipes.Select(pipe => pipe.Pipe.CadHandle));
+            return PipeDepthWritePlanner.Plan(analysis, stored);
+        }
+        catch (System.Exception exception) when (IsMissingMap(exception))
+        {
+            PluginLog.Error("Object Data indisponível", exception);
+            editor.WriteMessage(
+                "\nGeoAutoEngine: o Object Data do Map 3D não está disponível neste programa; só o diagnóstico funciona.\n");
+            return null;
+        }
+    }
+
+    private static void SaveDiagnostic(Document document, PipeDepthAnalysis analysis)
+    {
+        using var dialog = new SaveFileDialog
+        {
+            AddExtension = true,
+            DefaultExt = "csv",
+            FileName = Path.GetFileNameWithoutExtension(document.Name) + "-profundidades-diagnostico.csv",
+            Filter = "CSV (*.csv)|*.csv",
+            RestoreDirectory = true,
+            Title = "Salvar o diagnóstico das profundidades",
+        };
+        if (dialog.ShowDialog() != DialogResult.OK)
+        {
+            return;
+        }
+
+        File.WriteAllText(dialog.FileName, PipeDepthReport.DiagnosticCsv(analysis), new UTF8Encoding(true));
+        document.Editor.WriteMessage($"\nGeoAutoEngine: diagnóstico das profundidades -> {dialog.FileName}\n");
+    }
+
+    // Na exportação. False quando o usuário cancela (Esc). withDepths: as linhas com o resumo das profundidades
+    // (null quando não há o que levar ou o usuário responde Não). analysis: só na associação provisória, para o CSV.
+    private static bool TryAddDepthsForExport(
         Document document,
+        IReadOnlyList<GeoMapExportFeature> features,
         IReadOnlyList<GeoMapExportFeature> lines,
         string units,
-        out PipeDepthAnalysis? depths)
+        out IReadOnlyList<GeoMapExportFeature>? withDepths,
+        out PipeDepthAnalysis? analysis)
     {
-        depths = null;
+        withDepths = null;
+        analysis = null;
         var editor = document.Editor;
         if (lines.Count == 0)
         {
             return true;
         }
 
+        // 1) Profundidades gravadas no desenho, inclusive as corrigidas à mão.
+        Dictionary<string, PipeDepthFields>? stored = null;
+        try
+        {
+            stored = AutoCadPipeDepthStore.Read(document.Database, lines.Select(line => line.CadHandle))
+                .Where(entry => entry.Value.Fields?.ToSummary() is not null)
+                .ToDictionary(entry => entry.Key, entry => entry.Value.Fields!, StringComparer.Ordinal);
+        }
+        catch (System.Exception exception) when (IsMissingMap(exception))
+        {
+            PluginLog.Error("Object Data indisponível", exception);
+            editor.WriteMessage("\nGeoAutoEngine: o Object Data do Map 3D não está disponível; profundidades gravadas não serão lidas.");
+        }
+
+        if (stored is { Count: > 0 })
+        {
+            var manual = stored.Count(entry => entry.Value.NormalizedOrigin == PipeDepthOrigins.Manual);
+            var answer = AskYesNo(editor, $"\nLevar as profundidades gravadas no desenho ({stored.Count} linhas, {manual} manuais)?");
+            if (answer is null)
+            {
+                return false;
+            }
+
+            if (answer == true)
+            {
+                withDepths = PipeDepthExport.FromStored(features, stored);
+            }
+
+            return true;
+        }
+
+        // 2) Nada gravado: associação na hora, provisória.
         if (units == "degree")
         {
             editor.WriteMessage("\nGeoAutoEngine: desenho em graus; exportação sem profundidades.");
@@ -124,27 +214,44 @@ public sealed partial class GeoMapExportCommands
             return true;
         }
 
-        var ask = new PromptKeywordOptions($"\nLevar as profundidades dos {survey.Length} pontos {SurveyLayers}?")
-        {
-            AllowNone = true,
-        };
-        ask.Keywords.Add("Sim");
-        ask.Keywords.Add("Nao");
-        ask.Keywords.Default = "Sim";
-        var answer = editor.GetKeywords(ask);
-        if (answer.Status is not (PromptStatus.OK or PromptStatus.None))
+        var ask = AskYesNo(
+            editor,
+            $"\nNenhuma profundidade gravada nas linhas. Levar as dos {survey.Length} pontos {SurveyLayers} (provisórias)?");
+        if (ask is null)
         {
             return false;
         }
 
-        if (answer.StringResult == "Nao")
+        if (ask == true)
         {
-            return true;
+            analysis = Analyze(document.Database, editor, lines, survey, units);
+            withDepths = PipeDepthExport.Attach(features, analysis);
         }
 
-        depths = Analyze(document.Database, editor, lines, survey, units);
         return true;
     }
+
+    // true = Sim, false = Não, null = cancelado.
+    private static bool? AskYesNo(Editor editor, string message)
+    {
+        var options = new PromptKeywordOptions(message)
+        {
+            AllowNone = true,
+        };
+        options.Keywords.Add("Sim");
+        options.Keywords.Add("Nao");
+        options.Keywords.Default = "Sim";
+        var answer = editor.GetKeywords(options);
+        if (answer.Status is not (PromptStatus.OK or PromptStatus.None))
+        {
+            return null;
+        }
+
+        return answer.StringResult != "Nao";
+    }
+
+    private static bool IsMissingMap(System.Exception exception) =>
+        exception is FileNotFoundException or FileLoadException or TypeLoadException or MissingMethodException;
 
     private static PipeDepthAnalysis? Analyze(Document document, ObjectId[] selection, string units)
     {

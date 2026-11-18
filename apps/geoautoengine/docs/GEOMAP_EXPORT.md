@@ -98,7 +98,12 @@ Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-p
 - Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
 - Valores: como estão no código, em metros, até a geratriz superior, sem interpolação. A média é só um resumo para o mapa.
 - Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
-- **Provisório:** até a entrega 2 (M7.2), as medições não ficam gravadas no DWG. Ao reexportar, responda Sim às profundidades para não apagá-las do mapa.
+- **Gravação no desenho (M7.2):** depois do resumo, o `GEOAUTO3DEPTHSCAN` mostra o que vai gravar e pergunta `[Gravar/Diagnostico/Sair]`.
+  - As profundidades ficam na tabela Object Data `GEO_PROFUNDIDADE` de cada linha, que aparece na paleta Propriedades (Ctrl+1).
+  - Para corrigir, edite os campos. O plugin percebe a mudança e marca `ORIGEM = MANUAL`, e não sobrescreve mais.
+  - Para voltar ao cálculo automático, escreva `RECALCULAR` em `ORIGEM` e rode de novo.
+  - U desfaz a gravação inteira.
+- **Exportação:** se as linhas têm profundidade gravada, `GEOAUTO3GEOMAPEXPORT` leva esses valores, inclusive os manuais, com `profundidadeOrigem`. Sem nada gravado, ele oferece a associação provisória, que não fica no desenho.
 
 ## Política geométrica
 

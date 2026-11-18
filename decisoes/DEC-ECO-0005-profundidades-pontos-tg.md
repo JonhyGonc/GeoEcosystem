@@ -38,7 +38,17 @@
 
    Uma linha com medições demais para os 64 KiB do GeoMap faz a exportação parar com aviso, em vez de perder medições.
 7. **Diagnóstico:** `GEOAUTO3DEPTHSCAN` analisa sem gravar nada no desenho e salva um CSV (`;` e vírgula decimal) com uma linha por ponto e por tubulação. A exportação salva o mesmo CSV ao lado dos arquivos.
-8. **Persistência no DWG (entrega 2):** aprovado pelo usuário: gravar as medições num Extension Dictionary/XRecord próprio (`GEOAUTOENGINE_DEPTHS`) em cada linha. Assim o `FEATURE_ID` (XData `GEOAUTOENGINE_FEATURE`) e as associações da vídeo-inspeção (`GEOAUTOENGINE_VI`) não são tocados. Até a entrega 2, as profundidades no GeoMap são provisórias: reexportar sem elas as apaga do mapa.
+8. **Persistência no DWG (entrega 2):** decidida pelo usuário em 18/11/2026: profundidades **visíveis e editáveis** na paleta Propriedades. A escolha substitui o XRecord escondido aprovado em 17/11/2026, que continua só como cópia de controle.
+   - **Tabela Object Data `GEO_PROFUNDIDADE`** (Map 3D, incluído no Civil 3D), com os campos:
+     - `PROF_MEDIA_M` (número);
+     - `PROF_INICIAL_M`, `PROF_FINAL_M` e `PONTOS` (texto, aceitam vírgula e vazio);
+     - `ORIGEM`.
+   - **`ORIGEM`:** `AUTOMATICA` (calculada), `MANUAL` (corrigida à mão; o plugin não sobrescreve), `SEM_MEDICAO` (era automática e perdeu os pontos; é zerada e marcada, não apagada) e `RECALCULAR` (o usuário escreve para o plugin voltar a calcular).
+   - **Cópia escondida** (XRecord `GEOAUTOENGINE_DEPTHS` no dicionário da linha): o que o plugin gravou por último, com o detalhe de cada ponto. Se os campos visíveis estiverem diferentes dela, ou se não houver cópia, a linha é tratada como **manual**.
+   - **Gravação:** `GEOAUTO3DEPTHSCAN` mostra o resumo e o plano (novas, atualizadas, sem mudança, manuais mantidas, sem medição) e só grava com confirmação, numa transação. O comando inteiro pode ser desfeito com U. Reexecutar não duplica.
+   - **Exportação:** `GEOAUTO3GEOMAPEXPORT` leva o que está gravado, inclusive o manual, com `profundidadeOrigem`. Sem nada gravado, oferece a associação provisória de antes.
+   - O código da feição (XData `GEOAUTOENGINE_FEATURE`) e a vídeo-inspeção não são tocados.
+   - O GAE passa a referenciar `ManagedMapApi.dll` (Map 3D). Ele só existe no Civil 3D/Map 3D, que é onde o GAE é homologado. Sem ele, o comando avisa e só o diagnóstico funciona.
 
 ## Impacto
 - **GAE:** novas classes na camada Application (testadas na CI), leitor dos pontos no Cad2026, comando `GEOAUTO3DEPTHSCAN` e pergunta nova na exportação.

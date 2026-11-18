@@ -73,15 +73,16 @@ public sealed partial class GeoMapExportCommands
             }
 
             // Profundidades dos pontos _TG (entrega 1): associadas na hora, só leitura no desenho.
-            if (!TryAnalyzeDepthsForExport(document, lines, units.Trim().ToLowerInvariant(), out var depths))
+            if (!TryAddDepthsForExport(
+                document, read.Features, lines, units.Trim().ToLowerInvariant(), out var withDepths, out var depths))
             {
                 editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
                 return;
             }
 
-            if (depths is not null)
+            if (withDepths is not null)
             {
-                features = PipeDepthExport.Attach(read.Features, depths);
+                features = withDepths;
                 networks = GeoMapLayerNetworks.Split(features);
             }
 
@@ -128,8 +129,8 @@ public sealed partial class GeoMapExportCommands
                 editor.WriteMessage(
                     $"\nGeoAutoEngine: profundidades em {depths.PipesWithMeasurements} de {depths.Pipes.Count} linhas; " +
                     $"diagnóstico -> {diagnosticPath}" +
-                    "\nGeoAutoEngine: as profundidades ainda não ficam gravadas no DWG (provisórias). " +
-                    "Ao exportar de novo, responda Sim às profundidades para não perdê-las no GeoMap.");
+                    "\nGeoAutoEngine: essas profundidades não estão gravadas no desenho (provisórias). " +
+                    "Para gravar e poder corrigir à mão, use GEOAUTO3DEPTHSCAN.");
             }
 
             editor.WriteMessage(
