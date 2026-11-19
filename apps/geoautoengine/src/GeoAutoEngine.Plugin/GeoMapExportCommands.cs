@@ -14,7 +14,7 @@ using AutoCadApplication = Autodesk.AutoCAD.ApplicationServices.Core.Application
 
 namespace GeoAutoEngine.Plugin;
 
-public sealed class GeoMapExportCommands
+public sealed partial class GeoMapExportCommands
 {
     // Sem NoUndoMarker: desde o M4.3a o comando grava os códigos das feições no desenho (DEC-ECO-0003).
     [CommandMethod("GEOAUTO3GEOMAPEXPORT", CommandFlags.Modal)]
@@ -28,7 +28,10 @@ public sealed class GeoMapExportCommands
 
         try
         {
-            var selection = SelectPolylines(document.Editor);
+            var selection = SelectPolylines(
+                document.Editor,
+                ExportableTypes,
+                "\nSelecione as linhas (Polyline, LINE, ARC) e os blocos: ");
             if (selection is null)
             {
                 document.Editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
@@ -40,6 +43,7 @@ public sealed class GeoMapExportCommands
             // layer vão numa rede separada (DEC-029 do GeoMap). Cada rede vira um arquivo.
             var networks = GeoMapLayerNetworks.Split(read.Features);
             var lines = read.Features.Where(feature => feature.Block is null).ToArray();
+            IReadOnlyList<GeoMapExportFeature> features = read.Features;
             var inferredNetwork = InferNetwork(lines.Length > 0 ? lines : read.Features);
             var drawingName = Path.GetFileNameWithoutExtension(document.Name);
             var editor = document.Editor;
@@ -66,6 +70,24 @@ public sealed class GeoMapExportCommands
             {
                 editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
                 return;
+            }
+
+            // Profundidades dos pontos _TG (entrega 1): associadas na hora, só leitura no desenho.
+            // Tipo das peças (pela tabela GEO_PECA ou pelo nome do bloco).
+            features = AddFittingTypes(document, features);
+            networks = GeoMapLayerNetworks.Split(features);
+
+            if (!TryAddDepthsForExport(
+                document, features, lines, units.Trim().ToLowerInvariant(), out var withDepths, out var depths))
+            {
+                editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
+                return;
+            }
+
+            if (withDepths is not null)
+            {
+                features = withDepths;
+                networks = GeoMapLayerNetworks.Split(features);
             }
 
             // Todos os arquivos são montados e validados antes de qualquer gravação.
@@ -102,6 +124,17 @@ public sealed class GeoMapExportCommands
                     $"\nGeoAutoEngine: {output.Network.Features.Count} {(output.Network.IsBlocks ? "blocos" : "linhas")} " +
                     $"na rede \"{GeoMapLayerNetworks.NetworkName(output.Network)}\" (versão {output.Version}, " +
                     $"cor {output.Color ?? "nenhuma"}) -> {path}");
+            }
+
+            if (depths is not null)
+            {
+                var diagnosticPath = DepthDiagnosticPath(dialog.FileName);
+                File.WriteAllText(diagnosticPath, PipeDepthReport.DiagnosticCsv(depths), new UTF8Encoding(true));
+                editor.WriteMessage(
+                    $"\nGeoAutoEngine: profundidades em {depths.PipesWithMeasurements} de {depths.Pipes.Count} linhas; " +
+                    $"diagnóstico -> {diagnosticPath}" +
+                    "\nGeoAutoEngine: essas profundidades não estão gravadas no desenho (provisórias). " +
+                    "Para gravar e poder corrigir à mão, use GEOAUTO3DEPTHSCAN.");
             }
 
             editor.WriteMessage(
@@ -160,7 +193,7 @@ public sealed class GeoMapExportCommands
     // entidades exportáveis delas no espaço do modelo. Ou seleciona os objetos, como antes.
     private const string ExportableTypes = "LWPOLYLINE,LINE,ARC,INSERT";
 
-    private static ObjectId[]? SelectPolylines(Editor editor)
+    private static ObjectId[]? SelectPolylines(Editor editor, string types, string objectsMessage)
     {
         var mode = new PromptKeywordOptions("\nSelecionar por")
         {
@@ -179,12 +212,12 @@ public sealed class GeoMapExportCommands
         {
             var options = new PromptSelectionOptions
             {
-                MessageForAdding = "\nSelecione as linhas (Polyline, LINE, ARC) e os blocos: ",
+                MessageForAdding = objectsMessage,
                 MessageForRemoval = "\nRemova entidades da seleção: ",
             };
             var picked = editor.GetSelection(options, new SelectionFilter(
             [
-                new TypedValue((int)DxfCode.Start, ExportableTypes),
+                new TypedValue((int)DxfCode.Start, types),
             ]));
             return picked.Status == PromptStatus.OK ? picked.Value.GetObjectIds() : null;
         }
@@ -197,7 +230,7 @@ public sealed class GeoMapExportCommands
 
         var all = editor.SelectAll(new SelectionFilter(
         [
-            new TypedValue((int)DxfCode.Start, ExportableTypes),
+            new TypedValue((int)DxfCode.Start, types),
             new TypedValue((int)DxfCode.LayerName, layers),
             // Só o espaço do modelo, como a ponte DXF.
             new TypedValue((int)DxfCode.LayoutName, "Model"),

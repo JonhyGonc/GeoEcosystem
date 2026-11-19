@@ -89,6 +89,39 @@ O contrato GeoMap só tem linhas retas. Por isso cada arco vira uma sequência d
 - Uma Polyline ou ARC espelhado (normal -Z) é aceito, e o sentido do arco é corrigido. Um arco fora do plano XY cancela a exportação.
 - LINE e ARC também ganham o código próprio (`FEATURE_ID`).
 
+## Profundidades dos pontos _TG (desde o M7.1, provisório)
+Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md).
+
+- `GEOAUTO3DEPTHSCAN` analisa as tubulações escolhidas (por layer ou por objeto) contra todos os blocos das layers `_TG*` e mostra um resumo. **Não grava nada no desenho.** No fim, oferece salvar o diagnóstico em CSV.
+- `GEOAUTO3GEOMAPEXPORT` pergunta "Levar as profundidades dos N pontos _TG?". Com Sim, cada linha com medição recebe um resumo: `profundidadeMediaM` (média simples dos pontos, ao centímetro), `profundidadeInicialM`, `profundidadeFinalM` e `quantidadePontosProfundidade`. O valor de cada ponto, com código e vértice, fica no CSV. O diagnóstico é salvo ao lado dos arquivos (`<nome>-profundidades-diagnostico.csv`).
+- A posição de cada ponto é o ponto (DBPoint) de dentro do bloco, onde o OSNAP NODE prende. O ponto vale para a linha num vértice ou sobre um trecho, até 1 mm; de 1 mm a 10 cm, ele é só relatado.
+- Só a informação da rede com profundidade (ex.: `AP1.20D300`) conta; caixas e PVs (`CXAP1.50`), a COTA e códigos desconhecidos não viram profundidade da tubulação.
+- Valores: como estão no código, em metros, até a geratriz superior, sem interpolação. A média é só um resumo para o mapa.
+- Ignorados de propósito: `G` e `PT` (também `G1`, `PT-2`…, mas não `GUIA`, `GAS` ou `PTIL`). Não aparecem no CSV; o resumo mostra só a quantidade.
+- Estados no diagnóstico: `ASSOCIADO`, `ASSOCIADO_COMPARTILHADO`, `PROXIMO_NAO_ASSOCIADO`, `PAR_SINALIZACAO` (segundo ponto do par de campo, a até 10 cm de um ponto já associado com o mesmo valor), `SEM_TUBULACAO`, `AMBIGUO`, `CONFLITO_REDE`, `CONFLITO_DIAMETRO`, `CONFLITO_PONTOS`, `DUPLICADO`, `SEM_PROFUNDIDADE`, `PROFUNDIDADE_DE_OBJETO`, `CODIGO_DESCONHECIDO`, `PROFUNDIDADE_INVALIDA` e `SEM_CODIGO`.
+- **Gravação no desenho (M7.2):** depois do resumo, o `GEOAUTO3DEPTHSCAN` mostra o que vai gravar e pergunta `[Gravar/Diagnostico/Sair]`.
+  - As profundidades ficam na tabela Object Data `GEO_PROFUNDIDADE` de cada linha, que aparece na paleta Propriedades (Ctrl+1).
+  - Para corrigir, edite os campos. O plugin percebe a mudança e marca `ORIGEM = MANUAL`, e não sobrescreve mais.
+  - Para voltar ao cálculo automático, escreva `RECALCULAR` em `ORIGEM` e rode de novo.
+  - U desfaz a gravação inteira.
+- **Exportação:** se as linhas têm profundidade gravada, `GEOAUTO3GEOMAPEXPORT` leva esses valores, inclusive os manuais, com `profundidadeOrigem`. Sem nada gravado, ele oferece a associação provisória, que não fica no desenho.
+
+## Tipo das peças (desde 19/11/2026)
+- `GEOAUTO3FITTINGS`: escolha as layers dos blocos de peça. O tipo vem do nome do bloco. Os nomes reconhecidos são:
+  - Tê: `TE`, `TEE`;
+  - Registro: `RG`, `REG`, `REGISTRO`;
+  - Cruzeta: `CZ`, `CRUZ`, `CRUZETA`;
+  - Ventosa: `VT`, `VENT`, `VENTOSA`;
+  - Curva: `CV`, `CURVA`;
+  - Redução: `RED`, `REDUCAO`;
+  - Cap: `CAP`, `TAMPAO`, `PLUG`;
+  - Válvula: `VALV`, `VALVULA`;
+  - Luva, Hidrante (`HID`), Descarga, Junção.
+
+  Cada nome vale também seguido de número ou separador (`TE_100`).
+- O resumo mostra quantas peças há de cada tipo e os nomes fora da lista. Com confirmação, o tipo é gravado na tabela Object Data `GEO_PECA` (`TIPO`, `ORIGEM`), visível na paleta Propriedades. Corrigir o `TIPO` à mão o torna `MANUAL`; `RECALCULAR` em `ORIGEM` volta ao automático.
+- `GEOAUTO3GEOMAPEXPORT` leva `tipoPeca` nos blocos: o gravado no desenho, senão o da lista.
+
 ## Política geométrica
 
 Polylines abertas são exportadas como `LineString` com os vértices na ordem original. Em Polylines fechadas, a primeira posição é repetida no final para representar o fechamento. A coordenada Z não faz parte do contrato v0.1; a propriedade `projectedTo2D` registra quando os pontos CAD possuíam elevação diferente de zero, e `cadElevation` preserva a elevação original como metadado.

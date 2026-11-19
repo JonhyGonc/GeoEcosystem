@@ -161,6 +161,7 @@ public sealed class GeoMapExportTests
     [InlineData("block-export.geomap.json", "0.3", "valid-geoautoengine-blocks.geomap.json")]
     [InlineData("curve-export.geomap.json", "0.1", "valid-geoautoengine-curves.geomap.json")]
     [InlineData("layer-attributes-export.geomap.json", "0.3", "valid-geoautoengine-attributes.geomap.json")]
+    [InlineData("depths-export.geomap.json", "0.2", "valid-geoautoengine-depths.geomap.json")]
     [Trait("Category", "FAST")]
     public void Samples_AreIdenticalToTheExamplesValidatedByGeoMap(string sample, string version, string example)
     {

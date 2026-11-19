@@ -135,5 +135,12 @@ function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não'
   if (typeof value === 'string' || typeof value === 'number') return String(value)
+  // Listas simples (ex.: profundidades ao longo da linha) aparecem como texto separado por ";".
+  if (
+    Array.isArray(value) &&
+    value.every((item) => typeof item === 'string' || typeof item === 'number')
+  ) {
+    return value.length === 0 ? '—' : value.join('; ')
+  }
   return JSON.stringify(value)
 }

@@ -32,6 +32,7 @@ describe('SelectionSummary', () => {
               material: 'PVC',
               diameter: 300,
               inspected: true,
+              profundidadesM: [1, 0.9, 0.68],
             },
           },
         }}
@@ -50,6 +51,7 @@ describe('SelectionSummary', () => {
     expect(screen.getByText('PVC')).toBeInTheDocument()
     expect(screen.getByText('300')).toBeInTheDocument()
     expect(screen.getByText('Sim')).toBeInTheDocument()
+    expect(screen.getByText('1; 0.9; 0.68')).toBeInTheDocument()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpar seleção' }))
