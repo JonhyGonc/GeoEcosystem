@@ -229,8 +229,11 @@ public static class GeoMapExportSerializer
     private static readonly HashSet<string> ReservedBlockProperties = new(StringComparer.Ordinal)
     {
         "cadHandle", "cadEntityType", "bloco", "rotacao", "escalaX", "escalaY", "cadElevation",
-        "projectedTo2D", "posicaoPeloSimbolo", DiameterProperty, MaterialProperty,
+        "projectedTo2D", "posicaoPeloSimbolo", DiameterProperty, MaterialProperty, FittingTypeProperty,
     };
+
+    // Tipo da peça (M7, pedido do usuário em 19/11/2026); só aparece quando o tipo é conhecido.
+    private const string FittingTypeProperty = "tipoPeca";
 
     private const string DiameterProperty = "diametroMm";
     private const string MaterialProperty = "material";
@@ -256,6 +259,11 @@ public static class GeoMapExportSerializer
             ["projectedTo2D"] = feature.ProjectedTo2D,
             ["posicaoPeloSimbolo"] = block.PositionFromSymbol,
         };
+        if (block.FittingType is { } fittingType)
+        {
+            properties[FittingTypeProperty] = fittingType;
+        }
+
         if (layerAttributes.DiameterMm is { } diameter)
         {
             properties[DiameterProperty] = diameter;

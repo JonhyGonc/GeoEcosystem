@@ -24,6 +24,7 @@
 | 18/11/2026 | Profundidade inicial/final = primeira/última registrada ao longo da linha, mesmo fora das pontas | Usuário |
 | 18/11/2026 | Ignorar os pontos `G` e `PT` na análise (fora das contagens e do CSV) | Usuário |
 | 18/11/2026 | Par de sinalização de campo (~5 cm): o segundo ponto, com o mesmo valor, vira `PAR_SINALIZACAO`, fora da média e das pendências | Usuário |
+| 19/11/2026 | Peças: só o tipo (não a profundidade), pelo nome do bloco, lista comum que o usuário corrige; gravado em `GEO_PECA` e exportado em `tipoPeca` | Usuário |
 
 ## Pontos de atenção
 - A CI não compila o leitor CAD nem os comandos: só o roteiro no Civil 3D os prova.

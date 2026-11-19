@@ -106,6 +106,22 @@ Decisão proposta: [DEC-ECO-0005](../../../decisoes/DEC-ECO-0005-profundidades-p
   - U desfaz a gravação inteira.
 - **Exportação:** se as linhas têm profundidade gravada, `GEOAUTO3GEOMAPEXPORT` leva esses valores, inclusive os manuais, com `profundidadeOrigem`. Sem nada gravado, ele oferece a associação provisória, que não fica no desenho.
 
+## Tipo das peças (desde 19/11/2026)
+- `GEOAUTO3FITTINGS`: escolha as layers dos blocos de peça. O tipo vem do nome do bloco. Os nomes reconhecidos são:
+  - Tê: `TE`, `TEE`;
+  - Registro: `RG`, `REG`, `REGISTRO`;
+  - Cruzeta: `CZ`, `CRUZ`, `CRUZETA`;
+  - Ventosa: `VT`, `VENT`, `VENTOSA`;
+  - Curva: `CV`, `CURVA`;
+  - Redução: `RED`, `REDUCAO`;
+  - Cap: `CAP`, `TAMPAO`, `PLUG`;
+  - Válvula: `VALV`, `VALVULA`;
+  - Luva, Hidrante (`HID`), Descarga, Junção.
+
+  Cada nome vale também seguido de número ou separador (`TE_100`).
+- O resumo mostra quantas peças há de cada tipo e os nomes fora da lista. Com confirmação, o tipo é gravado na tabela Object Data `GEO_PECA` (`TIPO`, `ORIGEM`), visível na paleta Propriedades. Corrigir o `TIPO` à mão o torna `MANUAL`; `RECALCULAR` em `ORIGEM` volta ao automático.
+- `GEOAUTO3GEOMAPEXPORT` leva `tipoPeca` nos blocos: o gravado no desenho, senão o da lista.
+
 ## Política geométrica
 
 Polylines abertas são exportadas como `LineString` com os vértices na ordem original. Em Polylines fechadas, a primeira posição é repetida no final para representar o fechamento. A coordenada Z não faz parte do contrato v0.1; a propriedade `projectedTo2D` registra quando os pontos CAD possuíam elevação diferente de zero, e `cadElevation` preserva a elevação original como metadado.

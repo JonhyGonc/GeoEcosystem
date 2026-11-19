@@ -73,8 +73,12 @@ public sealed partial class GeoMapExportCommands
             }
 
             // Profundidades dos pontos _TG (entrega 1): associadas na hora, só leitura no desenho.
+            // Tipo das peças (pela tabela GEO_PECA ou pelo nome do bloco).
+            features = AddFittingTypes(document, features);
+            networks = GeoMapLayerNetworks.Split(features);
+
             if (!TryAddDepthsForExport(
-                document, read.Features, lines, units.Trim().ToLowerInvariant(), out var withDepths, out var depths))
+                document, features, lines, units.Trim().ToLowerInvariant(), out var withDepths, out var depths))
             {
                 editor.WriteMessage("\nGeoAutoEngine: exportação GeoMap cancelada.\n");
                 return;

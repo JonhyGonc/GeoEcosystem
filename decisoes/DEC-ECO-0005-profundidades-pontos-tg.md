@@ -50,6 +50,13 @@
    - O código da feição (XData `GEOAUTOENGINE_FEATURE`) e a vídeo-inspeção não são tocados.
    - O GAE passa a referenciar `ManagedMapApi.dll` (Map 3D). Ele só existe no Civil 3D/Map 3D, que é onde o GAE é homologado. Sem ele, o comando avisa e só o diagnóstico funciona.
 
+9. **Tipo das peças** (pedido do usuário em 19/11/2026: as peças não precisam de profundidade, só do tipo):
+   - o tipo vem do **nome do bloco**, por uma lista comum (TE → Tê, RG/REGISTRO → Registro, CZ/CRUZETA → Cruzeta, VT/VENTOSA → Ventosa, CV/CURVA → Curva, RED/REDUCAO → Redução, CAP/TAMPAO/PLUG → Cap, LUVA, HID/HIDRANTE, DESCARGA, JUNCAO, VALV/VALVULA) que o usuário corrige;
+   - o nome vale inteiro ou seguido de número ou separador (`TE_100`), nunca como começo de outra palavra (`TERMINAL`);
+   - `GEOAUTO3FITTINGS` grava o tipo na tabela Object Data `GEO_PECA` (`TIPO`, `ORIGEM`), com a mesma proteção do manual das profundidades (cópia escondida no XRecord `GEOAUTOENGINE_FITTING`);
+   - nomes fora da lista não recebem tipo e aparecem no resumo;
+   - `GEOAUTO3GEOMAPEXPORT` leva `tipoPeca` nos blocos: primeiro o gravado (inclusive manual), senão o da lista.
+
 ## Impacto
 - **GAE:** novas classes na camada Application (testadas na CI), leitor dos pontos no Cad2026, comando `GEOAUTO3DEPTHSCAN` e pergunta nova na exportação.
 - **GeoMap:** nenhuma mudança de código. O site já mostra as `properties`; a lista de medições aparece como texto JSON.
