@@ -1,6 +1,6 @@
 # M7 — Profundidades das tubulações pelos pontos _TG (emergencial)
 
-- **Estado:** M7.1 (entrega 1) em revisão no PR #34.
+- **Estado:** M7.1 e M7.2 homologados pelo usuário em 25/11/2026; aguardando o merge do PR #34.
 - **Origem:** pedido emergencial do usuário em 17/11/2026. Tem prioridade sobre o M5 e sobre melhorias não relacionadas. O M6 (Civil 3D 2027, PR #33) e o conversor da ortofoto (PR #32) já estão prontos e não são interrompidos.
 - **Decisão:** [DEC-ECO-0005](../../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md) (aprovada em 17/11/2026; limite de 10 m ainda proposto).
 - **Dono:** agente único (Emenda 2). Homologação no Civil 3D, conferência no mapa, merge e instalação: usuário.
@@ -9,8 +9,8 @@
 ## Passos
 | Passo | Entrega | Verificação | Estado |
 |---|---|---|---|
-| M7.1 | Entrega 1: leitura dos pontos `_TG`, interpretação pelo interpretador existente, associação pelo NODE (vértice e trecho), conflitos, diagnóstico CSV (`GEOAUTO3DEPTHSCAN`) e exportação provisória (`GEOAUTO3GEOMAPEXPORT`) | CI: casos sintéticos, 25.000 linhas × 50.000 pontos, dois desenhos reais da auditoria com contagens conferidas por outra implementação, amostra validada pelo GeoMap. Usuário: roteiro numa cópia de uma amostra do projeto real e valores no mapa | 🔄 |
-| M7.2 | Entrega 2: profundidades gravadas nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável; cópia escondida em XRecord), correção manual protegida (`ORIGEM`), atualização sem duplicar, exportação lendo do desenho | Testes da regra de gravação na CI; gravação conferida pelo usuário no projeto real em 18/11/2026; faltam: editar à mão + reexecutar, reabrir, reexportar | 🔄 no PR #34 |
+| M7.1 | Entrega 1: leitura dos pontos `_TG`, interpretação pelo interpretador existente, associação pelo NODE (vértice e trecho), conflitos, diagnóstico CSV (`GEOAUTO3DEPTHSCAN`) e exportação provisória (`GEOAUTO3GEOMAPEXPORT`) | CI: casos sintéticos, 25.000 linhas × 50.000 pontos, dois desenhos reais da auditoria com contagens conferidas por outra implementação, amostra validada pelo GeoMap. Usuário: roteiro numa cópia de uma amostra do projeto real e valores no mapa | ✅ homologado (PR #34) |
+| M7.2 | Entrega 2: profundidades gravadas nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável; cópia escondida em XRecord), correção manual protegida (`ORIGEM`), atualização sem duplicar, exportação lendo do desenho | Testes da regra de gravação na CI; homologado pelo usuário no projeto real (18 a 25/11/2026) | ✅ homologado (PR #34) |
 
 **Critério de aceitação:** numa amostra representativa do projeto real, as profundidades associadas conferem com as descrições dos pontos (conferência manual); cobertura, ambíguos, ausentes e divergências contados no diagnóstico; os valores aparecem no GeoMap.
 
@@ -25,6 +25,7 @@
 | 18/11/2026 | Ignorar os pontos `G` e `PT` na análise (fora das contagens e do CSV) | Usuário |
 | 18/11/2026 | Par de sinalização de campo (~5 cm): o segundo ponto, com o mesmo valor, vira `PAR_SINALIZACAO`, fora da média e das pendências | Usuário |
 | 19/11/2026 | Peças: só o tipo (não a profundidade), pelo nome do bloco, lista comum que o usuário corrige; gravado em `GEO_PECA` e exportado em `tipoPeca` | Usuário |
+| 25/11/2026 | Entregas 1 e 2 e o tipo das peças homologados ("tudo testado e funcionando") | Usuário |
 
 ## Pontos de atenção
 - A CI não compila o leitor CAD nem os comandos: só o roteiro no Civil 3D os prova.

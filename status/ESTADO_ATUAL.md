@@ -1,6 +1,6 @@
 # Estado atual
 
-**Atualizado em:** 18/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
+**Atualizado em:** 25/11/2026, pelo agente (Claude). Atualize ao fim de cada sessão.
 
 ## Onde estamos
 - **M1 — Versão oficial:** ✅ concluído. GeoAutoEngine 3.2.0 (`d762359`) e GeoAutoDocs 1.1.0 (`64081d5`), homologados pelo usuário em 12/11/2026.
@@ -12,7 +12,8 @@
 - **M5 — Anomalias no mapa:** decisões tomadas em 16/11/2026, pelo celular (DEC-ECO-0004, PR #31; plano em `roadmap/marcos/M5-anomalias-mapa.md`; Issue #30). Implementação começa depois da ortofoto (M4.6).
 - **Prioridade emergencial (pedido do usuário, 17/11/2026): M7 — profundidades das tubulações pelos pontos `_TG`.** Entregas 1 e 2 no PR #34: associação pelo NODE, diagnóstico `GEOAUTO3DEPTHSCAN`, gravação nas linhas (Object Data `GEO_PROFUNDIDADE`, visível e editável, com `ORIGEM` AUTOMATICA/MANUAL) e exportação do que está gravado (média, pontas e quantidade de pontos). DEC-ECO-0005 aprovada (17 e 18/11/2026); o limite de 10 m segue proposto. Testado pelo usuário em 18/11/2026 no projeto real (2.949 linhas, 84.021 pontos _TG): a importação da entrega 1 no site funcionou e a gravação na tabela `GEO_PROFUNDIDADE` funcionou, com média, inicial/final (primeira/última profundidade da linha), pontos e ORIGEM na paleta Propriedades, depois de duas correções no Map 3D (lista de registros vazia, criação da tabela). Plano: `roadmap/marcos/M7-profundidades-tg.md`.
 - **Prontos para o usuário:** PR #32 (conversor da ortofoto, testado em 17/11/2026) e PR #33 (Civil 3D 2027, M6).
-- **Próximo passo:** merge do PR #34 pelo usuário. Faltam no roteiro: correção à mão + nova rodada (MANUAL mantido), reabrir o DWG e exportar o gravado. Depois: revisar no CSV os 8.169 pontos "perto, fora da tolerância" e os 4.660 códigos desconhecidos do projeto real; limpeza do log da vídeo-inspeção (393 MB, a decidir pelo usuário) → M5.2.
+- **M7 homologado pelo usuário em 25/11/2026** ("tudo testado e funcionando"): profundidades (gravação, correção à mão, reabrir, exportar, par de sinalização, G/PT ignorados) e tipo das peças (`GEOAUTO3FITTINGS`, `tipoPeca`).
+- **Próximo passo:** merges pelo usuário, nesta ordem: PR #32 (conversor da ortofoto), PR #33 (Civil 3D 2027) e PR #34 (M7). Depois do #33, o agente resolve no #34 o conflito em `ROADMAP.md` e `ESTADO_ATUAL.md` (só documentação). Depois: revisar no CSV os 4.660 códigos desconhecidos; completar a lista de nomes de peça se aparecerem nomes fora dela; limpeza do log da vídeo-inspeção (a decidir) → M5.2.
 
 ## Pendências do usuário
 1. Merge do PR #28 (aposenta a ponte DXF); roteiro da ortofoto (PR #29) com uma ortofoto real.

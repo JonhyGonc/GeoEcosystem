@@ -9,7 +9,7 @@
 > | M3 — Contrato GADX | ✅ concluído em 16/11/2026; instalação na equipe adiada para o fim do projeto ([marcos/M3](marcos/M3-contrato-gadx.md)) |
 > | M4 — Exportador GAE → GeoMap | ✅ M4.1 a M4.5 concluídos em 16/11/2026; ponte DXF aposentada; M4.6 (ortofoto, pedido do usuário) em revisão ([marcos/M4](marcos/M4-dwg-geomap.md)) |
 > | M5 — Anomalias no mapa | 🔄 decisões tomadas em 16/11/2026 ([marcos/M5](marcos/M5-anomalias-mapa.md), [DEC-ECO-0004](../decisoes/DEC-ECO-0004-anomalias-no-mapa.md)); a ortofoto (M4.6) e as profundidades (M7) vêm antes, por prioridade do usuário |
-> | M7 — Profundidades pelos pontos _TG | 🔄 **emergencial**, pedido do usuário em 17/11/2026 ([marcos/M7](marcos/M7-profundidades-tg.md), [DEC-ECO-0005](../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md) proposta) |
+> | M7 — Profundidades pelos pontos _TG | ✅ homologado em 25/11/2026, aguardando merge do PR #34; **emergencial**, pedido do usuário em 17/11/2026 ([marcos/M7](marcos/M7-profundidades-tg.md), [DEC-ECO-0005](../decisoes/DEC-ECO-0005-profundidades-pontos-tg.md) proposta) |
 
 - **Autor:** Chat 00
 - **Data:** 11/11/2026
