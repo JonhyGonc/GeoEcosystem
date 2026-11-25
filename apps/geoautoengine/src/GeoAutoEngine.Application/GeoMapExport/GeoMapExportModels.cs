@@ -10,6 +10,10 @@ public readonly record struct GeoMapCoordinate(double X, double Y);
 /// </param>
 /// <param name="EntityType">Tipo da entidade no CAD: <c>Polyline</c>, <c>Line</c> ou <c>Arc</c> (M4.3d).</param>
 /// <param name="EndElevation">Elevação do ponto final de uma LINE; a do ponto inicial fica em <paramref name="Elevation"/>.</param>
+/// <param name="Depths">
+/// Profundidades dos pontos <c>_TG</c> associadas à linha (<see cref="PipeDepthExport"/>); <c>null</c> quando a
+/// associação não foi feita na exportação.
+/// </param>
 public sealed record GeoMapExportFeature(
     string SourceId,
     string CadHandle,
@@ -21,7 +25,24 @@ public sealed record GeoMapExportFeature(
     GeoMapBlockInfo? Block = null,
     IReadOnlyList<double>? Bulges = null,
     string EntityType = GeoMapEntityTypes.Polyline,
-    double? EndElevation = null);
+    double? EndElevation = null,
+    GeoMapPipeDepths? Depths = null);
+
+/// <summary>Resumo das profundidades de uma linha para o GeoMap, em metros (até a geratriz superior).</summary>
+/// <param name="AverageMetres">Média simples das profundidades dos pontos da linha.</param>
+/// <param name="StartMetres">Primeira profundidade registrada ao longo da linha.</param>
+/// <param name="EndMetres">Última profundidade registrada ao longo da linha.</param>
+/// <param name="PointCount">Quantos pontos entraram na média.</param>
+/// <param name="Origin">
+/// <see cref="PipeDepthOrigins.Automatic"/> ou <see cref="PipeDepthOrigins.Manual"/> quando os valores vêm do
+/// desenho; <c>null</c> na associação feita na hora da exportação (provisória).
+/// </param>
+public sealed record GeoMapPipeDepths(
+    double AverageMetres,
+    double? StartMetres,
+    double? EndMetres,
+    int PointCount,
+    string? Origin = null);
 
 /// <summary>Tipos de linha exportados; o valor vai em <c>sourceType</c> e <c>cadEntityType</c>.</summary>
 public static class GeoMapEntityTypes
@@ -38,13 +59,15 @@ public static class GeoMapEntityTypes
 /// <param name="Name">Nome do bloco (nome efetivo, no caso de bloco dinâmico); vai em <c>properties.bloco</c>.</param>
 /// <param name="PositionFromSymbol">Verdadeiro quando a posição é o centro do símbolo, e não o ponto de inserção.</param>
 /// <param name="Attributes">Atributos do bloco (ATTRIB), tag e valor, na ordem do desenho (M4.3e).</param>
+/// <param name="FittingType">Tipo da peça (tê, registro…), de <see cref="FittingExport"/>; vai em <c>properties.tipoPeca</c>.</param>
 public sealed record GeoMapBlockInfo(
     string Name,
     double RotationDegrees,
     double ScaleX,
     double ScaleY,
     bool PositionFromSymbol,
-    IReadOnlyList<KeyValuePair<string, string>>? Attributes = null);
+    IReadOnlyList<KeyValuePair<string, string>>? Attributes = null,
+    string? FittingType = null);
 
 public sealed record GeoMapExportRequest(
     string SourceCrs,

@@ -15,6 +15,7 @@ public sealed class GeoMapContractValidatorTests
     [InlineData("valid-geoautoengine-blocks.geomap.json")]
     [InlineData("valid-geoautoengine-curves.geomap.json")]
     [InlineData("valid-geoautoengine-attributes.geomap.json")]
+    [InlineData("valid-geoautoengine-depths.geomap.json")]
     public void Valid_examples_pass(string fileName)
     {
         var result = ValidateExample(fileName);
